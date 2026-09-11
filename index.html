@@ -2,81 +2,49 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V4.6.2
+  我的旅遊足跡 V4.7
 =============================================================
 
-【V4.6.2 足跡鏈結修復】
+【V4.7 新增】
 
-新增真正的足跡前後關係：
+1. 至下一筆紀錄時間
 
-  previousRecordId
-  linkTracked
+   只有在：
+   下一筆紀錄.previousRecordId === 目前紀錄.id
 
-例如：
+   才顯示：
 
-  A → B → C → D
+   ⏱ 至下一筆紀錄 6 分鐘
 
-D 會保存：
-  previousRecordId = C.id
-
-如果之後刪除 C：
-
-  A → B     D
-
-D 不會重新連到 B。
-
-畫面顯示：
-  ⚠️ 前一站紀錄已刪除
-
-而不是錯誤顯示：
-  ↗ 前一站 XX km
+   避免單純依時間排序造成誤判。
 
 
-【同步修正】
+2. 每日摘要
 
-1. 前一站距離
-   - 不再依「畫面上上一筆」計算
-   - 只依 previousRecordId
+   每天顯示：
 
-2. 地圖路線
-   - 有有效鏈結才畫線
-   - 刪除中間足跡後不跨斷點連線
+   📍 足跡數
+   🚗 有效移動
+   🕐 第一筆
+   🕐 最後一筆
+   🏷️ 類型統計
 
-3. 每日移動距離
-   - 只加總有效鏈結
-   - 不會因刪除中間紀錄而產生假的直線距離
 
-4. 新增足跡
-   - 一般紀錄會建立 previousRecordId
-   - 快速紀錄也會建立 previousRecordId
+【保留 V4.6.2 鏈結邏輯】
 
-5. 舊資料安全相容
-   - V4.6.1 以前沒有 previousRecordId
-   - 不會自動猜測舊紀錄的前一站
-   - linkTracked = false
-   - 避免建立錯誤歷史關係
+- previousRecordId
+- linkTracked
+- 刪除中間紀錄不重新接線
+- 前一站已刪除警告
+- 地圖不跨斷點
+- 每日有效移動只算有效鏈結
+- 舊版紀錄不猜測前一站
+- 舊版紀錄不顯示「前一站未知」
 
-【V4.6.1 功能全部保留】
-
-- 新增 / 切換 / 刪除旅程
-- 刪除旅程足跡自動移到未分類
-- 搬移足跡旅程
-- Map → Record
-- Record → Map
-- 足跡類型
-- GPS
-- Nominatim
-- Overpass
-- 快速紀錄
-- 時區 / GMT
-- 日期分組
-- 編輯 / 刪除
-- CSV / JSON
-- 舊資料匯入
 
 Storage Key : travelFootprints
 Trips Key   : travelFootprintTrips
-Version     : V4.6.2
+Version     : V4.7
 =============================================================
 -->
 
@@ -101,7 +69,7 @@ Version     : V4.6.2
 >
 
 <title>
-  我的旅遊足跡 V4.6.2
+  我的旅遊足跡 V4.7
 </title>
 
 <link
@@ -804,12 +772,6 @@ button:disabled {
   font-weight: 600;
 }
 
-
-/*
-  V4.6.2：
-  真正前一站已被刪除
-*/
-
 .record-link-warning {
   display: inline-block;
 
@@ -832,11 +794,11 @@ button:disabled {
 
 
 /*
-  舊版紀錄沒有 previousRecordId。
-  不猜測、不顯示假的前一站距離。
+  V4.7
+  至下一筆紀錄時間
 */
 
-.record-link-legacy {
+.record-next-time {
   display: inline-block;
 
   margin-top: 5px;
@@ -845,13 +807,15 @@ button:disabled {
 
   padding: 3px 7px;
 
-  background: #f2f2f2;
+  background: #f3efff;
 
-  color: #777;
+  color: #6842a8;
 
   border-radius: 7px;
 
   font-size: 12px;
+
+  font-weight: 600;
 }
 
 
@@ -949,12 +913,47 @@ button:disabled {
 }
 
 .day-summary {
-  margin-top: 5px;
+  margin-top: 7px;
 
   font-size: 13px;
 
   color: #666;
+
+  line-height: 1.8;
 }
+
+
+/*
+  V4.7
+  類型摘要
+*/
+
+.day-type-summary {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  margin-top: 7px;
+}
+
+.day-type-chip {
+  display: inline-block;
+
+  padding: 3px 7px;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  border: 1px solid #e1e4e8;
+
+  font-size: 12px;
+
+  color: #555;
+}
+
 
 .record {
   padding: 15px 8px;
@@ -1284,7 +1283,7 @@ button:disabled {
   🌏 我的旅遊足跡
 
   <span class="version-badge">
-    V4.6.2
+    V4.7
   </span>
 </h1>
 
@@ -1501,7 +1500,6 @@ button:disabled {
     </div>
 
   </div>
-  
     <div
     class="nearby-section"
     id="nearbySection"
@@ -1530,10 +1528,6 @@ button:disabled {
 
   </div>
 
-
-  <!-- =====================================================
-       TYPE
-  ====================================================== -->
 
   <label>
     🏷️ 足跡類型
@@ -1686,7 +1680,6 @@ button:disabled {
 
     </div>
 
-
     <div class="stat">
 
       <div
@@ -1701,7 +1694,6 @@ button:disabled {
       </div>
 
     </div>
-
 
     <div class="stat">
 
@@ -1732,7 +1724,6 @@ button:disabled {
   <div class="section-title">
     🕐 足跡時間軸
   </div>
-
 
   <div class="filter-box">
 
@@ -1801,7 +1792,6 @@ button:disabled {
 
   </div>
 
-
   <button
     class="btn-orange"
     type="button"
@@ -1823,8 +1813,7 @@ button:disabled {
   >
 
   <div class="small-note">
-    支援舊版足跡備份。
-    V4.6.1 以前的紀錄不會自動猜測前一站。
+    支援舊版足跡備份；舊資料不會自動猜測前一站。
   </div>
 
   <br>
@@ -1862,7 +1851,6 @@ button:disabled {
       id="editRecordId"
     >
 
-
     <label>
       旅程
     </label>
@@ -1871,7 +1859,6 @@ button:disabled {
       id="editTrip"
     >
     </select>
-
 
     <label>
       足跡類型
@@ -1915,7 +1902,6 @@ button:disabled {
 
     </select>
 
-
     <label>
       地點名稱
     </label>
@@ -1925,7 +1911,6 @@ button:disabled {
       id="editPlace"
     >
 
-
     <label>
       日期
     </label>
@@ -1934,7 +1919,6 @@ button:disabled {
       type="date"
       id="editDate"
     >
-
 
     <label>
       時間
@@ -1946,7 +1930,6 @@ button:disabled {
       step="1"
     >
 
-
     <label>
       備註
     </label>
@@ -1954,7 +1937,6 @@ button:disabled {
     <textarea
       id="editNote"
     ></textarea>
-
 
     <div class="gps-info">
 
@@ -1967,7 +1949,6 @@ button:disabled {
       </div>
 
     </div>
-
 
     <div class="modal-actions">
 
@@ -2009,7 +1990,6 @@ button:disabled {
       🧳 新增旅程
     </div>
 
-
     <label>
       旅程名稱
     </label>
@@ -2019,7 +1999,6 @@ button:disabled {
       id="newTripName"
       placeholder="例如：2026 東北賞楓"
     >
-
 
     <div class="modal-actions">
 
@@ -2116,7 +2095,6 @@ button:disabled {
   src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 ></script>
 
-
 <script>
 
 /* =========================================================
@@ -2130,7 +2108,6 @@ let currentAccuracy = null;
 let currentMarker = null;
 
 let recordMarkers = [];
-
 let routeLayers = [];
 
 let markerByRecordId =
@@ -2478,7 +2455,7 @@ function getCurrentTrip() {
 
 
 /* =========================================================
-   RENDER TRIP SELECTORS
+   RENDER TRIPS
 ========================================================= */
 
 function renderTripSelectors() {
@@ -2488,7 +2465,6 @@ function renderTripSelectors() {
 
   const currentId =
     getCurrentTripId();
-
 
   const tripSelect =
     document.getElementById(
@@ -2613,6 +2589,7 @@ function renderTripSelectors() {
   const currentTrip =
     getCurrentTrip();
 
+
   document
     .getElementById(
       "currentTripText"
@@ -2622,12 +2599,11 @@ function renderTripSelectors() {
     currentTrip.name;
 
 
-  const deleteTripButton =
-    document.getElementById(
+  document
+    .getElementById(
       "deleteTripButton"
-    );
-
-  deleteTripButton.disabled =
+    )
+    .disabled =
     currentTrip.id ===
     "default";
 
@@ -2635,7 +2611,7 @@ function renderTripSelectors() {
 
 
 /* =========================================================
-   CHANGE CURRENT TRIP
+   CHANGE TRIP
 ========================================================= */
 
 function changeCurrentTrip() {
@@ -2660,10 +2636,6 @@ function changeCurrentTrip() {
 
 }
 
-
-/* =========================================================
-   TRIP FILTER
-========================================================= */
 
 function changeTripFilter() {
 
@@ -2773,8 +2745,10 @@ async function createTrip() {
 
   }
 
+
   const trips =
     getTrips();
+
 
   const exists =
     trips.some(
@@ -2785,6 +2759,7 @@ async function createTrip() {
         name
           .toLocaleLowerCase()
     );
+
 
   if (
     exists
@@ -2810,6 +2785,7 @@ async function createTrip() {
 
   }
 
+
   const trip = {
 
     id:
@@ -2820,21 +2796,26 @@ async function createTrip() {
 
   };
 
+
   trips.push(
     trip
   );
+
 
   saveTrips(
     trips
   );
 
+
   setCurrentTripId(
     trip.id
   );
 
+
   closeTripModal();
 
   renderTripSelectors();
+
 
   showToast(
     "✅ 已建立旅程：" +
@@ -2845,7 +2826,7 @@ async function createTrip() {
 
 
 /* =========================================================
-   DELETE CURRENT TRIP
+   DELETE TRIP
 ========================================================= */
 
 async function deleteCurrentTrip() {
@@ -2862,8 +2843,10 @@ async function deleteCurrentTrip() {
 
   }
 
+
   const records =
     getRecords();
+
 
   const tripRecords =
     records.filter(
@@ -2934,17 +2917,6 @@ async function deleteCurrentTrip() {
 
   }
 
-
-  /*
-    足跡搬到 default。
-
-    V4.6.2：
-    previousRecordId 不改。
-
-    原因：
-    刪除旅程不代表刪除足跡，
-    足跡的歷史鏈結仍然存在。
-  */
 
   const updatedRecords =
     records.map(
@@ -3056,6 +3028,7 @@ function generateRecordId() {
 
   }
 
+
   return (
 
     Date.now() +
@@ -3070,8 +3043,7 @@ function generateRecordId() {
 
 
 /* =========================================================
-   NORMALIZE RECORDS
-   V4.6.2
+   NORMALIZE
 ========================================================= */
 
 function normalizeRecords(
@@ -3087,10 +3059,6 @@ function normalizeRecords(
 
   records.forEach(
     record => {
-
-      /*
-        ID
-      */
 
       let id =
         record.id !== undefined &&
@@ -3130,10 +3098,6 @@ function normalizeRecords(
       );
 
 
-      /*
-        Trip
-      */
-
       if (
         !record.tripId
       ) {
@@ -3160,10 +3124,6 @@ function normalizeRecords(
       }
 
 
-      /*
-        Type
-      */
-
       if (
         !record.type ||
         !TYPE_INFO[
@@ -3180,17 +3140,6 @@ function normalizeRecords(
       }
 
 
-      /*
-        V4.6.2 LINK MIGRATION
-
-        舊版沒有 linkTracked。
-
-        不可以根據時間排序
-        自動幫它猜 previousRecordId。
-
-        因為舊資料可能曾經刪除過紀錄。
-      */
-
       if (
         typeof record.linkTracked !==
         "boolean"
@@ -3204,15 +3153,6 @@ function normalizeRecords(
 
       }
 
-
-      /*
-        舊資料若沒有 previousRecordId，
-        統一用 null。
-
-        注意：
-        null 不代表「第一筆」，
-        必須搭配 linkTracked 判斷。
-      */
 
       if (
         !Object.prototype.hasOwnProperty.call(
@@ -3248,11 +3188,8 @@ function normalizeRecords(
 
   return {
 
-    records:
-      records,
-
-    changed:
-      changed
+    records,
+    changed
 
   };
 
@@ -3355,15 +3292,7 @@ function saveRecords(
 
 /* =========================================================
    LINK HELPERS
-   V4.6.2
 ========================================================= */
-
-
-/*
-  找某個旅程目前最後一筆紀錄。
-
-  新紀錄加入時只接「同一旅程」的最後一筆。
-*/
 
 function getLastRecordOfTrip(
   tripId
@@ -3411,14 +3340,6 @@ function getLastRecordOfTrip(
 }
 
 
-/*
-  建立新紀錄時使用。
-
-  回傳：
-    previousRecordId
-    linkTracked
-*/
-
 function createLinkForNewRecord(
   tripId
 ) {
@@ -3432,16 +3353,6 @@ function createLinkForNewRecord(
   if (
     !previousRecord
   ) {
-
-    /*
-      這是此旅程第一筆。
-
-      linkTracked=true
-      previousRecordId=null
-
-      代表：
-      「我們確定它就是第一筆」
-    */
 
     return {
 
@@ -3471,22 +3382,10 @@ function createLinkForNewRecord(
 }
 
 
-/*
-  找真正的前一筆。
-
-  重要：
-  previousRecordId 有值，
-  但該 ID 已不存在 → deleted
-*/
-
 function getPreviousLinkState(
   record,
   allRecords
 ) {
-
-  /*
-    舊版紀錄
-  */
 
   if (
     record.linkTracked !==
@@ -3505,10 +3404,6 @@ function getPreviousLinkState(
 
   }
 
-
-  /*
-    V4.6.2 建立的第一筆
-  */
 
   if (
     record.previousRecordId ===
@@ -3574,27 +3469,54 @@ function getPreviousLinkState(
 }
 
 
-/*
-  取得「有效鏈結」距離。
+/* =========================================================
+   V4.7 NEXT RECORD
+========================================================= */
 
-  無有效鏈結就回 null。
+/*
+  找真正以目前紀錄為 previousRecordId 的下一筆。
+
+  不使用單純時間排序猜測，
+  所以中間有斷鏈時不會產生假的停留時間。
 */
 
-function getLinkedDistanceKm(
+function getNextLinkedRecord(
   record,
   allRecords
 ) {
 
-  const link =
-    getPreviousLinkState(
-      record,
-      allRecords
-    );
+  const children =
+    allRecords
+      .filter(
+        item =>
+
+          item.linkTracked ===
+          true &&
+
+          String(
+            item.previousRecordId
+          ) ===
+          String(
+            record.id
+          )
+      )
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          new Date(
+            a.timestamp
+          ) -
+          new Date(
+            b.timestamp
+          )
+      );
 
 
   if (
-    link.state !==
-    "valid"
+    children.length ===
+    0
   ) {
 
     return null;
@@ -3602,25 +3524,145 @@ function getLinkedDistanceKm(
   }
 
 
-  return calculateDistanceKm(
+  return children[0];
 
-    Number(
-      link.previous.latitude
-    ),
+}
 
-    Number(
-      link.previous.longitude
-    ),
 
-    Number(
-      record.latitude
-    ),
+/* =========================================================
+   V4.7 DURATION
+========================================================= */
 
-    Number(
-      record.longitude
-    )
+function formatDuration(
+  milliseconds
+) {
+
+  let totalMinutes =
+    Math.round(
+      milliseconds /
+      60000
+    );
+
+
+  if (
+    totalMinutes < 0
+  ) {
+
+    return "";
+
+  }
+
+
+  if (
+    totalMinutes < 60
+  ) {
+
+    return (
+      totalMinutes +
+      " 分鐘"
+    );
+
+  }
+
+
+  const hours =
+    Math.floor(
+      totalMinutes /
+      60
+    );
+
+
+  const minutes =
+    totalMinutes %
+    60;
+
+
+  if (
+    minutes ===
+    0
+  ) {
+
+    return (
+      hours +
+      " 小時"
+    );
+
+  }
+
+
+  return (
+
+    hours +
+    " 小時 " +
+    minutes +
+    " 分鐘"
 
   );
+
+}
+
+
+function getTimeToNextLinkedRecord(
+  record,
+  allRecords
+) {
+
+  const next =
+    getNextLinkedRecord(
+      record,
+      allRecords
+    );
+
+
+  if (
+    !next
+  ) {
+
+    return null;
+
+  }
+
+
+  const currentTime =
+    new Date(
+      record.timestamp
+    );
+
+
+  const nextTime =
+    new Date(
+      next.timestamp
+    );
+
+
+  const diff =
+    nextTime -
+    currentTime;
+
+
+  if (
+    diff < 0
+  ) {
+
+    return null;
+
+  }
+
+
+  return {
+
+    next:
+      next,
+
+    milliseconds:
+      diff,
+
+    text:
+      formatDuration(
+        diff
+      )
+
+  };
 
 }
 
@@ -3842,7 +3884,6 @@ function showDialog({
   );
 
 }
-
 /* =========================================================
    TIMEZONE
 ========================================================= */
@@ -3893,8 +3934,10 @@ function getGMTOffset(
   const minutes =
     absoluteMinutes % 60;
 
+
   if (
-    minutes === 0
+    minutes ===
+    0
   ) {
 
     return (
@@ -3904,6 +3947,7 @@ function getGMTOffset(
     );
 
   }
+
 
   return (
 
@@ -3951,6 +3995,7 @@ function updateCurrentTimeDisplay() {
       now
     );
 
+
   document
     .getElementById(
       "currentTimeZone"
@@ -3958,12 +4003,14 @@ function updateCurrentTimeDisplay() {
     .textContent =
     timeZone;
 
+
   document
     .getElementById(
       "currentGMT"
     )
     .textContent =
     gmt;
+
 
   document
     .getElementById(
@@ -3973,6 +4020,7 @@ function updateCurrentTimeDisplay() {
     timeZone +
     " · " +
     gmt;
+
 
   document
     .getElementById(
@@ -4007,6 +4055,7 @@ function updateCurrentTimeDisplay() {
       }
     );
 
+
   document
     .getElementById(
       "todayText"
@@ -4033,7 +4082,9 @@ function updateCurrentTimeDisplay() {
 
 }
 
+
 updateCurrentTimeDisplay();
+
 
 setInterval(
   updateCurrentTimeDisplay,
@@ -4086,6 +4137,7 @@ function resetLookupUI() {
   placeNameSource =
     "auto";
 
+
   document
     .getElementById(
       "placeName"
@@ -4093,9 +4145,11 @@ function resetLookupUI() {
     .value =
     "";
 
+
   selectType(
     "other"
   );
+
 
   document
     .getElementById(
@@ -4106,12 +4160,14 @@ function resetLookupUI() {
       "show"
     );
 
+
   document
     .getElementById(
       "nameLookupStatus"
     )
     .textContent =
     "自動地名：搜尋中...";
+
 
   document
     .getElementById(
@@ -4120,20 +4176,24 @@ function resetLookupUI() {
     .textContent =
     "附近地點：搜尋中...";
 
+
   const nearbySection =
     document.getElementById(
       "nearbySection"
     );
+
 
   const nearbyList =
     document.getElementById(
       "nearbyList"
     );
 
+
   const nearbyLoading =
     document.getElementById(
       "nearbyLoading"
     );
+
 
   nearbySection
     .classList
@@ -4141,11 +4201,14 @@ function resetLookupUI() {
       "show"
     );
 
+
   nearbyList.innerHTML =
     "";
 
+
   nearbyLoading.style.display =
     "block";
+
 
   nearbyLoading.textContent =
     "正在搜尋附近地點...";
@@ -4164,10 +4227,12 @@ function getCurrentLocation() {
       "gpsStatus"
     );
 
+
   const button =
     document.getElementById(
       "locationButton"
     );
+
 
   if (
     !navigator.geolocation
@@ -4180,14 +4245,18 @@ function getCurrentLocation() {
 
   }
 
+
   const lookupId =
     ++locationLookupSequence;
+
 
   button.disabled =
     true;
 
+
   button.textContent =
     "📡 正在取得 GPS...";
+
 
   status.textContent =
     "📡 正在取得 GPS 位置...";
@@ -4210,15 +4279,18 @@ function getCurrentLocation() {
 
         }
 
+
         currentLat =
           position
             .coords
             .latitude;
 
+
         currentLng =
           position
             .coords
             .longitude;
+
 
         currentAccuracy =
           position
@@ -4235,6 +4307,7 @@ function getCurrentLocation() {
             6
           );
 
+
         document
           .getElementById(
             "lng"
@@ -4243,6 +4316,7 @@ function getCurrentLocation() {
           currentLng.toFixed(
             6
           );
+
 
         document
           .getElementById(
@@ -4326,6 +4400,7 @@ function getCurrentLocation() {
               button.disabled =
                 false;
 
+
               button.textContent =
                 "📡 重新取得目前 GPS";
 
@@ -4350,8 +4425,10 @@ function getCurrentLocation() {
 
         }
 
+
         button.disabled =
           false;
+
 
         button.textContent =
           "📡 重新取得目前 GPS";
@@ -4368,6 +4445,7 @@ function getCurrentLocation() {
 
             break;
 
+
           case error.POSITION_UNAVAILABLE:
 
             status.textContent =
@@ -4375,12 +4453,14 @@ function getCurrentLocation() {
 
             break;
 
+
           case error.TIMEOUT:
 
             status.textContent =
               "❌ GPS 定位逾時。";
 
             break;
+
 
           default:
 
@@ -4425,13 +4505,16 @@ async function lookupAutomaticPlaceName(
       "nameLookupStatus"
     );
 
+
   const input =
     document.getElementById(
       "placeName"
     );
 
+
   const controller =
     new AbortController();
+
 
   const timer =
     setTimeout(
@@ -4442,6 +4525,7 @@ async function lookupAutomaticPlaceName(
       },
       NOMINATIM_TIMEOUT_MS
     );
+
 
   const url =
     "https://nominatim.openstreetmap.org/reverse" +
@@ -4504,6 +4588,7 @@ async function lookupAutomaticPlaceName(
     const data =
       await response.json();
 
+
     const address =
       data.address ||
       {};
@@ -4565,6 +4650,7 @@ async function lookupAutomaticPlaceName(
         input.value =
           name;
 
+
         placeNameSource =
           "auto";
 
@@ -4593,6 +4679,7 @@ async function lookupAutomaticPlaceName(
       return;
 
     }
+
 
     status.textContent =
       "自動地名：⚠️ 暫時無法取得";
@@ -4672,6 +4759,7 @@ async function searchNearbyPlaces(
       lng
     );
 
+
   let lastError =
     null;
 
@@ -4686,6 +4774,7 @@ async function searchNearbyPlaces(
       const controller =
         new AbortController();
 
+
       const timer =
         setTimeout(
           () => {
@@ -4695,6 +4784,7 @@ async function searchNearbyPlaces(
           },
           OVERPASS_TIMEOUT_MS
         );
+
 
       let response;
 
@@ -4800,6 +4890,7 @@ async function lookupNearbyPlaces(
       "poiLookupStatus"
     );
 
+
   const loading =
     document.getElementById(
       "nearbyLoading"
@@ -4837,6 +4928,7 @@ async function lookupNearbyPlaces(
       status.textContent =
         "附近地點：⚠️ 500m 內找不到資料";
 
+
       document
         .getElementById(
           "nearbyList"
@@ -4857,6 +4949,7 @@ async function lookupNearbyPlaces(
           </div>
 
         `;
+
 
       return;
 
@@ -4888,11 +4981,14 @@ async function lookupNearbyPlaces(
 
     }
 
+
     status.textContent =
       "附近地點：⚠️ 暫時無法取得";
 
+
     loading.style.display =
       "block";
+
 
     loading.textContent =
       "⚠️ 附近地點暫時無法取得，可直接使用自動地名或手動輸入。";
@@ -4952,6 +5048,7 @@ function parseNearbyPlaces(
     let placeLat =
       element.lat;
 
+
     let placeLng =
       element.lon;
 
@@ -4962,6 +5059,7 @@ function parseNearbyPlaces(
 
       placeLat =
         element.center.lat;
+
 
       placeLng =
         element.center.lon;
@@ -5207,6 +5305,7 @@ function inferFootprintType(
 
     }
 
+
     return "shopping";
 
   }
@@ -5230,6 +5329,7 @@ function placeTypeText(
       place.type
     );
 
+
   return (
     info.icon +
     " " +
@@ -5252,6 +5352,7 @@ function renderNearbyPlaces(
       "nearbyList"
     );
 
+
   list.innerHTML =
     "";
 
@@ -5263,6 +5364,7 @@ function renderNearbyPlaces(
         document.createElement(
           "div"
         );
+
 
       wrapper.className =
         "nearby-item";
@@ -5428,15 +5530,18 @@ function calculateDistanceMeters(
   const earthRadius =
     6371000;
 
+
   const p1 =
     lat1 *
     Math.PI /
     180;
 
+
   const p2 =
     lat2 *
     Math.PI /
     180;
+
 
   const deltaP =
     (
@@ -5445,6 +5550,7 @@ function calculateDistanceMeters(
     ) *
     Math.PI /
     180;
+
 
   const deltaL =
     (
@@ -5675,7 +5781,6 @@ function checkDuplicateRecord(
 
 /* =========================================================
    QUICK SAVE
-   V4.6.2 LINK
 ========================================================= */
 
 async function quickSaveNearby(
@@ -5694,6 +5799,7 @@ async function quickSaveNearby(
 
   const trip =
     getCurrentTrip();
+
 
   const now =
     new Date();
@@ -5766,11 +5872,6 @@ async function quickSaveNearby(
     getCurrentTimeZone();
 
 
-  /*
-    V4.6.2
-    建立真正前一筆鏈結。
-  */
-
   const link =
     createLinkForNewRecord(
       trip.id
@@ -5839,6 +5940,7 @@ async function quickSaveNearby(
   const records =
     getRecords();
 
+
   records.push(
     record
   );
@@ -5864,7 +5966,6 @@ async function quickSaveNearby(
 
 /* =========================================================
    SAVE NORMAL RECORD
-   V4.6.2 LINK
 ========================================================= */
 
 async function saveLocation() {
@@ -5889,6 +5990,7 @@ async function saveLocation() {
         false
 
     });
+
 
     return;
 
@@ -5987,14 +6089,6 @@ async function saveLocation() {
   const timeZone =
     getCurrentTimeZone();
 
-
-  /*
-    V4.6.2
-    只在新增當下建立 previousRecordId。
-
-    之後就算前一筆被刪除，
-    也不會重算成別筆。
-  */
 
   const link =
     createLinkForNewRecord(
@@ -6105,6 +6199,7 @@ async function saveLocation() {
   );
 
 }
+
 /* =========================================================
    DATE / TIME
 ========================================================= */
@@ -6175,6 +6270,7 @@ function formatRecordTime(
     record.timeZone ||
     getCurrentTimeZone();
 
+
   return date
     .toLocaleTimeString(
       "zh-TW",
@@ -6211,6 +6307,7 @@ function getRecordDateKey(
     record.timeZone ||
     getCurrentTimeZone();
 
+
   const parts =
     new Intl.DateTimeFormat(
       "en-CA",
@@ -6234,8 +6331,10 @@ function getRecordDateKey(
       date
     );
 
+
   const values =
     {};
+
 
   parts.forEach(
     part => {
@@ -6247,6 +6346,7 @@ function getRecordDateKey(
 
     }
   );
+
 
   return (
 
@@ -6305,6 +6405,7 @@ function groupRecordsByDay(
   const groups =
     {};
 
+
   records.forEach(
     record => {
 
@@ -6312,6 +6413,7 @@ function groupRecordsByDay(
         getRecordDateKey(
           record
         );
+
 
       if (
         !groups[
@@ -6326,6 +6428,7 @@ function groupRecordsByDay(
 
       }
 
+
       groups[
         key
       ].push(
@@ -6334,6 +6437,7 @@ function groupRecordsByDay(
 
     }
   );
+
 
   return groups;
 
@@ -6348,6 +6452,7 @@ function getTripFilteredRecords() {
 
   let records =
     getRecords();
+
 
   if (
     currentTripFilter !==
@@ -6367,6 +6472,7 @@ function getTripFilteredRecords() {
 
   }
 
+
   return records;
 
 }
@@ -6376,6 +6482,7 @@ function getDisplayRecords() {
 
   let records =
     getTripFilteredRecords();
+
 
   if (
     currentDateFilter !==
@@ -6393,6 +6500,7 @@ function getDisplayRecords() {
 
   }
 
+
   return records;
 
 }
@@ -6409,8 +6517,10 @@ function updateDateFilterOptions() {
       "dateFilter"
     );
 
+
   const records =
     getTripFilteredRecords();
+
 
   const keys =
     [
@@ -6425,8 +6535,10 @@ function updateDateFilterOptions() {
     .sort()
     .reverse();
 
+
   select.innerHTML =
     '<option value="all">全部日期</option>';
+
 
   keys.forEach(
     key => {
@@ -6436,8 +6548,10 @@ function updateDateFilterOptions() {
           "option"
         );
 
+
       option.value =
         key;
+
 
       option.textContent =
         key.replaceAll(
@@ -6445,12 +6559,14 @@ function updateDateFilterOptions() {
           "/"
         );
 
+
       select.appendChild(
         option
       );
 
     }
   );
+
 
   if (
     currentDateFilter !==
@@ -6470,6 +6586,7 @@ function updateDateFilterOptions() {
     currentDateFilter =
       "all";
 
+
     select.value =
       "all";
 
@@ -6487,6 +6604,7 @@ function changeDateFilter() {
       )
       .value;
 
+
   renderRecords();
 
 }
@@ -6502,6 +6620,7 @@ function scrollToRecord(
 
   let target =
     null;
+
 
   document
     .querySelectorAll(
@@ -6527,6 +6646,7 @@ function scrollToRecord(
       }
     );
 
+
   if (
     !target
   ) {
@@ -6534,6 +6654,7 @@ function scrollToRecord(
     return;
 
   }
+
 
   target.scrollIntoView({
 
@@ -6545,11 +6666,13 @@ function scrollToRecord(
 
   });
 
+
   target
     .classList
     .add(
       "record-highlight"
     );
+
 
   setTimeout(
     () => {
@@ -6582,6 +6705,7 @@ function focusRecordOnMap(
       )
     );
 
+
   if (
     !marker
   ) {
@@ -6590,10 +6714,12 @@ function focusRecordOnMap(
 
   }
 
+
   const mapElement =
     document.getElementById(
       "map"
     );
+
 
   mapElement.scrollIntoView({
 
@@ -6605,10 +6731,12 @@ function focusRecordOnMap(
 
   });
 
+
   setTimeout(
     () => {
 
       map.invalidateSize();
+
 
       map.setView(
         marker.getLatLng(),
@@ -6618,6 +6746,7 @@ function focusRecordOnMap(
             true
         }
       );
+
 
       marker.openPopup();
 
@@ -6629,7 +6758,7 @@ function focusRecordOnMap(
 
 
 /* =========================================================
-   DAY LINK DISTANCE
+   VALID DAY DISTANCE
 ========================================================= */
 
 function calculateTrackedDayDistance(
@@ -6639,6 +6768,7 @@ function calculateTrackedDayDistance(
 
   let total =
     0;
+
 
   const dayIds =
     new Set(
@@ -6650,6 +6780,7 @@ function calculateTrackedDayDistance(
       )
     );
 
+
   dayRecords.forEach(
     record => {
 
@@ -6658,6 +6789,7 @@ function calculateTrackedDayDistance(
           record,
           allRecords
         );
+
 
       if (
         link.state !==
@@ -6668,12 +6800,6 @@ function calculateTrackedDayDistance(
 
       }
 
-      /*
-        每日統計只算同一天內的鏈結。
-
-        如果前一筆是昨天，
-        不算進今天的每日移動。
-      */
 
       if (
         !dayIds.has(
@@ -6686,6 +6812,7 @@ function calculateTrackedDayDistance(
         return;
 
       }
+
 
       total +=
         calculateDistanceKm(
@@ -6711,7 +6838,129 @@ function calculateTrackedDayDistance(
     }
   );
 
+
   return total;
+
+}
+
+
+/* =========================================================
+   DAILY TYPE SUMMARY
+========================================================= */
+
+function getDailyTypeSummary(
+  dayRecords
+) {
+
+  const counts =
+    {};
+
+
+  dayRecords.forEach(
+    record => {
+
+      const type =
+        TYPE_INFO[
+          record.type
+        ]
+          ? record.type
+          : "other";
+
+
+      counts[
+        type
+      ] =
+      (
+        counts[
+          type
+        ] ||
+        0
+      ) +
+      1;
+
+    }
+  );
+
+
+  return Object
+    .entries(
+      counts
+    )
+    .sort(
+      (
+        a,
+        b
+      ) =>
+        b[1] -
+        a[1]
+    )
+    .map(
+      (
+        [
+          type,
+          count
+        ]
+      ) => {
+
+        const info =
+          getTypeInfo(
+            type
+          );
+
+
+        return {
+
+          type:
+            type,
+
+          icon:
+            info.icon,
+
+          label:
+            info.label,
+
+          count:
+            count
+
+        };
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   DAILY SUMMARY HTML
+========================================================= */
+
+function buildDailyTypeSummaryHTML(
+  dayRecords
+) {
+
+  const summary =
+    getDailyTypeSummary(
+      dayRecords
+    );
+
+
+  return summary
+    .map(
+      item => `
+
+        <span class="day-type-chip">
+
+          ${item.icon}
+          ${escapeHTML(
+            item.label
+          )}
+          ${item.count}
+
+        </span>
+
+      `
+    )
+    .join("");
 
 }
 
@@ -6737,6 +6986,7 @@ function renderRecords() {
           )
       );
 
+
   const tripRecords =
     getTripFilteredRecords()
       .sort(
@@ -6752,10 +7002,12 @@ function renderRecords() {
           )
       );
 
+
   updateStats(
     tripRecords,
     allRecords
   );
+
 
   const displayRecords =
     getDisplayRecords()
@@ -6772,16 +7024,19 @@ function renderRecords() {
           )
       );
 
+
   const list =
     document.getElementById(
       "recordList"
     );
 
+
   list.innerHTML =
     "";
 
+
   /*
-    清 Marker
+    清除 Marker
   */
 
   recordMarkers.forEach(
@@ -6794,14 +7049,16 @@ function renderRecords() {
     }
   );
 
+
   recordMarkers =
     [];
+
 
   markerByRecordId.clear();
 
 
   /*
-    清 route segments
+    清除路線
   */
 
   routeLayers.forEach(
@@ -6814,6 +7071,7 @@ function renderRecords() {
     }
   );
 
+
   routeLayers =
     [];
 
@@ -6825,6 +7083,7 @@ function renderRecords() {
 
     list.innerHTML =
       '<div class="empty">目前沒有符合條件的足跡</div>';
+
 
     return;
 
@@ -6846,6 +7105,7 @@ function renderRecords() {
     groupRecordsByDay(
       displayRecords
     );
+
 
   const dateKeys =
     Object
@@ -6887,10 +7147,29 @@ function renderRecords() {
         );
 
 
+      const firstRecord =
+        dayRecords[
+          0
+        ];
+
+
+      const lastRecord =
+        dayRecords[
+          dayRecords.length - 1
+        ];
+
+
+      const typeSummaryHTML =
+        buildDailyTypeSummaryHTML(
+          dayRecords
+        );
+
+
       const dayGroup =
         document.createElement(
           "div"
         );
+
 
       dayGroup.className =
         "day-group";
@@ -6900,6 +7179,7 @@ function renderRecords() {
         document.createElement(
           "div"
         );
+
 
       header.className =
         "day-header";
@@ -6912,7 +7192,7 @@ function renderRecords() {
           📅
           ${escapeHTML(
             formatDayTitle(
-              dayRecords[0]
+              firstRecord
             )
           )}
 
@@ -6927,10 +7207,30 @@ function renderRecords() {
           ・
 
           🚗
-          有效移動約
+          有效移動
           ${formatDistance(
             dayDistance
           )}
+
+          <br>
+
+          🕐 第一筆
+          ${formatRecordTime(
+            firstRecord
+          )}
+
+          ・
+
+          最後一筆
+          ${formatRecordTime(
+            lastRecord
+          )}
+
+        </div>
+
+        <div class="day-type-summary">
+
+          ${typeSummaryHTML}
 
         </div>
 
@@ -6980,6 +7280,10 @@ function renderRecords() {
             "";
 
 
+          /*
+            真正前一站存在
+          */
+
           if (
             link.state ===
             "valid"
@@ -7023,6 +7327,10 @@ function renderRecords() {
           }
 
 
+          /*
+            真正前一站已被刪除
+          */
+
           else if (
             link.state ===
             "deleted"
@@ -7039,22 +7347,43 @@ function renderRecords() {
             `;
 
           }
-          
-          else if (
-  link.state ===
-  "legacy"
-) {
-
-  linkBadge =
-    "";
-
-}
-          
 
 
-    
+          /*
+            V4.7
+            找真正的下一筆紀錄。
+          */
 
-          
+          const nextInfo =
+            getTimeToNextLinkedRecord(
+              record,
+              allRecords
+            );
+
+
+          let nextTimeBadge =
+            "";
+
+
+          if (
+            nextInfo &&
+            nextInfo.text
+          ) {
+
+            nextTimeBadge = `
+
+              <span class="record-next-time">
+
+                ⏱ 至下一筆紀錄
+                ${escapeHTML(
+                  nextInfo.text
+                )}
+
+              </span>
+
+            `;
+
+          }
 
 
           const div =
@@ -7175,6 +7504,8 @@ function renderRecords() {
 
               ${linkBadge}
 
+              ${nextTimeBadge}
+
             </div>
 
 
@@ -7203,6 +7534,10 @@ function renderRecords() {
           `;
 
 
+          /*
+            Record → Map
+          */
+
           div
             .querySelectorAll(
               '[data-action="focus"]'
@@ -7225,6 +7560,10 @@ function renderRecords() {
             );
 
 
+          /*
+            Edit
+          */
+
           div
             .querySelector(
               '[data-action="edit"]'
@@ -7235,6 +7574,7 @@ function renderRecords() {
 
                 event.stopPropagation();
 
+
                 openEditModal(
                   record.id
                 );
@@ -7242,6 +7582,10 @@ function renderRecords() {
               }
             );
 
+
+          /*
+            Delete
+          */
 
           div
             .querySelector(
@@ -7252,6 +7596,7 @@ function renderRecords() {
               event => {
 
                 event.stopPropagation();
+
 
                 deleteRecord(
                   record.id
@@ -7276,6 +7621,7 @@ function renderRecords() {
                 Number(
                   record.latitude
                 ),
+
                 Number(
                   record.longitude
                 )
@@ -7347,23 +7693,21 @@ function renderRecords() {
 
           mapPoints.push(
             [
+
               Number(
                 record.latitude
               ),
+
               Number(
                 record.longitude
               )
+
             ]
           );
 
 
           /*
-            V4.6.2
-            只畫真正存在的鏈結。
-
-            並且目前畫面必須同時顯示
-            current 與 previous，
-            才畫該線段。
+            只畫有效鏈結
           */
 
           if (
@@ -7381,21 +7725,27 @@ function renderRecords() {
                 [
 
                   [
+
                     Number(
                       link.previous.latitude
                     ),
+
                     Number(
                       link.previous.longitude
                     )
+
                   ],
 
                   [
+
                     Number(
                       record.latitude
                     ),
+
                     Number(
                       record.longitude
                     )
+
                   ]
 
                 ],
@@ -7558,14 +7908,16 @@ async function deleteRecord(
   const childCount =
     records.filter(
       record =>
+
+        record.linkTracked ===
+        true &&
+
         String(
           record.previousRecordId
         ) ===
         String(
           target.id
-        ) &&
-        record.linkTracked ===
-        true
+        )
     )
     .length;
 
@@ -7643,10 +7995,7 @@ async function deleteRecord(
 
 
   /*
-    關鍵：
-    不修改其他紀錄的 previousRecordId。
-
-    這樣鏈結才真正保持斷裂。
+    不修改其他紀錄的 previousRecordId
   */
 
   saveRecords(
@@ -7812,7 +8161,7 @@ function closeEditModal() {
 
 
 /* =========================================================
-   EDIT DATE/TIME
+   EDIT DATE / TIME
 ========================================================= */
 
 function getEditableDateTimeParts(
@@ -7898,7 +8247,7 @@ function getEditableDateTimeParts(
 
 
 /* =========================================================
-   LOCAL → UTC
+   LOCAL TIME → UTC
 ========================================================= */
 
 function localDateTimeToUTC(
@@ -8140,6 +8489,7 @@ async function saveEditedRecord() {
 
     });
 
+
     return;
 
   }
@@ -8234,12 +8584,8 @@ async function saveEditedRecord() {
 
 
   /*
-    如果只是改名稱 / 類型 / 時間，
-    保留原有 previousRecordId。
-
-    如果跨旅程搬移：
-    舊鏈結可能已經不屬於同一旅程，
-    安全起見標記為未知，不重新猜測。
+    跨旅程搬移：
+    不猜測新的前一站
   */
 
   if (
@@ -8253,6 +8599,7 @@ async function saveEditedRecord() {
 
     record.previousRecordId =
       null;
+
 
     record.linkTracked =
       false;
@@ -8272,6 +8619,7 @@ async function saveEditedRecord() {
 
 
   closeEditModal();
+
 
   renderTripSelectors();
 
@@ -8375,7 +8723,7 @@ async function clearAllRecords() {
 
 
 /* =========================================================
-   CSV
+   CSV EXPORT
 ========================================================= */
 
 function exportCSV() {
@@ -8457,7 +8805,8 @@ function exportCSV() {
 
         rows.push([
 
-          record.tripName,
+          record.tripName ||
+          "",
 
           typeInfo.label,
 
@@ -8469,13 +8818,17 @@ function exportCSV() {
             record
           ),
 
-          record.place,
+          record.place ||
+          "",
 
-          record.timeZone,
+          record.timeZone ||
+          "",
 
-          record.gmtOffset,
+          record.gmtOffset ||
+          "",
 
-          record.timestamp,
+          record.timestamp ||
+          "",
 
           record.latitude,
 
@@ -8483,7 +8836,8 @@ function exportCSV() {
 
           record.accuracy,
 
-          record.note,
+          record.note ||
+          "",
 
           record.previousRecordId,
 
@@ -8517,7 +8871,7 @@ function exportCSV() {
 
     csv,
 
-    "travel-footprints-v4-6-2.csv",
+    "travel-footprints-v4-7.csv",
 
     "text/csv;charset=utf-8"
 
@@ -8556,7 +8910,7 @@ function exportJSON() {
       "Travel Footprints",
 
     version:
-      "4.6.2",
+      "4.7",
 
     exportedAt:
       new Date()
@@ -8582,7 +8936,7 @@ function exportJSON() {
       2
     ),
 
-    "travel-footprints-v4-6-2.json",
+    "travel-footprints-v4-7.json",
 
     "application/json"
 
@@ -8796,8 +9150,10 @@ function importJSON(
         let importedRecords =
           null;
 
+
         let importedTrips =
           null;
+
 
         let importedCurrentTripId =
           null;
@@ -8814,6 +9170,7 @@ function importJSON(
 
         }
 
+
         else if (
           data &&
           Array.isArray(
@@ -8824,9 +9181,11 @@ function importJSON(
           importedRecords =
             data.records;
 
+
           importedTrips =
             data.trips ||
             null;
+
 
           importedCurrentTripId =
             data.currentTripId ||
@@ -8932,6 +9291,7 @@ function importJSON(
               record.tripId =
                 "default";
 
+
               record.tripName =
                 "未分類旅程";
 
@@ -8967,8 +9327,8 @@ function importJSON(
               importedRecords.length +
               " 筆足跡。\n\n" +
 
-              "舊版紀錄若沒有鏈結資料，" +
-              "會保留為「前一站未知」，不會自動猜測。\n\n" +
+              "舊資料若沒有 previousRecordId，" +
+              "不會自動猜測前一站。\n\n" +
 
               "確定要匯入嗎？",
 
@@ -9062,6 +9422,7 @@ function importJSON(
 
       }
 
+
       catch (
         error
       ) {
@@ -9088,6 +9449,7 @@ function importJSON(
         });
 
       }
+
 
       finally {
 
@@ -9327,6 +9689,7 @@ document
 
         event.preventDefault();
 
+
         createTrip();
 
       }
@@ -9366,6 +9729,7 @@ document.addEventListener(
     ) {
 
       updateCurrentTimeDisplay();
+
 
       map.invalidateSize();
 
