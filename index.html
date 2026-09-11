@@ -2,77 +2,75 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V4.5
+  我的旅遊足跡 V4.6
 =============================================================
 
-【V4.5 主要修改】
+【V4.6 新增功能】
 
-1. 附近地點搜尋核心改採「旅遊美食日誌」已實測成功版本。
+1. 旅程分類
+   每筆足跡新增：
+   - tripId
+   - tripName
 
-2. Overpass 搜尋策略：
-   - 不再使用 3 個節點同時 Race
-   - 不再只等 3 秒就 Abort
-   - Server 1 最多等 18 秒
-   - 失敗才切換 Server 2
-   - 實際若 1~3 秒回來，就立即顯示，不會真的等滿 18 秒
+   可以建立 / 選擇不同旅程，例如：
+   - 2026 東北賞楓
+   - 福岡自由行
+   - 台北一日遊
 
-3. 搜尋半徑：
-   - 500 公尺
+2. 足跡類型
+   每筆足跡新增 type：
 
-4. 搜尋類型：
-   - 餐廳
-   - 咖啡店
-   - 速食
-   - Food Court
-   - 冰品
-   - Bar / Pub
-   - 麵包店
-   - 便利商店
-   - 熟食
-   - 甜點
-   - 咖啡相關商店
-   - 車站
-   - 飯店
-   - 景點
+   attraction   景點
+   restaurant   餐廳
+   hotel        飯店
+   station      車站
+   airport      機場
+   shopping     購物
+   rest         休息
+   other        其他
 
-5. 地點名稱優先順序：
-   - name:zh-Hant
-   - name:zh
-   - name:ja
-   - name
-   - brand
+3. 快速紀錄
+   搜尋附近地點後：
+   - 點「選擇」：只填入地點名稱
+   - 點「快速紀錄」：立即建立足跡
 
-6. 附近地點：
-   - 依 GPS 距離排序
-   - 同名只保留最近的一筆
-   - 最多顯示 10 個
+4. 自動判斷附近地點類型
+   Overpass 結果會自動對應足跡 type。
 
-7. Nominatim 與 Overpass 同時執行：
-   - Nominatim：自動地名
-   - Overpass：附近地點
-   - 互不阻塞
+5. 舊資料相容
+   V4.5 以前紀錄如果沒有：
+   - tripId
+   - tripName
+   - type
 
-8. 保留既有足跡功能：
+   會自動補：
+   tripId   = "default"
+   tripName = "未分類旅程"
+   type     = "other"
+
+6. 保留 V4.5 全部功能
    - GPS
+   - Nominatim
+   - Overpass 500m
+   - 18 秒 timeout
+   - Server fallback
+   - 附近 10 個地點
    - Leaflet 地圖
-   - 自動時區
-   - GMT
+   - 時區 / GMT
    - 日期分組
-   - 前一站距離
-   - 每日距離
-   - 旅行總距離
+   - 距離統計
    - 日期篩選
-   - Marker ↔ 紀錄連動
    - 編輯
    - 刪除
    - 重複紀錄提醒
    - CSV
-   - JSON 匯出 / 匯入
-   - 舊版本資料相容
-   - Record ID 自動修復
+   - JSON 備份 / 還原
+   - Record ID 修復
 
 Storage Key : travelFootprints
-Version     : V4.5
+Trips Key   : travelFootprintTrips
+
+Version     : V4.6
 =============================================================
 -->
 
@@ -97,7 +95,7 @@ Version     : V4.5
 >
 
 <title>
-  我的旅遊足跡 V4.5
+  我的旅遊足跡 V4.6
 </title>
 
 <link
@@ -129,6 +127,7 @@ body {
 
   color: #222;
 }
+
 
 /* =========================================================
    HEADER
@@ -215,6 +214,7 @@ header .date {
   font-weight: 700;
 }
 
+
 /* =========================================================
    LAYOUT
 ========================================================= */
@@ -255,6 +255,7 @@ header .date {
   margin-bottom: 12px;
 }
 
+
 /* =========================================================
    CURRENT TIME
 ========================================================= */
@@ -277,6 +278,7 @@ header .date {
   color: #9a6400;
 }
 
+
 /* =========================================================
    MAP
 ========================================================= */
@@ -290,6 +292,61 @@ header .date {
 
   overflow: hidden;
 }
+
+
+/* =========================================================
+   TRIP
+========================================================= */
+
+.trip-box {
+  background: #f2f8ff;
+
+  border-radius: 12px;
+
+  padding: 12px;
+
+  margin-bottom: 14px;
+}
+
+.trip-box label {
+  margin-top: 0;
+}
+
+.trip-row {
+  display: grid;
+
+  grid-template-columns:
+    1fr auto;
+
+  gap: 8px;
+}
+
+.trip-row select {
+  margin-bottom: 0;
+}
+
+.trip-add-btn {
+  width: auto;
+
+  min-width: 52px;
+
+  margin: 0;
+
+  padding: 10px 14px;
+
+  background: #e7f0ff;
+
+  color: #185cb1;
+}
+
+.current-trip {
+  margin-top: 8px;
+
+  font-size: 13px;
+
+  color: #555;
+}
+
 
 /* =========================================================
    GPS
@@ -322,6 +379,7 @@ header .date {
 
   min-height: 22px;
 }
+
 
 /* =========================================================
    INPUT
@@ -360,6 +418,55 @@ textarea {
 
   min-height: 70px;
 }
+
+
+/* =========================================================
+   TYPE SELECTOR
+========================================================= */
+
+.type-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4,1fr);
+
+  gap: 7px;
+
+  margin-bottom: 14px;
+}
+
+.type-btn {
+  margin: 0;
+
+  padding: 10px 4px;
+
+  background: #f4f5f7;
+
+  color: #444;
+
+  border: 1px solid #e3e5e8;
+
+  font-size: 13px;
+
+  line-height: 1.35;
+}
+
+.type-btn.active {
+  background: #e9f3ff;
+
+  border-color: #7db5ef;
+
+  color: #1659b7;
+}
+
+.type-icon {
+  display: block;
+
+  font-size: 20px;
+
+  margin-bottom: 3px;
+}
+
 
 /* =========================================================
    BUTTONS
@@ -443,8 +550,9 @@ button:disabled {
   margin-top: 4px;
 }
 
+
 /* =========================================================
-   LOOKUP STATUS
+   LOOKUP
 ========================================================= */
 
 .lookup-status {
@@ -476,6 +584,7 @@ button:disabled {
 
   align-items: flex-start;
 }
+
 
 /* =========================================================
    NEARBY
@@ -530,27 +639,27 @@ button:disabled {
 }
 
 .nearby-item {
-  width: 100%;
-
-  padding: 11px 12px;
-
   background: #ffffff;
 
   border: 1px solid #e3e3e3;
 
   border-radius: 12px;
 
-  text-align: left;
-
-  color: #222;
-
-  margin: 0;
-
-  font-weight: 500;
+  padding: 11px 12px;
 }
 
-.nearby-item:active {
-  background: #f5f5f5;
+.nearby-main {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  align-items: flex-start;
+}
+
+.nearby-text {
+  flex: 1;
 }
 
 .nearby-name {
@@ -571,11 +680,68 @@ button:disabled {
   font-size: 12px;
 }
 
-.nearby-selected {
-  background: #eaf7ef !important;
+.nearby-actions {
+  display: grid;
 
-  border-color: #9ed4b0 !important;
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 7px;
+
+  margin-top: 10px;
 }
+
+.nearby-actions button {
+  margin: 0;
+
+  padding: 9px 8px;
+
+  font-size: 13px;
+}
+
+.nearby-select-btn {
+  background: #eef3f9;
+
+  color: #28517e;
+}
+
+.nearby-quick-btn {
+  background: #eaf7ef;
+
+  color: #14703d;
+}
+
+.nearby-selected {
+  background: #f1faf4;
+
+  border-color: #9ed4b0;
+}
+
+
+/* =========================================================
+   TYPE BADGE
+========================================================= */
+
+.type-badge {
+  display: inline-block;
+
+  margin-top: 5px;
+
+  margin-right: 4px;
+
+  padding: 3px 7px;
+
+  border-radius: 7px;
+
+  background: #fff4df;
+
+  color: #8b5c00;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
 
 /* =========================================================
    STATS
@@ -614,6 +780,7 @@ button:disabled {
   margin-top: 3px;
 }
 
+
 /* =========================================================
    FILTER
 ========================================================= */
@@ -637,11 +804,16 @@ button:disabled {
 }
 
 .filter-box select {
+  margin-bottom: 8px;
+}
+
+.filter-box select:last-child {
   margin-bottom: 0;
 }
 
+
 /* =========================================================
-   TIMELINE
+   RECORD
 ========================================================= */
 
 .day-group {
@@ -827,6 +999,7 @@ button:disabled {
   padding: 25px 5px;
 }
 
+
 /* =========================================================
    MODAL
 ========================================================= */
@@ -938,6 +1111,7 @@ button:disabled {
   grid-template-columns: 1fr;
 }
 
+
 /* =========================================================
    TOAST
 ========================================================= */
@@ -991,6 +1165,7 @@ button:disabled {
     translateY(0);
 }
 
+
 /* =========================================================
    MOBILE
 ========================================================= */
@@ -1016,6 +1191,11 @@ button:disabled {
     flex-direction: column;
   }
 
+  .type-grid {
+    grid-template-columns:
+      repeat(4,1fr);
+  }
+
 }
 
 </style>
@@ -1030,7 +1210,7 @@ button:disabled {
   🌏 我的旅遊足跡
 
   <span class="version-badge">
-    V4.5
+    V4.6
   </span>
 </h1>
 
@@ -1058,6 +1238,47 @@ button:disabled {
 </header>
 
 <div class="container">
+
+<!-- =========================================================
+     TRIP
+========================================================= -->
+
+<div class="card">
+
+  <div class="section-title">
+    🧳 目前旅程
+  </div>
+
+  <div class="trip-box">
+
+    <div class="trip-row">
+
+      <select
+        id="tripSelect"
+        onchange="changeCurrentTrip()"
+      >
+      </select>
+
+      <button
+        type="button"
+        class="trip-add-btn"
+        onclick="openAddTripDialog()"
+      >
+        ＋
+      </button>
+
+    </div>
+
+    <div
+      class="current-trip"
+      id="currentTripText"
+    >
+      目前旅程：未分類旅程
+    </div>
+
+  </div>
+
+</div>
 
 <!-- =========================================================
      CURRENT TIME
@@ -1167,9 +1388,7 @@ button:disabled {
 
     <div class="lookup-row">
 
-      <span>
-        🏷️
-      </span>
+      <span>🏷️</span>
 
       <span
         id="nameLookupStatus"
@@ -1181,9 +1400,7 @@ button:disabled {
 
     <div class="lookup-row">
 
-      <span>
-        📍
-      </span>
+      <span>📍</span>
 
       <span
         id="poiLookupStatus"
@@ -1205,7 +1422,7 @@ button:disabled {
     </div>
 
     <div class="nearby-note">
-      依 GPS 距離排序，點選後會自動填入地點名稱
+      依 GPS 距離排序，可選擇地點或直接快速紀錄
     </div>
 
     <div
@@ -1223,6 +1440,101 @@ button:disabled {
 
   </div>
 
+  <!-- =====================================================
+       TYPE
+  ====================================================== -->
+
+  <label>
+    🏷️ 足跡類型
+  </label>
+
+  <div
+    class="type-grid"
+    id="typeGrid"
+  >
+
+    <button
+      type="button"
+      class="type-btn"
+      data-type="attraction"
+      onclick="selectType('attraction')"
+    >
+      <span class="type-icon">📷</span>
+      景點
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      data-type="restaurant"
+      onclick="selectType('restaurant')"
+    >
+      <span class="type-icon">🍜</span>
+      餐廳
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      data-type="hotel"
+      onclick="selectType('hotel')"
+    >
+      <span class="type-icon">🏨</span>
+      飯店
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      data-type="station"
+      onclick="selectType('station')"
+    >
+      <span class="type-icon">🚉</span>
+      車站
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      data-type="airport"
+      onclick="selectType('airport')"
+    >
+      <span class="type-icon">✈️</span>
+      機場
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      data-type="shopping"
+      onclick="selectType('shopping')"
+    >
+      <span class="type-icon">🛍️</span>
+      購物
+    </button>
+
+    <button
+      type="button"
+      class="type-btn"
+      data-type="rest"
+      onclick="selectType('rest')"
+    >
+      <span class="type-icon">☕</span>
+      休息
+    </button>
+
+    <button
+      type="button"
+      class="type-btn active"
+      data-type="other"
+      onclick="selectType('other')"
+    >
+      <span class="type-icon">📍</span>
+      其他
+    </button>
+
+  </div>
+
   <label>
     地點名稱
   </label>
@@ -1230,7 +1542,7 @@ button:disabled {
   <input
     type="text"
     id="placeName"
-    placeholder="例如：桃園機場、福岡機場、博多車站"
+    placeholder="例如：熊本城、博多車站、一蘭拉麵"
   >
 
   <label>
@@ -1239,7 +1551,7 @@ button:disabled {
 
   <textarea
     id="note"
-    placeholder="例如：抵達、吃午餐、搭電車、開始逛街"
+    placeholder="例如：抵達、午餐、開始逛街、休息"
   ></textarea>
 
   <button
@@ -1326,7 +1638,20 @@ button:disabled {
   <div class="filter-box">
 
     <div class="filter-title">
-      📅 顯示日期
+      🧳 旅程
+    </div>
+
+    <select
+      id="tripFilter"
+      onchange="changeTripFilter()"
+    >
+      <option value="all">
+        全部旅程
+      </option>
+    </select>
+
+    <div class="filter-title">
+      📅 日期
     </div>
 
     <select
@@ -1396,8 +1721,8 @@ button:disabled {
   >
 
   <div class="small-note">
-    支援 V2 / V3 / V4 / V4.1 / V4.2 / V4.3 / V4.3.1 / V4.4 / V4.5 JSON。
-    匯入會取代目前手機上的紀錄。
+    匯入會取代目前手機上的足跡紀錄。
+    V4.5 以前的資料會自動補上旅程與類型。
   </div>
 
   <br>
@@ -1433,6 +1758,57 @@ button:disabled {
       type="hidden"
       id="editRecordId"
     >
+
+    <label>
+      旅程
+    </label>
+
+    <select
+      id="editTrip"
+    >
+    </select>
+
+    <label>
+      足跡類型
+    </label>
+
+    <select
+      id="editType"
+    >
+
+      <option value="attraction">
+        📷 景點
+      </option>
+
+      <option value="restaurant">
+        🍜 餐廳
+      </option>
+
+      <option value="hotel">
+        🏨 飯店
+      </option>
+
+      <option value="station">
+        🚉 車站
+      </option>
+
+      <option value="airport">
+        ✈️ 機場
+      </option>
+
+      <option value="shopping">
+        🛍️ 購物
+      </option>
+
+      <option value="rest">
+        ☕ 休息
+      </option>
+
+      <option value="other">
+        📍 其他
+      </option>
+
+    </select>
 
     <label>
       地點名稱
@@ -1507,6 +1883,55 @@ button:disabled {
 </div>
 
 <!-- =========================================================
+     ADD TRIP MODAL
+========================================================= -->
+
+<div
+  class="modal-overlay"
+  id="tripModal"
+>
+
+  <div class="modal">
+
+    <div class="modal-title">
+      🧳 新增旅程
+    </div>
+
+    <label>
+      旅程名稱
+    </label>
+
+    <input
+      type="text"
+      id="newTripName"
+      placeholder="例如：2026 東北賞楓"
+    >
+
+    <div class="modal-actions">
+
+      <button
+        class="btn-gray"
+        type="button"
+        onclick="closeTripModal()"
+      >
+        取消
+      </button>
+
+      <button
+        class="btn-green"
+        type="button"
+        onclick="createTrip()"
+      >
+        建立旅程
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- =========================================================
      DIALOG
 ========================================================= -->
 
@@ -1564,10 +1989,6 @@ button:disabled {
 
 </div>
 
-<!-- =========================================================
-     TOAST
-========================================================= -->
-
 <div
   class="toast"
   id="toast"
@@ -1589,9 +2010,7 @@ let currentLng = null;
 let currentAccuracy = null;
 
 let currentMarker = null;
-
 let pathLayer = null;
-
 let recordMarkers = [];
 
 let markerByRecordId =
@@ -1600,65 +2019,39 @@ let markerByRecordId =
 let currentDateFilter =
   "all";
 
+let currentTripFilter =
+  "all";
+
 let toastTimer =
   null;
-
-/*
-  地點名稱目前來源
-
-  none   = 尚未設定
-  auto   = Nominatim
-  nearby = 使用者點選附近地點
-  manual = 使用者手動輸入
-*/
 
 let placeNameSource =
   "none";
 
-/*
-  防止舊 GPS 查詢結果
-  覆蓋後來的新 GPS 查詢
-*/
-
 let locationLookupSequence =
   0;
 
+/*
+  V4.6
+  新增目前足跡類型
+*/
+
+let selectedType =
+  "other";
+
 
 /* =========================================================
-   V4.5 SEARCH SETTINGS
+   SEARCH SETTINGS
 ========================================================= */
-
-/*
-  V4.5 改回
-  旅遊美食日誌已實測成功的策略。
-
-  Overpass：
-  - 每個 Server 最多 18 秒
-  - Server 1 失敗才 Server 2
-  - 實際若 1 秒回來就 1 秒完成
-*/
 
 const OVERPASS_TIMEOUT_MS =
   18000;
 
-/*
-  Nominatim 也沿用較寬鬆 timeout
-*/
-
 const NOMINATIM_TIMEOUT_MS =
   12000;
 
-/*
-  搜尋半徑 500 公尺
-*/
-
 const OVERPASS_RADIUS =
   500;
-
-/*
-  這兩個就是旅遊美食日誌
-  已經實際驗證可用的節點
-*/
 
 const OVERPASS_SERVERS = [
 
@@ -1670,48 +2063,686 @@ const OVERPASS_SERVERS = [
 
 
 /* =========================================================
-   PLACE INPUT
+   TYPE INFO
 ========================================================= */
 
-document
-  .getElementById(
-    "placeName"
-  )
-  .addEventListener(
-    "input",
-    function() {
+const TYPE_INFO = {
 
-      /*
-        使用者自己輸入後，
-        不允許後回來的 Nominatim
-        蓋掉內容。
-      */
+  attraction: {
+    icon: "📷",
+    label: "景點"
+  },
 
-      placeNameSource =
-        "manual";
+  restaurant: {
+    icon: "🍜",
+    label: "餐廳"
+  },
 
-      document
-        .querySelectorAll(
-          ".nearby-item"
-        )
-        .forEach(
-          item => {
+  hotel: {
+    icon: "🏨",
+    label: "飯店"
+  },
 
-            item
-              .classList
-              .remove(
-                "nearby-selected"
-              );
+  station: {
+    icon: "🚉",
+    label: "車站"
+  },
 
-          }
+  airport: {
+    icon: "✈️",
+    label: "機場"
+  },
+
+  shopping: {
+    icon: "🛍️",
+    label: "購物"
+  },
+
+  rest: {
+    icon: "☕",
+    label: "休息"
+  },
+
+  other: {
+    icon: "📍",
+    label: "其他"
+  }
+
+};
+
+
+function getTypeInfo(
+  type
+) {
+
+  return (
+    TYPE_INFO[
+      type
+    ] ||
+    TYPE_INFO.other
+  );
+
+}
+
+
+function selectType(
+  type
+) {
+
+  if (
+    !TYPE_INFO[
+      type
+    ]
+  ) {
+
+    type =
+      "other";
+
+  }
+
+  selectedType =
+    type;
+
+  document
+    .querySelectorAll(
+      ".type-btn"
+    )
+    .forEach(
+      button => {
+
+        button
+          .classList
+          .toggle(
+
+            "active",
+
+            button.dataset.type ===
+            type
+
+          );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   TRIP STORAGE
+========================================================= */
+
+function getTrips() {
+
+  const data =
+    localStorage.getItem(
+      "travelFootprintTrips"
+    );
+
+  if (
+    !data
+  ) {
+
+    const defaults = [
+
+      {
+        id: "default",
+        name: "未分類旅程"
+      }
+
+    ];
+
+    localStorage.setItem(
+
+      "travelFootprintTrips",
+
+      JSON.stringify(
+        defaults
+      )
+
+    );
+
+    return defaults;
+
+  }
+
+  try {
+
+    const trips =
+      JSON.parse(
+        data
+      );
+
+    if (
+      !Array.isArray(
+        trips
+      ) ||
+      trips.length ===
+      0
+    ) {
+
+      throw new Error(
+        "Invalid trips"
+      );
+
+    }
+
+    /*
+      確保 default 永遠存在
+    */
+
+    if (
+      !trips.some(
+        trip =>
+          trip.id ===
+          "default"
+      )
+    ) {
+
+      trips.unshift({
+
+        id:
+          "default",
+
+        name:
+          "未分類旅程"
+
+      });
+
+      saveTrips(
+        trips
+      );
+
+    }
+
+    return trips;
+
+  }
+
+  catch {
+
+    const defaults = [
+
+      {
+        id: "default",
+        name: "未分類旅程"
+      }
+
+    ];
+
+    saveTrips(
+      defaults
+    );
+
+    return defaults;
+
+  }
+
+}
+
+
+function saveTrips(
+  trips
+) {
+
+  localStorage.setItem(
+
+    "travelFootprintTrips",
+
+    JSON.stringify(
+      trips
+    )
+
+  );
+
+}
+
+
+/* =========================================================
+   CURRENT TRIP
+========================================================= */
+
+function getCurrentTripId() {
+
+  const id =
+    localStorage.getItem(
+      "travelFootprintCurrentTrip"
+    );
+
+  const trips =
+    getTrips();
+
+  if (
+    id &&
+    trips.some(
+      trip =>
+        trip.id ===
+        id
+    )
+  ) {
+
+    return id;
+
+  }
+
+  return "default";
+
+}
+
+
+function setCurrentTripId(
+  id
+) {
+
+  localStorage.setItem(
+    "travelFootprintCurrentTrip",
+    id
+  );
+
+}
+
+
+function getCurrentTrip() {
+
+  const id =
+    getCurrentTripId();
+
+  return (
+    getTrips().find(
+      trip =>
+        trip.id ===
+        id
+    ) ||
+    {
+      id: "default",
+      name: "未分類旅程"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   RENDER TRIPS
+========================================================= */
+
+function renderTripSelectors() {
+
+  const trips =
+    getTrips();
+
+  const currentId =
+    getCurrentTripId();
+
+  const tripSelect =
+    document.getElementById(
+      "tripSelect"
+    );
+
+  const tripFilter =
+    document.getElementById(
+      "tripFilter"
+    );
+
+  const editTrip =
+    document.getElementById(
+      "editTrip"
+    );
+
+  /*
+    目前旅程
+  */
+
+  tripSelect.innerHTML =
+    "";
+
+  trips.forEach(
+    trip => {
+
+      const option =
+        document.createElement(
+          "option"
         );
+
+      option.value =
+        trip.id;
+
+      option.textContent =
+        trip.name;
+
+      tripSelect.appendChild(
+        option
+      );
 
     }
   );
 
+  tripSelect.value =
+    currentId;
+
+  /*
+    Filter
+  */
+
+  tripFilter.innerHTML =
+    '<option value="all">全部旅程</option>';
+
+  trips.forEach(
+    trip => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value =
+        trip.id;
+
+      option.textContent =
+        trip.name;
+
+      tripFilter.appendChild(
+        option
+      );
+
+    }
+  );
+
+  if (
+    currentTripFilter !==
+    "all" &&
+    trips.some(
+      trip =>
+        trip.id ===
+        currentTripFilter
+    )
+  ) {
+
+    tripFilter.value =
+      currentTripFilter;
+
+  }
+
+  else {
+
+    currentTripFilter =
+      "all";
+
+    tripFilter.value =
+      "all";
+
+  }
+
+  /*
+    編輯視窗
+  */
+
+  editTrip.innerHTML =
+    "";
+
+  trips.forEach(
+    trip => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+      option.value =
+        trip.id;
+
+      option.textContent =
+        trip.name;
+
+      editTrip.appendChild(
+        option
+      );
+
+    }
+  );
+
+  const currentTrip =
+    getCurrentTrip();
+
+  document
+    .getElementById(
+      "currentTripText"
+    )
+    .textContent =
+    "目前旅程：" +
+    currentTrip.name;
+
+}
+
 
 /* =========================================================
-   RECORD ID
+   CHANGE CURRENT TRIP
+========================================================= */
+
+function changeCurrentTrip() {
+
+  const id =
+    document
+      .getElementById(
+        "tripSelect"
+      )
+      .value;
+
+  setCurrentTripId(
+    id
+  );
+
+  renderTripSelectors();
+
+  showToast(
+    "🧳 已切換旅程：" +
+    getCurrentTrip().name
+  );
+
+}
+
+
+/* =========================================================
+   TRIP FILTER
+========================================================= */
+
+function changeTripFilter() {
+
+  currentTripFilter =
+    document
+      .getElementById(
+        "tripFilter"
+      )
+      .value;
+
+  updateDateFilterOptions();
+
+  renderRecords();
+
+}
+
+
+/* =========================================================
+   ADD TRIP
+========================================================= */
+
+function openAddTripDialog() {
+
+  document
+    .getElementById(
+      "newTripName"
+    )
+    .value =
+    "";
+
+  document
+    .getElementById(
+      "tripModal"
+    )
+    .classList
+    .add(
+      "show"
+    );
+
+  setTimeout(
+    () => {
+
+      document
+        .getElementById(
+          "newTripName"
+        )
+        .focus();
+
+    },
+    150
+  );
+
+}
+
+
+function closeTripModal() {
+
+  document
+    .getElementById(
+      "tripModal"
+    )
+    .classList
+    .remove(
+      "show"
+    );
+
+}
+
+
+function generateTripId() {
+
+  return (
+
+    "trip_" +
+
+    Date.now() +
+
+    "_" +
+
+    Math.random()
+      .toString(36)
+      .slice(2,7)
+
+  );
+
+}
+
+
+async function createTrip() {
+
+  const name =
+    document
+      .getElementById(
+        "newTripName"
+      )
+      .value
+      .trim();
+
+  if (
+    !name
+  ) {
+
+    await showDialog({
+
+      icon:
+        "🧳",
+
+      title:
+        "請輸入旅程名稱",
+
+      message:
+        "例如：2026 東北賞楓",
+
+      showCancel:
+        false
+
+    });
+
+    return;
+
+  }
+
+  const trips =
+    getTrips();
+
+  /*
+    避免同名
+  */
+
+  const exists =
+    trips.some(
+      trip =>
+        trip.name
+          .trim()
+          .toLocaleLowerCase() ===
+        name
+          .toLocaleLowerCase()
+    );
+
+  if (
+    exists
+  ) {
+
+    await showDialog({
+
+      icon:
+        "⚠️",
+
+      title:
+        "旅程名稱已存在",
+
+      message:
+        "請使用其他旅程名稱。",
+
+      showCancel:
+        false
+
+    });
+
+    return;
+
+  }
+
+  const trip = {
+
+    id:
+      generateTripId(),
+
+    name:
+      name
+
+  };
+
+  trips.push(
+    trip
+  );
+
+  saveTrips(
+    trips
+  );
+
+  setCurrentTripId(
+    trip.id
+  );
+
+  closeTripModal();
+
+  renderTripSelectors();
+
+  showToast(
+    "✅ 已建立旅程：" +
+    name
+  );
+
+}
+
+
+/* =========================================================
+   RECORD NORMALIZE
 ========================================================= */
 
 function generateRecordId() {
@@ -1739,7 +2770,7 @@ function generateRecordId() {
 }
 
 
-function normalizeRecordIds(
+function normalizeRecords(
   records
 ) {
 
@@ -1751,6 +2782,10 @@ function normalizeRecordIds(
 
   records.forEach(
     record => {
+
+      /*
+        ID
+      */
 
       let id =
         record.id !== undefined &&
@@ -1784,6 +2819,55 @@ function normalizeRecordIds(
         id
       );
 
+      /*
+        V4.6：
+        舊資料補 trip
+      */
+
+      if (
+        !record.tripId
+      ) {
+
+        record.tripId =
+          "default";
+
+        changed =
+          true;
+
+      }
+
+      if (
+        !record.tripName
+      ) {
+
+        record.tripName =
+          "未分類旅程";
+
+        changed =
+          true;
+
+      }
+
+      /*
+        V4.6：
+        舊資料補 type
+      */
+
+      if (
+        !record.type ||
+        !TYPE_INFO[
+          record.type
+        ]
+      ) {
+
+        record.type =
+          "other";
+
+        changed =
+          true;
+
+      }
+
     }
   );
 
@@ -1793,6 +2877,135 @@ function normalizeRecordIds(
   };
 
 }
+
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+function getRecords() {
+
+  const data =
+    localStorage.getItem(
+      "travelFootprints"
+    );
+
+  if (
+    !data
+  ) {
+
+    return [];
+
+  }
+
+  try {
+
+    const parsed =
+      JSON.parse(
+        data
+      );
+
+    if (
+      !Array.isArray(
+        parsed
+      )
+    ) {
+
+      return [];
+
+    }
+
+    const result =
+      normalizeRecords(
+        parsed
+      );
+
+    if (
+      result.changed
+    ) {
+
+      localStorage.setItem(
+
+        "travelFootprints",
+
+        JSON.stringify(
+          result.records
+        )
+
+      );
+
+    }
+
+    return result.records;
+
+  }
+
+  catch (
+    error
+  ) {
+
+    console.error(
+      "Storage Error:",
+      error
+    );
+
+    return [];
+
+  }
+
+}
+
+
+function saveRecords(
+  records
+) {
+
+  localStorage.setItem(
+
+    "travelFootprints",
+
+    JSON.stringify(
+      records
+    )
+
+  );
+
+}
+
+
+/* =========================================================
+   PLACE INPUT
+========================================================= */
+
+document
+  .getElementById(
+    "placeName"
+  )
+  .addEventListener(
+    "input",
+    function() {
+
+      placeNameSource =
+        "manual";
+
+      document
+        .querySelectorAll(
+          ".nearby-item"
+        )
+        .forEach(
+          item => {
+
+            item
+              .classList
+              .remove(
+                "nearby-selected"
+              );
+
+          }
+        );
+
+    }
+  );
 
 
 /* =========================================================
@@ -1812,9 +3025,11 @@ function showToast(
   toast.textContent =
     message;
 
-  toast.classList.add(
-    "show"
-  );
+  toast
+    .classList
+    .add(
+      "show"
+    );
 
   clearTimeout(
     toastTimer
@@ -1967,8 +3182,6 @@ function showDialog({
   );
 
 }
-
-
 /* =========================================================
    TIMEZONE
 ========================================================= */
@@ -1999,8 +3212,7 @@ function getGMTOffset(
 ) {
 
   const offsetMinutes =
-    -date
-      .getTimezoneOffset();
+    -date.getTimezoneOffset();
 
   const sign =
     offsetMinutes >= 0
@@ -2014,17 +3226,14 @@ function getGMTOffset(
 
   const hours =
     Math.floor(
-      absoluteMinutes /
-      60
+      absoluteMinutes / 60
     );
 
   const minutes =
-    absoluteMinutes %
-    60;
+    absoluteMinutes % 60;
 
   if (
-    minutes ===
-    0
+    minutes === 0
   ) {
 
     return (
@@ -2207,109 +3416,10 @@ L.tileLayer(
 
 
 /* =========================================================
-   STORAGE
-========================================================= */
-
-function getRecords() {
-
-  const data =
-    localStorage.getItem(
-      "travelFootprints"
-    );
-
-  if (
-    !data
-  ) {
-
-    return [];
-
-  }
-
-  try {
-
-    const parsed =
-      JSON.parse(
-        data
-      );
-
-    if (
-      !Array.isArray(
-        parsed
-      )
-    ) {
-
-      return [];
-
-    }
-
-    const result =
-      normalizeRecordIds(
-        parsed
-      );
-
-    if (
-      result.changed
-    ) {
-
-      localStorage.setItem(
-
-        "travelFootprints",
-
-        JSON.stringify(
-          result.records
-        )
-
-      );
-
-    }
-
-    return result.records;
-
-  }
-
-  catch (
-    error
-  ) {
-
-    console.error(
-      "Storage Error:",
-      error
-    );
-
-    return [];
-
-  }
-
-}
-
-
-function saveRecords(
-  records
-) {
-
-  localStorage.setItem(
-
-    "travelFootprints",
-
-    JSON.stringify(
-      records
-    )
-
-  );
-
-}
-
-
-/* =========================================================
    LOOKUP UI
 ========================================================= */
 
 function resetLookupUI() {
-
-  /*
-    新 GPS 位置，
-    先清空上一個地點名稱
-  */
 
   placeNameSource =
     "auto";
@@ -2320,6 +3430,13 @@ function resetLookupUI() {
     )
     .value =
     "";
+
+  selectedType =
+    "other";
+
+  selectType(
+    "other"
+  );
 
   document
     .getElementById(
@@ -2518,15 +3635,6 @@ function getCurrentLocation() {
         button.textContent =
           "🔎 正在搜尋地點...";
 
-        /*
-          V4.5：
-          地址與附近地點同時啟動。
-
-          但 Overpass 本身採
-          美食日誌實測成功的：
-          Server1 → 失敗才 Server2
-        */
-
         lookupAutomaticPlaceName(
           currentLat,
           currentLng,
@@ -2571,10 +3679,6 @@ function getCurrentLocation() {
           return;
 
         }
-
-        console.error(
-          error
-        );
 
         button.disabled =
           false;
@@ -2633,9 +3737,9 @@ function getCurrentLocation() {
 
 }
 
+
 /* =========================================================
-   V4.5 NOMINATIM 自動地名
-   沿用旅遊美食日誌較寬鬆 timeout
+   NOMINATIM
 ========================================================= */
 
 async function lookupAutomaticPlaceName(
@@ -2716,7 +3820,7 @@ async function lookupAutomaticPlaceName(
     ) {
 
       throw new Error(
-        "地址查詢服務目前無法使用"
+        "Nominatim Error"
       );
 
     }
@@ -2727,17 +3831,6 @@ async function lookupAutomaticPlaceName(
     const address =
       data.address ||
       {};
-
-    /*
-      自動地名優先順序
-
-      優先抓：
-      - 建築 / 店家 / 景點本名
-      - 車站
-      - neighbourhood
-      - suburb
-      - city district
-    */
 
     const name =
 
@@ -2783,14 +3876,6 @@ async function lookupAutomaticPlaceName(
         "自動地名：✅ " +
         name;
 
-      /*
-        如果使用者尚未：
-        - 自己輸入
-        - 點附近地點
-
-        才允許自動填入
-      */
-
       if (
         placeNameSource ===
         "auto" ||
@@ -2830,11 +3915,6 @@ async function lookupAutomaticPlaceName(
 
     }
 
-    console.log(
-      "Nominatim Error:",
-      error
-    );
-
     status.textContent =
       "自動地名：⚠️ 暫時無法取得";
 
@@ -2852,13 +3932,7 @@ async function lookupAutomaticPlaceName(
 
 
 /* =========================================================
-   V4.5 OVERPASS QUERY
-
-   核心沿用旅遊美食日誌已實測成功 Query
-   再增加：
-   - 車站
-   - 飯店
-   - 景點
+   OVERPASS QUERY
 ========================================================= */
 
 function buildOverpassQuery(
@@ -2871,48 +3945,28 @@ function buildOverpassQuery(
 [out:json][timeout:18];
 
 (
-  /*
-    餐飲
-  */
-
   nwr
     ["amenity"~"restaurant|cafe|fast_food|food_court|ice_cream|bar|pub"]
     (around:${OVERPASS_RADIUS},${lat},${lng});
-
-
-  /*
-    美食相關商店
-  */
 
   nwr
     ["shop"~"bakery|convenience|deli|pastry|coffee|confectionery"]
     (around:${OVERPASS_RADIUS},${lat},${lng});
 
-
-  /*
-    車站
-  */
-
   nwr
     ["railway"~"station|halt"]
     (around:${OVERPASS_RADIUS},${lat},${lng});
-
-
-  /*
-    住宿
-  */
 
   nwr
     ["tourism"~"hotel|hostel|guest_house"]
     (around:${OVERPASS_RADIUS},${lat},${lng});
 
-
-  /*
-    主要旅遊景點
-  */
-
   nwr
     ["tourism"~"attraction|museum|gallery|viewpoint"]
+    (around:${OVERPASS_RADIUS},${lat},${lng});
+
+  nwr
+    ["aeroway"~"aerodrome|terminal"]
     (around:${OVERPASS_RADIUS},${lat},${lng});
 
 );
@@ -2925,13 +3979,7 @@ out center tags;
 
 
 /* =========================================================
-   V4.5 搜尋附近地點
-   完全改成：
-   Server 1
-      ↓ 失敗
-   Server 2
-
-   每台最多 18 秒
+   OVERPASS SEARCH
 ========================================================= */
 
 async function searchNearbyPlaces(
@@ -2954,11 +4002,6 @@ async function searchNearbyPlaces(
   ) {
 
     try {
-
-      console.log(
-        "Overpass Try:",
-        server
-      );
 
       const controller =
         new AbortController();
@@ -3019,7 +4062,7 @@ async function searchNearbyPlaces(
       ) {
 
         throw new Error(
-          "附近地點服務 HTTP " +
+          "HTTP " +
           response.status
         );
 
@@ -3027,20 +4070,6 @@ async function searchNearbyPlaces(
 
       const data =
         await response.json();
-
-      console.log(
-        "Overpass Success:",
-        server
-      );
-
-      /*
-        只要 Server 有正常回傳，
-        就直接使用。
-
-        就算附近只有 1~2 個，
-        也不需要為了湊滿數量
-        再查其他 Server。
-      */
 
       return parseNearbyPlaces(
         data,
@@ -3054,12 +4083,6 @@ async function searchNearbyPlaces(
       error
     ) {
 
-      console.log(
-        "Overpass Failed:",
-        server,
-        error
-      );
-
       lastError =
         error;
 
@@ -3070,7 +4093,7 @@ async function searchNearbyPlaces(
   throw (
     lastError ||
     new Error(
-      "附近地點服務目前無法使用"
+      "Overpass unavailable"
     )
   );
 
@@ -3078,7 +4101,7 @@ async function searchNearbyPlaces(
 
 
 /* =========================================================
-   V4.5 UI 包裝
+   LOOKUP NEARBY
 ========================================================= */
 
 async function lookupNearbyPlaces(
@@ -3104,11 +4127,6 @@ async function lookupNearbyPlaces(
         lat,
         lng
       );
-
-    /*
-      如果已經重新定位，
-      舊結果不顯示。
-    */
 
     if (
       lookupId !==
@@ -3141,12 +4159,9 @@ async function lookupNearbyPlaces(
               padding:12px;
               color:#777;
               font-size:14px;
-              line-height:1.6;
             "
           >
             500 公尺內沒有找到已登錄名稱的地點。
-            <br>
-            可以直接使用自動地名或手動輸入。
           </div>
 
         `;
@@ -3179,11 +4194,6 @@ async function lookupNearbyPlaces(
 
     }
 
-    console.log(
-      "Nearby Search Error:",
-      error
-    );
-
     status.textContent =
       "附近地點：⚠️ 暫時無法取得";
 
@@ -3199,16 +4209,7 @@ async function lookupNearbyPlaces(
 
 
 /* =========================================================
-   V4.5 整理附近地點
-
-   名稱優先：
-   name:zh-Hant
-   name:zh
-   name:ja
-   name
-   brand
-
-   與旅遊美食日誌相同核心邏輯
+   PARSE NEARBY
 ========================================================= */
 
 function parseNearbyPlaces(
@@ -3222,20 +4223,13 @@ function parseNearbyPlaces(
 
   for (
     const element of
-    data.elements || []
+    data.elements ||
+    []
   ) {
 
     const tags =
       element.tags ||
       {};
-
-    /*
-      V4.5：
-      不在 Query 階段要求 ["name"]
-
-      改成拿回來後再依序判斷，
-      這對日本 OSM 資料比較友善。
-    */
 
     const name =
 
@@ -3262,10 +4256,6 @@ function parseNearbyPlaces(
 
     let placeLng =
       element.lon;
-
-    /*
-      way / relation
-    */
 
     if (
       element.center
@@ -3301,7 +4291,7 @@ function parseNearbyPlaces(
 
       );
 
-    places.push({
+    const place = {
 
       name:
         String(
@@ -3337,22 +4327,26 @@ function parseNearbyPlaces(
         tags.railway ||
         "",
 
+      aeroway:
+        tags.aeroway ||
+        "",
+
       cuisine:
         tags.cuisine ||
         ""
 
-    });
+    };
+
+    place.type =
+      inferFootprintType(
+        place
+      );
+
+    places.push(
+      place
+    );
 
   }
-
-  /*
-    同名去重。
-
-    同一間店可能同時有：
-    node / way / relation
-
-    只留最近的。
-  */
 
   const uniqueMap =
     new Map();
@@ -3388,11 +4382,6 @@ function parseNearbyPlaces(
 
   }
 
-  /*
-    依距離排序，
-    顯示最近 10 個。
-  */
-
   return Array
     .from(
       uniqueMap.values()
@@ -3414,8 +4403,458 @@ function parseNearbyPlaces(
 
 
 /* =========================================================
-   公尺距離計算
-   沿用旅遊美食日誌算法
+   AUTO TYPE
+========================================================= */
+
+function inferFootprintType(
+  place
+) {
+
+  if (
+    place.aeroway ===
+    "aerodrome" ||
+    place.aeroway ===
+    "terminal"
+  ) {
+
+    return "airport";
+
+  }
+
+  if (
+    place.railway ===
+    "station" ||
+    place.railway ===
+    "halt"
+  ) {
+
+    return "station";
+
+  }
+
+  if (
+    place.tourism ===
+    "hotel" ||
+    place.tourism ===
+    "hostel" ||
+    place.tourism ===
+    "guest_house"
+  ) {
+
+    return "hotel";
+
+  }
+
+  if (
+    place.tourism ===
+    "attraction" ||
+    place.tourism ===
+    "museum" ||
+    place.tourism ===
+    "gallery" ||
+    place.tourism ===
+    "viewpoint"
+  ) {
+
+    return "attraction";
+
+  }
+
+  if (
+    place.amenity ===
+    "restaurant" ||
+    place.amenity ===
+    "cafe" ||
+    place.amenity ===
+    "fast_food" ||
+    place.amenity ===
+    "food_court" ||
+    place.amenity ===
+    "ice_cream" ||
+    place.amenity ===
+    "bar" ||
+    place.amenity ===
+    "pub"
+  ) {
+
+    return "restaurant";
+
+  }
+
+  if (
+    place.shop
+  ) {
+
+    if (
+      place.shop ===
+      "coffee"
+    ) {
+
+      return "rest";
+
+    }
+
+    return "shopping";
+
+  }
+
+  return "other";
+
+}
+
+
+/* =========================================================
+   PLACE TYPE TEXT
+========================================================= */
+
+function placeTypeText(
+  place
+) {
+
+  const info =
+    getTypeInfo(
+      place.type
+    );
+
+  return (
+    info.icon +
+    " " +
+    info.label
+  );
+
+}
+
+
+/* =========================================================
+   RENDER NEARBY
+========================================================= */
+
+function renderNearbyPlaces(
+  places
+) {
+
+  const list =
+    document.getElementById(
+      "nearbyList"
+    );
+
+  list.innerHTML =
+    "";
+
+  places.forEach(
+    place => {
+
+      const wrapper =
+        document.createElement(
+          "div"
+        );
+
+      wrapper.className =
+        "nearby-item";
+
+      let meta =
+
+        place.distanceMeters +
+        " 公尺 · " +
+        placeTypeText(
+          place
+        );
+
+      if (
+        place.cuisine
+      ) {
+
+        meta +=
+          " · " +
+          place.cuisine;
+
+      }
+
+      wrapper.innerHTML = `
+
+        <div class="nearby-main">
+
+          <div class="nearby-text">
+
+            <span class="nearby-name">
+
+              ${escapeHTML(
+                place.name
+              )}
+
+            </span>
+
+            <span class="nearby-meta">
+
+              ${escapeHTML(
+                meta
+              )}
+
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="nearby-actions">
+
+          <button
+            type="button"
+            class="nearby-select-btn"
+          >
+            選擇
+          </button>
+
+          <button
+            type="button"
+            class="nearby-quick-btn"
+          >
+            ⚡ 快速紀錄
+          </button>
+
+        </div>
+
+      `;
+
+      const buttons =
+        wrapper.querySelectorAll(
+          "button"
+        );
+
+      const selectButton =
+        buttons[0];
+
+      const quickButton =
+        buttons[1];
+
+      selectButton.onclick =
+        function() {
+
+          document
+            .querySelectorAll(
+              ".nearby-item"
+            )
+            .forEach(
+              item => {
+
+                item
+                  .classList
+                  .remove(
+                    "nearby-selected"
+                  );
+
+              }
+            );
+
+          wrapper
+            .classList
+            .add(
+              "nearby-selected"
+            );
+
+          document
+            .getElementById(
+              "placeName"
+            )
+            .value =
+            place.name;
+
+          placeNameSource =
+            "nearby";
+
+          selectType(
+            place.type
+          );
+
+          showToast(
+            "✅ 已選擇：" +
+            place.name
+          );
+
+        };
+
+      quickButton.onclick =
+        async function() {
+
+          await quickSaveNearby(
+            place
+          );
+
+        };
+
+      list.appendChild(
+        wrapper
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   QUICK SAVE
+========================================================= */
+
+async function quickSaveNearby(
+  place
+) {
+
+  if (
+    currentLat === null ||
+    currentLng === null
+  ) {
+
+    return;
+
+  }
+
+  const trip =
+    getCurrentTrip();
+
+  const now =
+    new Date();
+
+  const duplicate =
+    checkDuplicateRecord(
+
+      currentLat,
+
+      currentLng,
+
+      now
+
+    );
+
+  if (
+    duplicate
+  ) {
+
+    const ok =
+      await showDialog({
+
+        icon:
+          "⚠️",
+
+        title:
+          "可能是重複紀錄",
+
+        message:
+
+          "上一筆：" +
+          (
+            duplicate.record.place ||
+            "未命名地點"
+          ) +
+
+          "\n時間相差：" +
+          duplicate.seconds +
+          " 秒" +
+
+          "\n距離：約 " +
+          duplicate.meters +
+          " 公尺" +
+
+          "\n\n仍然快速紀錄嗎？",
+
+        confirmText:
+          "仍然紀錄",
+
+        cancelText:
+          "取消"
+
+      });
+
+    if (
+      !ok
+    ) {
+
+      return;
+
+    }
+
+  }
+
+  const timeZone =
+    getCurrentTimeZone();
+
+  const record = {
+
+    id:
+      generateRecordId(),
+
+    tripId:
+      trip.id,
+
+    tripName:
+      trip.name,
+
+    type:
+      place.type ||
+      "other",
+
+    latitude:
+      currentLat,
+
+    longitude:
+      currentLng,
+
+    accuracy:
+      currentAccuracy,
+
+    place:
+      place.name,
+
+    note:
+      "",
+
+    timestamp:
+      now.toISOString(),
+
+    timeZone:
+      timeZone,
+
+    gmtOffset:
+      getGMTOffset(
+        now
+      ),
+
+    utcOffsetMinutes:
+      getUTCOffsetMinutes(),
+
+    localTime:
+      formatDateTimeForZone(
+        now,
+        timeZone
+      )
+
+  };
+
+  const records =
+    getRecords();
+
+  records.push(
+    record
+  );
+
+  saveRecords(
+    records
+  );
+
+  updateDateFilterOptions();
+
+  renderRecords();
+
+  showToast(
+    "⚡ 已快速紀錄：" +
+    place.name
+  );
+
+}
+
+
+/* =========================================================
+   DISTANCE
 ========================================================= */
 
 function calculateDistanceMeters(
@@ -3455,6 +4894,7 @@ function calculateDistanceMeters(
     180;
 
   const a =
+
     Math.sin(
       deltaP / 2
     ) ** 2 +
@@ -3493,10 +4933,6 @@ function calculateDistanceMeters(
 }
 
 
-/* =========================================================
-   原本足跡使用 km 距離
-========================================================= */
-
 function calculateDistanceKm(
   lat1,
   lon1,
@@ -3516,235 +4952,6 @@ function calculateDistanceKm(
 
 }
 
-
-/* =========================================================
-   地點類型
-========================================================= */
-
-function placeTypeText(
-  place
-) {
-
-  const type =
-    place.amenity ||
-    place.shop ||
-    place.tourism ||
-    place.railway;
-
-  const typeMap = {
-
-    restaurant:
-      "餐廳",
-
-    cafe:
-      "咖啡店",
-
-    fast_food:
-      "速食",
-
-    food_court:
-      "美食廣場",
-
-    ice_cream:
-      "冰品",
-
-    bar:
-      "酒吧",
-
-    pub:
-      "居酒屋 / 酒吧",
-
-    bakery:
-      "麵包店",
-
-    convenience:
-      "便利商店",
-
-    deli:
-      "熟食店",
-
-    pastry:
-      "甜點店",
-
-    coffee:
-      "咖啡店",
-
-    confectionery:
-      "甜點店",
-
-    station:
-      "車站",
-
-    halt:
-      "車站",
-
-    hotel:
-      "飯店",
-
-    hostel:
-      "青年旅館",
-
-    guest_house:
-      "旅館",
-
-    attraction:
-      "景點",
-
-    museum:
-      "博物館",
-
-    gallery:
-      "展覽",
-
-    viewpoint:
-      "觀景點"
-
-  };
-
-  return (
-    typeMap[
-      type
-    ] ||
-    "地點"
-  );
-
-}
-
-
-/* =========================================================
-   顯示附近地點
-========================================================= */
-
-function renderNearbyPlaces(
-  places
-) {
-
-  const list =
-    document.getElementById(
-      "nearbyList"
-    );
-
-  list.innerHTML =
-    "";
-
-  places.forEach(
-    place => {
-
-      const button =
-        document.createElement(
-          "button"
-        );
-
-      button.type =
-        "button";
-
-      button.className =
-        "nearby-item";
-
-      let meta =
-        place.distanceMeters +
-        " 公尺 · " +
-        placeTypeText(
-          place
-        );
-
-      if (
-        place.cuisine
-      ) {
-
-        meta +=
-          " · " +
-          place.cuisine;
-
-      }
-
-      button.innerHTML = `
-
-        <span class="nearby-name">
-
-          ${escapeHTML(
-            place.name
-          )}
-
-        </span>
-
-        <span class="nearby-meta">
-
-          ${escapeHTML(
-            meta
-          )}
-
-        </span>
-
-      `;
-
-      button.onclick =
-        function() {
-
-          /*
-            取消其他選取
-          */
-
-          document
-            .querySelectorAll(
-              ".nearby-item"
-            )
-            .forEach(
-              item => {
-
-                item
-                  .classList
-                  .remove(
-                    "nearby-selected"
-                  );
-
-              }
-            );
-
-          /*
-            標示目前選取
-          */
-
-          button
-            .classList
-            .add(
-              "nearby-selected"
-            );
-
-          /*
-            填入地點名稱
-          */
-
-          document
-            .getElementById(
-              "placeName"
-            )
-            .value =
-            place.name;
-
-          placeNameSource =
-            "nearby";
-
-          showToast(
-            "✅ 已選擇：" +
-            place.name
-          );
-
-        };
-
-      list.appendChild(
-        button
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   每日移動距離
-========================================================= */
 
 function calculateGroupDistance(
   records
@@ -3795,17 +5002,12 @@ function calculateGroupDistance(
 }
 
 
-/* =========================================================
-   距離顯示格式
-========================================================= */
-
 function formatDistance(
   km
 ) {
 
   if (
-    km <
-    1
+    km < 1
   ) {
 
     return (
@@ -3819,8 +5021,7 @@ function formatDistance(
   }
 
   if (
-    km <
-    10
+    km < 10
   ) {
 
     return (
@@ -3843,7 +5044,7 @@ function formatDistance(
 
 
 /* =========================================================
-   重複紀錄檢查
+   DUPLICATE CHECK
 ========================================================= */
 
 function checkDuplicateRecord(
@@ -3918,12 +5119,6 @@ function checkDuplicateRecord(
 
     );
 
-  /*
-    60 秒內
-    且 30 公尺內
-    → 提醒可能重複
-  */
-
   if (
     seconds <= 60 &&
     meters <= 30
@@ -3953,7 +5148,7 @@ function checkDuplicateRecord(
 }
 
 /* =========================================================
-   SAVE RECORD
+   SAVE NORMAL RECORD
 ========================================================= */
 
 async function saveLocation() {
@@ -3965,17 +5160,14 @@ async function saveLocation() {
 
     await showDialog({
 
-      icon:
-        "📍",
+      icon: "📍",
 
-      title:
-        "尚未定位",
+      title: "尚未定位",
 
       message:
         "請先按「取得目前 GPS」。",
 
-      showCancel:
-        false
+      showCancel: false
 
     });
 
@@ -3999,7 +5191,7 @@ async function saveLocation() {
       .value
       .trim();
 
-  const recordTime =
+  const now =
     new Date();
 
   const duplicate =
@@ -4009,7 +5201,7 @@ async function saveLocation() {
 
       currentLng,
 
-      recordTime
+      now
 
     );
 
@@ -4020,8 +5212,7 @@ async function saveLocation() {
     const ok =
       await showDialog({
 
-        icon:
-          "⚠️",
+        icon: "⚠️",
 
         title:
           "可能是重複紀錄",
@@ -4062,6 +5253,9 @@ async function saveLocation() {
 
   }
 
+  const trip =
+    getCurrentTrip();
+
   const timeZone =
     getCurrentTimeZone();
 
@@ -4069,6 +5263,16 @@ async function saveLocation() {
 
     id:
       generateRecordId(),
+
+    tripId:
+      trip.id,
+
+    tripName:
+      trip.name,
+
+    type:
+      selectedType ||
+      "other",
 
     latitude:
       currentLat,
@@ -4087,15 +5291,14 @@ async function saveLocation() {
       note,
 
     timestamp:
-      recordTime
-        .toISOString(),
+      now.toISOString(),
 
     timeZone:
       timeZone,
 
     gmtOffset:
       getGMTOffset(
-        recordTime
+        now
       ),
 
     utcOffsetMinutes:
@@ -4103,7 +5306,7 @@ async function saveLocation() {
 
     localTime:
       formatDateTimeForZone(
-        recordTime,
+        now,
         timeZone
       )
 
@@ -4131,9 +5334,18 @@ async function saveLocation() {
 
   renderRecords();
 
+  const typeInfo =
+    getTypeInfo(
+      record.type
+    );
+
   showToast(
-    "✅ 已紀錄：" +
+
+    "✅ " +
+    typeInfo.icon +
+    " 已紀錄：" +
     record.place
+
   );
 
 }
@@ -4329,7 +5541,7 @@ function formatDayTitle(
 
 
 /* =========================================================
-   GROUP
+   GROUP BY DAY
 ========================================================= */
 
 function groupRecordsByDay(
@@ -4348,15 +5560,21 @@ function groupRecordsByDay(
         );
 
       if (
-        !groups[key]
+        !groups[
+          key
+        ]
       ) {
 
-        groups[key] =
-          [];
+        groups[
+          key
+        ] =
+        [];
 
       }
 
-      groups[key].push(
+      groups[
+        key
+      ].push(
         record
       );
 
@@ -4369,7 +5587,65 @@ function groupRecordsByDay(
 
 
 /* =========================================================
-   DATE FILTER
+   RECORD FILTER
+========================================================= */
+
+function getTripFilteredRecords() {
+
+  let records =
+    getRecords();
+
+  if (
+    currentTripFilter !==
+    "all"
+  ) {
+
+    records =
+      records.filter(
+        record =>
+          String(
+            record.tripId
+          ) ===
+          String(
+            currentTripFilter
+          )
+      );
+
+  }
+
+  return records;
+
+}
+
+
+function getDisplayRecords() {
+
+  let records =
+    getTripFilteredRecords();
+
+  if (
+    currentDateFilter !==
+    "all"
+  ) {
+
+    records =
+      records.filter(
+        record =>
+          getRecordDateKey(
+            record
+          ) ===
+          currentDateFilter
+      );
+
+  }
+
+  return records;
+
+}
+
+
+/* =========================================================
+   DATE FILTER OPTIONS
 ========================================================= */
 
 function updateDateFilterOptions() {
@@ -4379,17 +5655,24 @@ function updateDateFilterOptions() {
       "dateFilter"
     );
 
+  /*
+    日期選單依照目前「旅程篩選」
+    動態產生。
+  */
+
   const records =
-    getRecords();
+    getTripFilteredRecords();
 
   const keys =
-    [...new Set(
+    [
+      ...new Set(
 
-      records.map(
-        getRecordDateKey
+        records.map(
+          getRecordDateKey
+        )
+
       )
-
-    )]
+    ]
     .sort()
     .reverse();
 
@@ -4461,7 +5744,7 @@ function changeDateFilter() {
 
 
 /* =========================================================
-   MAP ↔ RECORD
+   MAP → RECORD
 ========================================================= */
 
 function scrollToRecord(
@@ -4513,9 +5796,11 @@ function scrollToRecord(
 
   });
 
-  target.classList.add(
-    "record-highlight"
-  );
+  target
+    .classList
+    .add(
+      "record-highlight"
+    );
 
   setTimeout(
     () => {
@@ -4532,6 +5817,10 @@ function scrollToRecord(
 
 }
 
+
+/* =========================================================
+   RECORD → MAP
+========================================================= */
 
 function focusRecordOnMap(
   id
@@ -4563,13 +5852,25 @@ function focusRecordOnMap(
 
 
 /* =========================================================
-   RENDER
+   RENDER RECORDS
 ========================================================= */
 
 function renderRecords() {
 
-  const allRecords =
-    getRecords()
+  /*
+    統計：
+    只套用旅程篩選，
+    不套用日期篩選。
+
+    例如：
+    旅程 = 2026 東北賞楓
+    日期 = 9/18
+
+    統計仍然顯示整趟旅程。
+  */
+
+  const tripRecords =
+    getTripFilteredRecords()
       .sort(
         (
           a,
@@ -4584,8 +5885,23 @@ function renderRecords() {
       );
 
   updateStats(
-    allRecords
+    tripRecords
   );
+
+  const displayRecords =
+    getDisplayRecords()
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          new Date(
+            a.timestamp
+          ) -
+          new Date(
+            b.timestamp
+          )
+      );
 
   const list =
     document.getElementById(
@@ -4595,17 +5911,28 @@ function renderRecords() {
   list.innerHTML =
     "";
 
+  /*
+    清除舊 Marker
+  */
+
   recordMarkers.forEach(
-    marker =>
+    marker => {
+
       map.removeLayer(
         marker
-      )
+      );
+
+    }
   );
 
   recordMarkers =
     [];
 
   markerByRecordId.clear();
+
+  /*
+    清除舊路線
+  */
 
   if (
     pathLayer
@@ -4620,32 +5947,13 @@ function renderRecords() {
 
   }
 
-  let displayRecords =
-    allRecords;
-
-  if (
-    currentDateFilter !==
-    "all"
-  ) {
-
-    displayRecords =
-      allRecords.filter(
-        record =>
-          getRecordDateKey(
-            record
-          ) ===
-          currentDateFilter
-      );
-
-  }
-
   if (
     displayRecords.length ===
     0
   ) {
 
     list.innerHTML =
-      '<div class="empty">此日期沒有足跡</div>';
+      '<div class="empty">目前沒有符合條件的足跡</div>';
 
     return;
 
@@ -4739,6 +6047,11 @@ function renderRecords() {
           index
         ) => {
 
+          const typeInfo =
+            getTypeInfo(
+              record.type
+            );
+
           let distanceText =
             "";
 
@@ -4789,6 +6102,10 @@ function renderRecords() {
                 record.gmtOffset
               : zone;
 
+          const tripName =
+            record.tripName ||
+            "未分類旅程";
+
           const div =
             document.createElement(
               "div"
@@ -4808,11 +6125,7 @@ function renderRecords() {
 
               <div
                 class="record-main"
-                onclick="
-                  focusRecordOnMap(
-                    '${String(record.id)}'
-                  )
-                "
+                data-action="focus"
               >
 
                 <div class="record-time">
@@ -4825,7 +6138,7 @@ function renderRecords() {
 
                 <div class="record-place">
 
-                  📍
+                  ${typeInfo.icon}
                   ${escapeHTML(
                     record.place
                   )}
@@ -4838,25 +6151,17 @@ function renderRecords() {
               <div class="record-actions">
 
                 <button
+                  type="button"
                   class="edit-btn"
-                  onclick="
-                    event.stopPropagation();
-                    openEditModal(
-                      '${String(record.id)}'
-                    );
-                  "
+                  data-action="edit"
                 >
                   ✏️ 編輯
                 </button>
 
                 <button
+                  type="button"
                   class="delete-btn"
-                  onclick="
-                    event.stopPropagation();
-                    deleteRecord(
-                      '${String(record.id)}'
-                    );
-                  "
+                  data-action="delete"
                 >
                   🗑️ 刪除
                 </button>
@@ -4868,12 +6173,15 @@ function renderRecords() {
 
             <div
               class="record-detail"
-              onclick="
-                focusRecordOnMap(
-                  '${String(record.id)}'
-                )
-              "
+              data-action="focus"
             >
+
+              🧳
+              ${escapeHTML(
+                tripName
+              )}
+
+              <br>
 
               GPS：
               ${Number(
@@ -4894,6 +6202,15 @@ function renderRecords() {
               公尺
 
               <br>
+
+              <span
+                class="type-badge"
+              >
+
+                ${typeInfo.icon}
+                ${typeInfo.label}
+
+              </span>
 
               <span
                 class="record-timezone"
@@ -4952,9 +6269,74 @@ function renderRecords() {
 
           `;
 
+          /*
+            使用 addEventListener，
+            不把 record.id 直接塞進 onclick，
+            對匯入舊資料比較安全。
+          */
+
+          div
+            .querySelectorAll(
+              '[data-action="focus"]'
+            )
+            .forEach(
+              element => {
+
+                element.addEventListener(
+                  "click",
+                  () => {
+
+                    focusRecordOnMap(
+                      record.id
+                    );
+
+                  }
+                );
+
+              }
+            );
+
+          div
+            .querySelector(
+              '[data-action="edit"]'
+            )
+            .addEventListener(
+              "click",
+              event => {
+
+                event.stopPropagation();
+
+                openEditModal(
+                  record.id
+                );
+
+              }
+            );
+
+          div
+            .querySelector(
+              '[data-action="delete"]'
+            )
+            .addEventListener(
+              "click",
+              event => {
+
+                event.stopPropagation();
+
+                deleteRecord(
+                  record.id
+                );
+
+              }
+            );
+
           dayGroup.appendChild(
             div
           );
+
+          /*
+            Map Marker
+          */
 
           const marker =
             L.marker(
@@ -4975,13 +6357,24 @@ function renderRecords() {
               `
 
               <b>
-
-                ${markerIndex}.
+                ${typeInfo.icon}
                 ${escapeHTML(
                   record.place
                 )}
-
               </b>
+
+              <br>
+
+              ${escapeHTML(
+                typeInfo.label
+              )}
+
+              <br>
+
+              🧳
+              ${escapeHTML(
+                tripName
+              )}
 
               <br>
 
@@ -5046,6 +6439,10 @@ function renderRecords() {
     }
   );
 
+  /*
+    路線
+  */
+
   if (
     path.length >=
     2
@@ -5056,11 +6453,9 @@ function renderRecords() {
         path,
         {
 
-          weight:
-            4,
+          weight: 4,
 
-          opacity:
-            0.7
+          opacity: 0.7
 
         }
       )
@@ -5069,6 +6464,10 @@ function renderRecords() {
       );
 
   }
+
+  /*
+    自動縮放
+  */
 
   if (
     path.length >
@@ -5120,29 +6519,45 @@ function updateStats(
       "dayCount"
     )
     .textContent =
-    Object
-      .keys(
-        groups
-      )
-      .length;
+    Object.keys(
+      groups
+    ).length;
 
   let total =
     0;
 
-  Object
-    .values(
-      groups
-    )
-    .forEach(
-      day => {
+  /*
+    距離以每日為單位計算，
+    避免跨日最後一站 →
+    隔日第一站被算入每日移動。
+  */
 
-        total +=
-          calculateGroupDistance(
-            day
-          );
+  Object.values(
+    groups
+  )
+  .forEach(
+    dayRecords => {
 
-      }
-    );
+      dayRecords.sort(
+        (
+          a,
+          b
+        ) =>
+          new Date(
+            a.timestamp
+          ) -
+          new Date(
+            b.timestamp
+          )
+      );
+
+      total +=
+        calculateGroupDistance(
+          dayRecords
+        );
+
+    }
+  );
 
   document
     .getElementById(
@@ -5157,7 +6572,7 @@ function updateStats(
 
 
 /* =========================================================
-   DELETE
+   DELETE RECORD
 ========================================================= */
 
 async function deleteRecord(
@@ -5169,9 +6584,9 @@ async function deleteRecord(
 
   const target =
     records.find(
-      item =>
+      record =>
         String(
-          item.id
+          record.id
         ) ===
         String(
           id
@@ -5189,8 +6604,7 @@ async function deleteRecord(
   const ok =
     await showDialog({
 
-      icon:
-        "🗑️",
+      icon: "🗑️",
 
       title:
         "刪除足跡",
@@ -5205,8 +6619,13 @@ async function deleteRecord(
           "未命名地點"
         ) +
 
-        "\n" +
+        "\n🧳 " +
+        (
+          target.tripName ||
+          "未分類旅程"
+        ) +
 
+        "\n🕐 " +
         formatRecordTime(
           target
         ),
@@ -5232,9 +6651,9 @@ async function deleteRecord(
 
   const newRecords =
     records.filter(
-      item =>
+      record =>
         String(
-          item.id
+          record.id
         ) !==
         String(
           id
@@ -5258,7 +6677,7 @@ async function deleteRecord(
 
 
 /* =========================================================
-   EDIT
+   OPEN EDIT MODAL
 ========================================================= */
 
 function openEditModal(
@@ -5285,6 +6704,8 @@ function openEditModal(
 
   }
 
+  renderTripSelectors();
+
   document
     .getElementById(
       "editRecordId"
@@ -5293,6 +6714,22 @@ function openEditModal(
     String(
       record.id
     );
+
+  document
+    .getElementById(
+      "editTrip"
+    )
+    .value =
+    record.tripId ||
+    "default";
+
+  document
+    .getElementById(
+      "editType"
+    )
+    .value =
+    record.type ||
+    "other";
 
   document
     .getElementById(
@@ -5370,6 +6807,10 @@ function closeEditModal() {
 
 }
 
+
+/* =========================================================
+   EDIT DATE / TIME
+========================================================= */
 
 function getEditableDateTimeParts(
   record
@@ -5449,6 +6890,10 @@ function getEditableDateTimeParts(
 
 }
 
+
+/* =========================================================
+   LOCAL DATE/TIME → UTC
+========================================================= */
 
 function localDateTimeToUTC(
   dateText,
@@ -5594,6 +7039,10 @@ function localDateTimeToUTC(
 }
 
 
+/* =========================================================
+   SAVE EDIT
+========================================================= */
+
 async function saveEditedRecord() {
 
   const id =
@@ -5608,9 +7057,9 @@ async function saveEditedRecord() {
 
   const index =
     records.findIndex(
-      item =>
+      record =>
         String(
-          item.id
+          record.id
         ) ===
         String(
           id
@@ -5647,8 +7096,7 @@ async function saveEditedRecord() {
 
     await showDialog({
 
-      icon:
-        "⚠️",
+      icon: "⚠️",
 
       title:
         "資料不完整",
@@ -5684,6 +7132,38 @@ async function saveEditedRecord() {
       timeZone
 
     );
+
+  const newTripId =
+    document
+      .getElementById(
+        "editTrip"
+      )
+      .value;
+
+  const trip =
+    getTrips().find(
+      item =>
+        item.id ===
+        newTripId
+    ) ||
+    {
+      id: "default",
+      name: "未分類旅程"
+    };
+
+  record.tripId =
+    trip.id;
+
+  record.tripName =
+    trip.name;
+
+  record.type =
+    document
+      .getElementById(
+        "editType"
+      )
+      .value ||
+    "other";
 
   record.place =
     document
@@ -5723,6 +7203,8 @@ async function saveEditedRecord() {
 
   closeEditModal();
 
+  renderTripSelectors();
+
   updateDateFilterOptions();
 
   renderRecords();
@@ -5735,27 +7217,42 @@ async function saveEditedRecord() {
 
 
 /* =========================================================
-   CLEAR ALL
+   CLEAR ALL RECORDS
 ========================================================= */
 
 async function clearAllRecords() {
 
+  const records =
+    getRecords();
+
+  if (
+    records.length ===
+    0
+  ) {
+
+    showToast(
+      "目前沒有足跡"
+    );
+
+    return;
+
+  }
+
   const ok =
     await showDialog({
 
-      icon:
-        "⚠️",
+      icon: "⚠️",
 
       title:
         "清除全部足跡",
 
       message:
 
-        "確定要清除全部紀錄嗎？\n\n" +
+        "確定要清除全部足跡嗎？\n\n" +
 
-        "建議先匯出 JSON 備份。\n" +
+        "旅程名稱會保留，但所有足跡紀錄會刪除。\n\n" +
 
-        "此操作無法復原。",
+        "建議先匯出 JSON 備份。",
 
       confirmText:
         "全部清除",
@@ -5780,8 +7277,13 @@ async function clearAllRecords() {
     "travelFootprints"
   );
 
+  currentTripFilter =
+    "all";
+
   currentDateFilter =
     "all";
+
+  renderTripSelectors();
 
   updateDateFilterOptions();
 
@@ -5818,6 +7320,10 @@ function exportCSV() {
 
   const rows = [[
 
+    "旅程",
+
+    "足跡類型",
+
     "當地日期",
 
     "當地時間",
@@ -5842,7 +7348,7 @@ function exportCSV() {
 
   ]];
 
-  records
+  [...records]
     .sort(
       (
         a,
@@ -5858,7 +7364,17 @@ function exportCSV() {
     .forEach(
       record => {
 
+        const typeInfo =
+          getTypeInfo(
+            record.type
+          );
+
         rows.push([
+
+          record.tripName ||
+          "未分類旅程",
+
+          typeInfo.label,
 
           getRecordDateKey(
             record
@@ -5912,7 +7428,7 @@ function exportCSV() {
 
     csv,
 
-    "travel-footprints.csv",
+    "travel-footprints-v4-6.csv",
 
     "text/csv;charset=utf-8"
 
@@ -5943,14 +7459,31 @@ function exportJSON() {
 
   }
 
+  /*
+    V4.6 不只備份 records，
+    也把 trips 一起備份。
+
+    否則換手機後只還原 records，
+    旅程下拉選單會不完整。
+  */
+
   const backup = {
 
+    app:
+      "Travel Footprints",
+
     version:
-      "4.5",
+      "4.6",
 
     exportedAt:
       new Date()
         .toISOString(),
+
+    currentTripId:
+      getCurrentTripId(),
+
+    trips:
+      getTrips(),
 
     records:
       records
@@ -5965,11 +7498,157 @@ function exportJSON() {
       2
     ),
 
-    "travel-footprints-v4-5.json",
+    "travel-footprints-v4-6.json",
 
     "application/json"
 
   );
+
+}
+
+
+/* =========================================================
+   BUILD TRIPS FROM OLD RECORDS
+========================================================= */
+
+function buildTripsFromRecords(
+  records
+) {
+
+  const trips = [
+
+    {
+      id: "default",
+      name: "未分類旅程"
+    }
+
+  ];
+
+  const seen =
+    new Set([
+      "default"
+    ]);
+
+  records.forEach(
+    record => {
+
+      const tripId =
+        record.tripId ||
+        "default";
+
+      if (
+        seen.has(
+          tripId
+        )
+      ) {
+
+        return;
+
+      }
+
+      seen.add(
+        tripId
+      );
+
+      trips.push({
+
+        id:
+          tripId,
+
+        name:
+          record.tripName ||
+          "未命名旅程"
+
+      });
+
+    }
+  );
+
+  return trips;
+
+}
+
+
+/* =========================================================
+   NORMALIZE IMPORTED TRIPS
+========================================================= */
+
+function normalizeImportedTrips(
+  trips
+) {
+
+  const result = [
+
+    {
+      id: "default",
+      name: "未分類旅程"
+    }
+
+  ];
+
+  const seen =
+    new Set([
+      "default"
+    ]);
+
+  if (
+    !Array.isArray(
+      trips
+    )
+  ) {
+
+    return result;
+
+  }
+
+  trips.forEach(
+    trip => {
+
+      if (
+        !trip ||
+        !trip.id ||
+        !trip.name
+      ) {
+
+        return;
+
+      }
+
+      const id =
+        String(
+          trip.id
+        );
+
+      if (
+        seen.has(
+          id
+        )
+      ) {
+
+        return;
+
+      }
+
+      seen.add(
+        id
+      );
+
+      result.push({
+
+        id:
+          id,
+
+        name:
+          String(
+            trip.name
+          )
+
+      });
+
+    }
+  );
+
+  return result;
 
 }
 
@@ -6013,6 +7692,20 @@ function importJSON(
         let importedRecords =
           null;
 
+        let importedTrips =
+          null;
+
+        let importedCurrentTripId =
+          null;
+
+        /*
+          V2 舊格式：
+          [
+            record,
+            record
+          ]
+        */
+
         if (
           Array.isArray(
             data
@@ -6024,6 +7717,13 @@ function importJSON(
 
         }
 
+        /*
+          V3 ~ V4.6：
+          {
+            records: [...]
+          }
+        */
+
         else if (
           data &&
           Array.isArray(
@@ -6033,6 +7733,28 @@ function importJSON(
 
           importedRecords =
             data.records;
+
+          if (
+            Array.isArray(
+              data.trips
+            )
+          ) {
+
+            importedTrips =
+              data.trips;
+
+          }
+
+          if (
+            data.currentTripId
+          ) {
+
+            importedCurrentTripId =
+              String(
+                data.currentTripId
+              );
+
+          }
 
         }
 
@@ -6045,6 +7767,10 @@ function importJSON(
           );
 
         }
+
+        /*
+          驗證必要欄位
+        */
 
         const valid =
           importedRecords.every(
@@ -6066,24 +7792,107 @@ function importJSON(
         ) {
 
           throw new Error(
-            "備份中含有無效紀錄。"
+            "備份中含有無效的足跡紀錄。"
           );
 
         }
 
+        /*
+          修復：
+          - 舊 Record ID
+          - 重複 ID
+          - trip
+          - type
+        */
+
         const normalized =
-          normalizeRecordIds(
+          normalizeRecords(
             importedRecords
           );
 
         importedRecords =
           normalized.records;
 
+        /*
+          V4.6 有 trips：
+          使用備份中的 trips。
+
+          舊版沒有 trips：
+          從 record.tripId / tripName 重建。
+        */
+
+        let finalTrips;
+
+        if (
+          importedTrips
+        ) {
+
+          finalTrips =
+            normalizeImportedTrips(
+              importedTrips
+            );
+
+        }
+
+        else {
+
+          finalTrips =
+            buildTripsFromRecords(
+              importedRecords
+            );
+
+        }
+
+        /*
+          確保所有 record.tripId
+          都真的存在於 trip list。
+        */
+
+        const tripMap =
+          new Map(
+            finalTrips.map(
+              trip => [
+                trip.id,
+                trip
+              ]
+            )
+          );
+
+        importedRecords.forEach(
+          record => {
+
+            if (
+              !tripMap.has(
+                record.tripId
+              )
+            ) {
+
+              record.tripId =
+                "default";
+
+              record.tripName =
+                "未分類旅程";
+
+            }
+
+            else {
+
+              record.tripName =
+                tripMap
+                  .get(
+                    record.tripId
+                  )
+                  .name;
+
+            }
+
+          }
+        );
+
         const ok =
           await showDialog({
 
-            icon:
-              "📥",
+            icon: "📥",
 
             title:
               "匯入 JSON 備份",
@@ -6092,21 +7901,13 @@ function importJSON(
 
               "找到 " +
               importedRecords.length +
-              " 筆足跡。\n\n" +
+              " 筆足跡。\n" +
 
-              (
-                normalized.changed
+              "找到 " +
+              finalTrips.length +
+              " 個旅程。\n\n" +
 
-                ?
-
-                "已自動修復缺少或重複的 Record ID。\n\n"
-
-                :
-
-                ""
-              ) +
-
-              "匯入後會取代目前手機上的所有紀錄。\n\n" +
+              "匯入後會取代目前手機上的足跡與旅程資料。\n\n" +
 
               "確定要繼續嗎？",
 
@@ -6126,12 +7927,54 @@ function importJSON(
 
         }
 
+        saveTrips(
+          finalTrips
+        );
+
         saveRecords(
           importedRecords
         );
 
+        /*
+          恢復目前旅程
+        */
+
+        const finalTripIds =
+          new Set(
+            finalTrips.map(
+              trip =>
+                trip.id
+            )
+          );
+
+        if (
+          importedCurrentTripId &&
+          finalTripIds.has(
+            importedCurrentTripId
+          )
+        ) {
+
+          setCurrentTripId(
+            importedCurrentTripId
+          );
+
+        }
+
+        else {
+
+          setCurrentTripId(
+            "default"
+          );
+
+        }
+
+        currentTripFilter =
+          "all";
+
         currentDateFilter =
           "all";
+
+        renderTripSelectors();
 
         updateDateFilterOptions();
 
@@ -6153,10 +7996,13 @@ function importJSON(
         error
       ) {
 
+        console.error(
+          error
+        );
+
         await showDialog({
 
-          icon:
-            "❌",
+          icon: "❌",
 
           title:
             "匯入失敗",
@@ -6188,7 +8034,7 @@ function importJSON(
 
 
 /* =========================================================
-   DOWNLOAD
+   DOWNLOAD FILE
 ========================================================= */
 
 function downloadFile(
@@ -6213,26 +8059,24 @@ function downloadFile(
       blob
     );
 
-  const a =
+  const link =
     document.createElement(
       "a"
     );
 
-  a.href =
+  link.href =
     url;
 
-  a.download =
+  link.download =
     filename;
 
   document.body.appendChild(
-    a
+    link
   );
 
-  a.click();
+  link.click();
 
-  document.body.removeChild(
-    a
-  );
+  link.remove();
 
   setTimeout(
     () => {
@@ -6265,22 +8109,22 @@ function csvEscape(
 
   }
 
-  const str =
+  const text =
     String(
       value
     );
 
   if (
-    str.includes(",") ||
-    str.includes('"') ||
-    str.includes("\n")
+    text.includes(",") ||
+    text.includes('"') ||
+    text.includes("\n")
   ) {
 
     return (
 
       '"' +
 
-      str.replace(
+      text.replace(
         /"/g,
         '""'
       ) +
@@ -6291,7 +8135,7 @@ function csvEscape(
 
   }
 
-  return str;
+  return text;
 
 }
 
@@ -6305,7 +8149,7 @@ function escapeHTML(
 ) {
 
   return String(
-    value ||
+    value ??
     ""
   )
   .replaceAll(
@@ -6333,7 +8177,7 @@ function escapeHTML(
 
 
 /* =========================================================
-   EDIT MODAL BACKGROUND
+   MODAL BACKGROUND CLOSE
 ========================================================= */
 
 document
@@ -6359,14 +8203,95 @@ document
   );
 
 
+document
+  .getElementById(
+    "tripModal"
+  )
+  .addEventListener(
+    "click",
+    function(
+      event
+    ) {
+
+      if (
+        event.target ===
+        this
+      ) {
+
+        closeTripModal();
+
+      }
+
+    }
+  );
+
+
 /* =========================================================
-   START
+   ENTER → CREATE TRIP
 ========================================================= */
+
+document
+  .getElementById(
+    "newTripName"
+  )
+  .addEventListener(
+    "keydown",
+    function(
+      event
+    ) {
+
+      if (
+        event.key ===
+        "Enter"
+      ) {
+
+        event.preventDefault();
+
+        createTrip();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   APP START
+========================================================= */
+
+/*
+  第一次進入 V4.6：
+
+  getTrips()
+  會自動建立：
+  未分類旅程
+
+  getRecords()
+  會把 V4.5 舊紀錄自動補上：
+  tripId
+  tripName
+  type
+*/
+
+getTrips();
+
+getRecords();
+
+renderTripSelectors();
 
 updateDateFilterOptions();
 
 renderRecords();
 
+selectType(
+  "other"
+);
+
+
+/*
+  iPhone Safari 從背景回到前景，
+  更新時間與 Leaflet 尺寸。
+*/
 
 document.addEventListener(
 
