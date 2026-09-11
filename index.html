@@ -8776,26 +8776,7 @@ function renderRecords() {
       );
 
 
-  const statsRecords =
-    getTripFilteredRecords()
-      .sort(
-        (
-          a,
-          b
-        ) =>
-          new Date(
-            a.timestamp
-          ) -
-          new Date(
-            b.timestamp
-          )
-      );
 
-
-  updateStats(
-    statsRecords,
-    allRecords
-  );
 
 
   const displayRecords =
