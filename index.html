@@ -2,24 +2,87 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V3
+  我的旅遊足跡 V4
 =============================================================
 
-【V3 新增 / 修改功能】
+【V4 新增 / 修改功能】
 
-1. 單筆紀錄刪除修正
-2. 新增單筆編輯功能
-3. 新增 UUID 唯一識別碼
-4. 新增重複紀錄提醒
-5. 新增 JSON 備份匯入 / 還原
-6. 修改 JSON 匯出格式
-7. 保留舊版資料相容性
-8. 保留自動時區與 GMT 顯示
-9. 保留每日分組與距離統計
-10. 保留 Leaflet / OpenStreetMap 地圖
+1. V4 新增：自製訊息 / 確認對話框
+   - 移除主要操作中的 window.alert()
+   - 移除主要操作中的 window.confirm()
+   - 避免 iOS 顯示「禁止顯示對話方塊」
+   - 新增、修改、刪除、重複提醒、清除資料、
+     JSON 匯入確認皆使用自製 Modal
+   - 成功訊息使用 Toast 提示，不阻擋操作
+
+2. V4 新增：日期篩選功能
+   - 可選擇「全部日期」
+   - 可只查看指定日期的足跡
+   - 足跡時間軸同步篩選
+   - 地圖 Marker 同步篩選
+   - 地圖路線同步只顯示所選日期
+   - 統計區仍顯示整趟旅行總資料
+
+3. V4 新增：地圖 Marker 與足跡列表連動
+   - 點擊地圖 Marker
+   - 自動捲動到對應的足跡紀錄
+   - 對應紀錄會短暫高亮顯示
+
+4. V4 新增：足跡點擊定位
+   - 點擊足跡內容可讓地圖移動到該位置
+   - 自動開啟該 Marker Popup
+
+5. V4 改善：編輯 Modal
+   - 延續 V3 編輯功能
+   - 可修改地點、日期、時間、備註
+   - GPS 座標維持不變
+   - 修改完成改用 Toast 顯示結果
+
+6. V4 改善：單筆刪除
+   - 保留 V3 String ID 比對
+   - 支援舊版 Date.now() 數字 ID
+   - 支援 V3/V4 UUID
+   - 改用自製確認視窗
+
+7. V4 改善：重複紀錄防呆
+   - 60 秒內
+   - 距離 30 公尺內
+   - 顯示自製確認視窗
+   - 使用者仍可選擇強制新增
+
+8. V4 改善：JSON 備份 / 還原
+   - 支援 V2 Array JSON
+   - 支援 V3 JSON
+   - 支援 V4 JSON
+   - 匯入前驗證資料格式
+   - 匯入改用自製確認視窗
+   - 匯出版本更新為 version: 4
+
+9. 保留自動時區
+   - Asia/Taipei · GMT+8
+   - Asia/Tokyo · GMT+9
+   - 每筆紀錄保存自己的時區
+
+10. 保留日期分組
+    - 每日足跡數量
+    - 每日移動距離
+    - 日期與星期
+
+11. 保留距離統計
+    - Haversine Formula
+    - 前一站直線距離
+    - 每日總距離
+    - 整趟旅行總距離
+
+12. 保留 GPS / 自動地名
+    - navigator.geolocation
+    - GPS 精度
+    - OpenStreetMap Nominatim
+
+13. 保留 Leaflet / OpenStreetMap 地圖
 
 Storage Key : travelFootprints
-Version     : V3
+Version     : V4
 =============================================================
 -->
 
@@ -27,803 +90,816 @@ Version     : V3
 
 <head>
 
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width,
-             initial-scale=1.0,
-             viewport-fit=cover"
-  >
+<meta
+  name="viewport"
+  content="width=device-width,
+           initial-scale=1.0,
+           viewport-fit=cover"
+>
 
-  <meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff">
 
-  <title>我的旅遊足跡 V3</title>
+<title>我的旅遊足跡 V4</title>
 
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+<style>
 
+* {
+  box-sizing: border-box;
+}
 
-  <style>
+html {
+  scroll-behavior: smooth;
+}
 
-    * {
-      box-sizing: border-box;
-    }
+body {
+  margin: 0;
 
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Noto Sans TC",
+    sans-serif;
 
-    body {
+  background: #f5f6f8;
+  color: #222;
+}
 
-      margin: 0;
 
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        "Noto Sans TC",
-        sans-serif;
+/* =====================================================
+   Header
+===================================================== */
 
-      background: #f5f6f8;
+header {
+  background: white;
 
-      color: #222;
+  padding:
+    calc(18px + env(safe-area-inset-top))
+    16px
+    14px;
 
-    }
+  position: sticky;
 
+  top: 0;
 
-    header {
+  z-index: 1000;
 
-      background: white;
+  box-shadow:
+    0 1px 8px
+    rgba(0,0,0,0.08);
+}
 
-      padding:
-        calc(18px + env(safe-area-inset-top))
-        16px
-        14px;
+header h1 {
+  margin: 0;
+  font-size: 22px;
+}
 
-      position: sticky;
+header .date {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #777;
+}
 
-      top: 0;
+.timezone-header {
+  display: flex;
+  align-items: center;
 
-      z-index: 1000;
+  gap: 6px;
 
-      box-shadow:
-        0 1px 8px
-        rgba(0,0,0,0.08);
+  flex-wrap: wrap;
 
-    }
+  margin-top: 6px;
 
+  font-size: 13px;
 
-    header h1 {
+  color: #555;
+}
 
-      margin: 0;
+.timezone-badge {
+  display: inline-block;
 
-      font-size: 22px;
+  padding: 3px 8px;
 
-    }
+  border-radius: 999px;
 
+  background: #eef4ff;
 
-    header .date {
+  color: #1659b7;
 
-      margin-top: 5px;
+  font-weight: 600;
+}
 
-      font-size: 14px;
+.version-badge {
+  display: inline-block;
 
-      color: #777;
+  margin-left: 4px;
 
-    }
+  padding: 3px 7px;
 
+  border-radius: 999px;
 
-    .timezone-header {
+  background: #edf8f1;
 
-      display: flex;
+  color: #13713d;
 
-      align-items: center;
+  font-size: 11px;
 
-      gap: 6px;
+  font-weight: 700;
+}
 
-      flex-wrap: wrap;
 
-      margin-top: 6px;
+/* =====================================================
+   Layout
+===================================================== */
 
-      font-size: 13px;
+.container {
+  max-width: 760px;
 
-      color: #555;
+  margin: auto;
 
-    }
+  padding: 14px;
 
+  padding-bottom:
+    calc(
+      30px +
+      env(safe-area-inset-bottom)
+    );
+}
 
-    .timezone-badge {
+.card {
+  background: white;
 
-      display: inline-block;
+  border-radius: 16px;
 
-      padding: 3px 8px;
+  padding: 16px;
 
-      border-radius: 999px;
+  margin-bottom: 14px;
 
-      background: #eef4ff;
+  box-shadow:
+    0 2px 10px
+    rgba(0,0,0,0.06);
+}
 
-      color: #1659b7;
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
 
-      font-weight: 600;
 
-    }
+/* =====================================================
+   Time
+===================================================== */
 
+.time-info {
+  background: #fff8e8;
 
-    .version-badge {
+  padding: 12px;
 
-      display: inline-block;
+  border-radius: 12px;
 
-      margin-left: 4px;
+  margin-bottom: 14px;
 
-      padding: 3px 7px;
+  line-height: 1.8;
 
-      border-radius: 999px;
+  font-size: 14px;
+}
 
-      background: #edf8f1;
+.time-info strong {
+  color: #9a6400;
+}
 
-      color: #13713d;
 
-      font-size: 11px;
+/* =====================================================
+   Map
+===================================================== */
 
-      font-weight: 700;
+#map {
+  width: 100%;
 
-    }
+  height: 330px;
 
+  border-radius: 14px;
 
-    .container {
+  overflow: hidden;
+}
 
-      max-width: 760px;
 
-      margin: auto;
+/* =====================================================
+   Form
+===================================================== */
 
-      padding: 14px;
+.gps-info {
+  background: #f3f7ff;
 
-      padding-bottom:
-        calc(
-          30px +
-          env(safe-area-inset-bottom)
-        );
+  padding: 12px;
 
-    }
+  border-radius: 12px;
 
+  margin-bottom: 12px;
 
-    .card {
+  line-height: 1.8;
 
-      background: white;
+  font-size: 14px;
+}
 
-      border-radius: 16px;
+label {
+  display: block;
 
-      padding: 16px;
+  margin-bottom: 6px;
 
-      margin-bottom: 14px;
+  font-size: 14px;
 
-      box-shadow:
-        0 2px 10px
-        rgba(0,0,0,0.06);
+  font-weight: 600;
+}
 
-    }
+input,
+textarea,
+select {
+  width: 100%;
 
+  padding: 12px;
 
-    .section-title {
+  border: 1px solid #ddd;
 
-      font-size: 18px;
+  border-radius: 10px;
 
-      font-weight: 700;
+  font-size: 16px;
 
-      margin-bottom: 12px;
+  margin-bottom: 12px;
 
-    }
+  background: white;
+}
 
+textarea {
+  resize: vertical;
+  min-height: 70px;
+}
 
-    #map {
 
-      width: 100%;
+/* =====================================================
+   Buttons
+===================================================== */
 
-      height: 330px;
+button {
+  width: 100%;
 
-      border-radius: 14px;
+  border: none;
 
-      overflow: hidden;
+  border-radius: 12px;
 
-    }
+  padding: 14px;
 
+  font-size: 16px;
 
-    .gps-info {
+  font-weight: 700;
 
-      background: #f3f7ff;
+  cursor: pointer;
 
-      padding: 12px;
+  margin-bottom: 8px;
 
-      border-radius: 12px;
+  -webkit-tap-highlight-color:
+    transparent;
+}
 
-      margin-bottom: 12px;
+.btn-primary {
+  background: #1f6feb;
+  color: white;
+}
 
-      line-height: 1.8;
+.btn-green {
+  background: #138a4b;
+  color: white;
+}
 
-      font-size: 14px;
+.btn-gray {
+  background: #eceef1;
+  color: #222;
+}
 
-    }
+.btn-red {
+  background: #d73a49;
+  color: white;
+}
 
+.btn-orange {
+  background: #e58a00;
+  color: white;
+}
 
-    .time-info {
+.button-row {
+  display: grid;
 
-      background: #fff8e8;
+  grid-template-columns:
+    1fr 1fr;
 
-      padding: 12px;
+  gap: 8px;
+}
 
-      border-radius: 12px;
 
-      margin-bottom: 14px;
+/* =====================================================
+   Status
+===================================================== */
 
-      line-height: 1.8;
+.status {
+  font-size: 14px;
 
-      font-size: 14px;
+  color: #666;
 
-    }
+  text-align: center;
 
+  margin-top: 5px;
 
-    .time-info strong {
+  margin-bottom: 10px;
 
-      color: #9a6400;
+  min-height: 22px;
+}
 
-    }
+.small-note {
+  font-size: 12px;
 
+  color: #888;
 
-    label {
+  line-height: 1.6;
 
-      display: block;
+  margin-top: 4px;
+}
 
-      margin-bottom: 6px;
 
-      font-size: 14px;
+/* =====================================================
+   Stats
+===================================================== */
 
-      font-weight: 600;
+.stats {
+  display: grid;
 
-    }
+  grid-template-columns:
+    repeat(3, 1fr);
 
+  gap: 8px;
+}
 
-    input,
-    textarea,
-    select {
+.stat {
+  background: #f6f7f9;
 
-      width: 100%;
+  padding: 12px 6px;
 
-      padding: 12px;
+  border-radius: 12px;
 
-      border: 1px solid #ddd;
+  text-align: center;
+}
 
-      border-radius: 10px;
+.stat-value {
+  font-weight: 700;
+  font-size: 18px;
+}
 
-      font-size: 16px;
+.stat-label {
+  font-size: 12px;
 
-      margin-bottom: 12px;
+  color: #777;
 
-      background: white;
+  margin-top: 3px;
+}
 
-    }
 
+/* =====================================================
+   V4 新增：日期篩選
+===================================================== */
 
-    textarea {
+.filter-box {
+  background: #f6f8fb;
 
-      resize: vertical;
+  border-radius: 12px;
 
-      min-height: 70px;
+  padding: 12px;
 
-    }
+  margin-bottom: 14px;
+}
 
+.filter-title {
+  font-size: 14px;
 
-    button {
+  font-weight: 700;
 
-      width: 100%;
+  margin-bottom: 8px;
+}
 
-      border: none;
+.filter-box select {
+  margin-bottom: 0;
+}
 
-      border-radius: 12px;
 
-      padding: 14px;
+/* =====================================================
+   Day Group
+===================================================== */
 
-      font-size: 16px;
+.day-group {
+  margin-bottom: 22px;
+}
 
-      font-weight: 700;
+.day-header {
+  background: #f6f8fb;
 
-      cursor: pointer;
+  border-radius: 12px;
 
-      margin-bottom: 8px;
+  padding: 12px 14px;
 
-      -webkit-tap-highlight-color:
-        transparent;
+  margin-bottom: 4px;
+}
 
-    }
+.day-title {
+  font-size: 17px;
+  font-weight: 700;
+}
 
+.day-summary {
+  margin-top: 5px;
 
-    .btn-primary {
+  font-size: 13px;
 
-      background: #1f6feb;
+  color: #666;
+}
 
-      color: white;
 
-    }
+/* =====================================================
+   Record
+===================================================== */
 
+.record {
+  padding: 15px 8px;
 
-    .btn-green {
+  border-bottom:
+    1px solid #eee;
 
-      background: #138a4b;
+  border-radius: 12px;
 
-      color: white;
+  transition:
+    background 0.25s,
+    box-shadow 0.25s;
+}
 
-    }
+.record:last-child {
+  border-bottom: none;
+}
 
 
-    .btn-gray {
+/* =====================================================
+   V4 新增：Marker 跳轉後高亮
+===================================================== */
 
-      background: #eceef1;
+.record.record-highlight {
+  background: #fff7d9;
 
-      color: #222;
+  box-shadow:
+    0 0 0 2px
+    rgba(229,138,0,0.18);
+}
 
-    }
 
+.record-main {
+  cursor: pointer;
+}
 
-    .btn-red {
+.record-top {
+  display: flex;
 
-      background: #d73a49;
+  justify-content:
+    space-between;
 
-      color: white;
+  align-items:
+    flex-start;
 
-    }
+  gap: 10px;
+}
 
+.record-time {
+  font-weight: 700;
 
-    .btn-orange {
+  font-size: 19px;
+}
 
-      background: #e58a00;
+.record-place {
+  font-size: 17px;
 
-      color: white;
+  margin-top: 5px;
 
-    }
+  font-weight: 600;
+}
 
+.record-detail {
+  margin-top: 7px;
 
-    .button-row {
+  font-size: 13px;
 
-      display: grid;
+  color: #777;
 
-      grid-template-columns:
-        1fr 1fr;
+  line-height: 1.7;
+}
 
-      gap: 8px;
+.record-timezone {
+  display: inline-block;
 
-    }
+  margin-top: 5px;
 
+  padding: 3px 7px;
 
-    .stats {
+  background: #eef4ff;
 
-      display: grid;
+  color: #175bb6;
 
-      grid-template-columns:
-        repeat(3, 1fr);
+  border-radius: 7px;
 
-      gap: 8px;
+  font-size: 12px;
 
-    }
+  font-weight: 600;
+}
 
+.record-distance {
+  display: inline-block;
 
-    .stat {
+  margin-top: 5px;
 
-      background: #f6f7f9;
+  margin-left: 4px;
 
-      padding: 12px 6px;
+  padding: 3px 7px;
 
-      border-radius: 12px;
+  background: #edf8f1;
 
-      text-align: center;
+  color: #13713d;
 
-    }
+  border-radius: 7px;
 
+  font-size: 12px;
 
-    .stat-value {
+  font-weight: 600;
+}
 
-      font-weight: 700;
+.record-note {
+  margin-top: 8px;
 
-      font-size: 18px;
+  font-size: 14px;
 
-    }
+  color: #444;
 
+  background: #f7f7f7;
 
-    .stat-label {
+  padding: 8px 10px;
 
-      font-size: 12px;
+  border-radius: 8px;
+}
 
-      color: #777;
 
-      margin-top: 3px;
+/* =====================================================
+   Record Actions
+===================================================== */
 
-    }
+.record-actions {
+  display: flex;
 
+  gap: 7px;
 
-    .status {
+  flex-shrink: 0;
+}
 
-      font-size: 14px;
+.record-actions button {
+  width: auto;
 
-      color: #666;
+  margin: 0;
 
-      text-align: center;
+  padding: 8px 10px;
 
-      margin-top: 5px;
+  font-size: 13px;
+}
 
-      margin-bottom: 10px;
+.edit-btn {
+  background: #fff6df;
+  color: #9a6400;
+}
 
-      min-height: 22px;
+.delete-btn {
+  background: #fff0f0;
+  color: #c62828;
+}
 
-    }
+.empty {
+  color: #999;
 
+  text-align: center;
 
-    .small-note {
+  padding: 25px 5px;
+}
 
-      font-size: 12px;
 
-      color: #888;
+/* =====================================================
+   Edit Modal
+===================================================== */
 
-      line-height: 1.6;
+.modal-overlay {
+  position: fixed;
 
-      margin-top: 4px;
+  inset: 0;
 
-    }
+  background:
+    rgba(0,0,0,0.48);
 
+  display: none;
 
-    /* =====================================================
-       日期區塊
-    ===================================================== */
+  align-items: center;
 
-    .day-group {
+  justify-content: center;
 
-      margin-bottom: 22px;
+  padding: 16px;
 
-    }
+  z-index: 9999;
+}
 
+.modal-overlay.show {
+  display: flex;
+}
 
-    .day-header {
+.modal {
+  width: 100%;
 
-      background: #f6f8fb;
+  max-width: 520px;
 
-      border-radius: 12px;
+  max-height: 90vh;
 
-      padding: 12px 14px;
+  overflow-y: auto;
 
-      margin-bottom: 4px;
+  background: white;
 
-    }
+  border-radius: 18px;
 
+  padding: 18px;
 
-    .day-title {
+  box-shadow:
+    0 8px 30px
+    rgba(0,0,0,0.25);
+}
 
-      font-size: 17px;
+.modal-title {
+  font-size: 20px;
 
-      font-weight: 700;
+  font-weight: 700;
 
-    }
+  margin-bottom: 16px;
+}
 
+.modal-actions {
+  display: grid;
 
-    .day-summary {
+  grid-template-columns:
+    1fr 1fr;
 
-      margin-top: 5px;
+  gap: 8px;
 
-      font-size: 13px;
+  margin-top: 8px;
+}
 
-      color: #666;
+.modal-actions button {
+  margin-bottom: 0;
+}
 
-    }
 
+/* =====================================================
+   V4 新增：自製 Message / Confirm Modal
+===================================================== */
 
-    /* =====================================================
-       單筆紀錄
-    ===================================================== */
+.dialog-icon {
+  text-align: center;
 
-    .record {
+  font-size: 42px;
 
-      padding: 15px 4px;
+  margin-bottom: 8px;
+}
 
-      border-bottom:
-        1px solid #eee;
+.dialog-title {
+  text-align: center;
 
-    }
+  font-size: 21px;
 
+  font-weight: 700;
 
-    .record:last-child {
+  margin-bottom: 12px;
+}
 
-      border-bottom: none;
+.dialog-message {
+  white-space: pre-line;
 
-    }
+  text-align: center;
 
+  color: #555;
 
-    .record-top {
+  line-height: 1.7;
 
-      display: flex;
+  font-size: 15px;
 
-      justify-content:
-        space-between;
+  margin-bottom: 16px;
+}
 
-      align-items:
-        flex-start;
+.dialog-actions {
+  display: grid;
 
-      gap: 10px;
+  grid-template-columns:
+    1fr 1fr;
 
-    }
+  gap: 8px;
+}
 
+.dialog-actions.single {
+  grid-template-columns: 1fr;
+}
 
-    .record-time {
 
-      font-weight: 700;
+/* =====================================================
+   V4 新增：Toast
+===================================================== */
 
-      font-size: 19px;
+.toast {
+  position: fixed;
 
-    }
+  left: 50%;
 
+  bottom:
+    calc(
+      26px +
+      env(safe-area-inset-bottom)
+    );
 
-    .record-place {
+  transform:
+    translateX(-50%)
+    translateY(30px);
 
-      font-size: 17px;
+  background:
+    rgba(25,25,25,0.92);
 
-      margin-top: 5px;
+  color: white;
 
-      font-weight: 600;
+  padding: 11px 18px;
 
-    }
+  border-radius: 999px;
 
+  font-size: 14px;
 
-    .record-detail {
+  opacity: 0;
 
-      margin-top: 7px;
+  pointer-events: none;
 
-      font-size: 13px;
+  transition:
+    opacity .25s,
+    transform .25s;
 
-      color: #777;
+  z-index: 12000;
 
-      line-height: 1.7;
+  max-width: 88%;
 
-    }
+  text-align: center;
+}
 
+.toast.show {
+  opacity: 1;
 
-    .record-timezone {
+  transform:
+    translateX(-50%)
+    translateY(0);
+}
 
-      display: inline-block;
 
-      margin-top: 5px;
+/* =====================================================
+   Mobile
+===================================================== */
 
-      padding: 3px 7px;
+@media
+(max-width: 480px) {
 
-      background: #eef4ff;
+  #map {
+    height: 280px;
+  }
 
-      color: #175bb6;
+  .container {
+    padding: 10px;
+  }
 
-      border-radius: 7px;
+  .card {
+    border-radius: 14px;
+    padding: 14px;
+  }
 
-      font-size: 12px;
+  .record-actions {
+    flex-direction: column;
+  }
 
-      font-weight: 600;
+}
 
-    }
-
-
-    .record-distance {
-
-      display: inline-block;
-
-      margin-top: 5px;
-
-      margin-left: 4px;
-
-      padding: 3px 7px;
-
-      background: #edf8f1;
-
-      color: #13713d;
-
-      border-radius: 7px;
-
-      font-size: 12px;
-
-      font-weight: 600;
-
-    }
-
-
-    .record-note {
-
-      margin-top: 8px;
-
-      font-size: 14px;
-
-      color: #444;
-
-      background: #f7f7f7;
-
-      padding: 8px 10px;
-
-      border-radius: 8px;
-
-    }
-
-
-    /* =====================================================
-       V3 新增：單筆操作按鈕
-    ===================================================== */
-
-    .record-actions {
-
-      display: flex;
-
-      gap: 7px;
-
-      flex-shrink: 0;
-
-    }
-
-
-    .record-actions button {
-
-      width: auto;
-
-      margin: 0;
-
-      padding: 8px 10px;
-
-      font-size: 13px;
-
-    }
-
-
-    .edit-btn {
-
-      background: #fff6df;
-
-      color: #9a6400;
-
-    }
-
-
-    .delete-btn {
-
-      background: #fff0f0;
-
-      color: #c62828;
-
-    }
-
-
-    .empty {
-
-      color: #999;
-
-      text-align: center;
-
-      padding: 25px 5px;
-
-    }
-
-
-    /* =====================================================
-       V3 新增：編輯視窗 Modal
-    ===================================================== */
-
-    .modal-overlay {
-
-      position: fixed;
-
-      inset: 0;
-
-      background:
-        rgba(0,0,0,0.48);
-
-      display: none;
-
-      align-items: center;
-
-      justify-content: center;
-
-      padding: 16px;
-
-      z-index: 9999;
-
-    }
-
-
-    .modal-overlay.show {
-
-      display: flex;
-
-    }
-
-
-    .modal {
-
-      width: 100%;
-
-      max-width: 520px;
-
-      max-height: 90vh;
-
-      overflow-y: auto;
-
-      background: white;
-
-      border-radius: 18px;
-
-      padding: 18px;
-
-      box-shadow:
-        0 8px 30px
-        rgba(0,0,0,0.25);
-
-    }
-
-
-    .modal-title {
-
-      font-size: 20px;
-
-      font-weight: 700;
-
-      margin-bottom: 16px;
-
-    }
-
-
-    .modal-actions {
-
-      display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap: 8px;
-
-      margin-top: 8px;
-
-    }
-
-
-    .modal-actions button {
-
-      margin-bottom: 0;
-
-    }
-
-
-    @media
-    (max-width: 480px) {
-
-      #map {
-
-        height: 280px;
-
-      }
-
-
-      .container {
-
-        padding: 10px;
-
-      }
-
-
-      .card {
-
-        border-radius: 14px;
-
-        padding: 14px;
-
-      }
-
-
-      .record-actions {
-
-        flex-direction: column;
-
-      }
-
-    }
-
-  </style>
+</style>
 
 </head>
 
@@ -834,36 +910,34 @@ Version     : V3
 
 <header>
 
-  <h1>
-    🌏 我的旅遊足跡
-    <span class="version-badge">
-      V3
-    </span>
-  </h1>
+<h1>
+  🌏 我的旅遊足跡
 
+  <span class="version-badge">
+    V4
+  </span>
+</h1>
 
-  <div
-    class="date"
-    id="todayText">
-  </div>
+<div
+  class="date"
+  id="todayText">
+</div>
 
+<div class="timezone-header">
 
-  <div
-    class="timezone-header">
+  <span>
+    🕐 目前時區
+  </span>
 
-    <span>
-      🕐 目前時區
-    </span>
+  <span
+    class="timezone-badge"
+    id="headerTimeZone">
 
-    <span
-      class="timezone-badge"
-      id="headerTimeZone">
+    偵測中...
 
-      偵測中...
+  </span>
 
-    </span>
-
-  </div>
+</div>
 
 </header>
 
@@ -872,343 +946,324 @@ Version     : V3
 <div class="container">
 
 
-  <!-- =====================================================
-       現在時間
-  ====================================================== -->
+<!-- =====================================================
+     現在時間
+====================================================== -->
 
-  <div class="card">
+<div class="card">
 
-    <div class="section-title">
-      🕐 目前時間
+  <div class="section-title">
+    🕐 目前時間
+  </div>
+
+  <div class="time-info">
+
+    <div>
+      當地時間：
+      <strong id="currentLocalTime">
+        --
+      </strong>
     </div>
 
-
-    <div class="time-info">
-
-      <div>
-        當地時間：
-        <strong id="currentLocalTime">
-          --
-        </strong>
-      </div>
-
-
-      <div>
-        時區：
-        <strong id="currentTimeZone">
-          --
-        </strong>
-      </div>
-
-
-      <div>
-        GMT：
-        <strong id="currentGMT">
-          --
-        </strong>
-      </div>
-
+    <div>
+      時區：
+      <strong id="currentTimeZone">
+        --
+      </strong>
     </div>
 
+    <div>
+      GMT：
+      <strong id="currentGMT">
+        --
+      </strong>
+    </div>
 
-    <div class="small-note">
+  </div>
 
-      時區依照 iPhone
-      目前系統時區自動偵測。
-      出國時建議開啟
-      「設定 → 一般 → 日期與時間 →
-      自動設定」。
+</div>
 
+
+
+<!-- =====================================================
+     地圖
+====================================================== -->
+
+<div class="card">
+
+  <div class="section-title">
+    🗺️ 足跡地圖
+  </div>
+
+  <div id="map"></div>
+
+</div>
+
+
+
+<!-- =====================================================
+     GPS
+====================================================== -->
+
+<div class="card">
+
+  <div class="section-title">
+    📍 紀錄目前位置
+  </div>
+
+
+  <div class="gps-info">
+
+    <div>
+      緯度：
+      <span id="lat">
+        尚未定位
+      </span>
+    </div>
+
+    <div>
+      經度：
+      <span id="lng">
+        尚未定位
+      </span>
+    </div>
+
+    <div>
+      GPS 精度：
+      <span id="accuracy">
+        --
+      </span>
     </div>
 
   </div>
 
 
+  <button
+    class="btn-primary"
+    onclick="getCurrentLocation()">
 
-  <!-- =====================================================
-       地圖
-  ====================================================== -->
+    📡 取得目前 GPS
 
-  <div class="card">
+  </button>
 
-    <div class="section-title">
-      🗺️ 足跡地圖
+
+  <div
+    class="status"
+    id="gpsStatus">
+  </div>
+
+
+  <label>
+    地點名稱
+  </label>
+
+  <input
+    type="text"
+    id="placeName"
+    placeholder="例如：桃園機場、福岡機場、博多車站"
+  >
+
+
+  <label>
+    備註
+  </label>
+
+  <textarea
+    id="note"
+    placeholder="例如：抵達、吃午餐、搭電車、開始逛街"
+  ></textarea>
+
+
+  <button
+    class="btn-green"
+    onclick="saveLocation()">
+
+    📍 紀錄這個位置
+
+  </button>
+
+</div>
+
+
+
+<!-- =====================================================
+     統計
+====================================================== -->
+
+<div class="card">
+
+  <div class="section-title">
+    📊 旅行統計
+  </div>
+
+
+  <div class="stats">
+
+    <div class="stat">
+
+      <div
+        class="stat-value"
+        id="recordCount">
+        0
+      </div>
+
+      <div class="stat-label">
+        足跡
+      </div>
+
     </div>
 
-    <div id="map"></div>
+
+    <div class="stat">
+
+      <div
+        class="stat-value"
+        id="dayCount">
+        0
+      </div>
+
+      <div class="stat-label">
+        天數
+      </div>
+
+    </div>
+
+
+    <div class="stat">
+
+      <div
+        class="stat-value"
+        id="totalDistance">
+        0 km
+      </div>
+
+      <div class="stat-label">
+        總移動
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     足跡
+====================================================== -->
+
+<div class="card">
+
+  <div class="section-title">
+    🕐 足跡時間軸
+  </div>
+
+
+  <!-- =================================================
+       V4 新增：日期篩選
+  ================================================== -->
+
+  <div class="filter-box">
+
+    <div class="filter-title">
+      📅 顯示日期
+    </div>
+
+    <select
+      id="dateFilter"
+      onchange="changeDateFilter()">
+
+      <option value="all">
+        全部日期
+      </option>
+
+    </select>
 
   </div>
 
 
+  <div id="recordList"></div>
 
-  <!-- =====================================================
-       GPS
-  ====================================================== -->
-
-  <div class="card">
+</div>
 
 
-    <div class="section-title">
-      📍 紀錄目前位置
-    </div>
+
+<!-- =====================================================
+     備份
+====================================================== -->
+
+<div class="card">
+
+  <div class="section-title">
+    💾 備份 / 還原
+  </div>
 
 
-    <div class="gps-info">
-
-      <div>
-        緯度：
-        <span id="lat">
-          尚未定位
-        </span>
-      </div>
-
-
-      <div>
-        經度：
-        <span id="lng">
-          尚未定位
-        </span>
-      </div>
-
-
-      <div>
-        GPS 精度：
-        <span id="accuracy">
-          --
-        </span>
-      </div>
-
-    </div>
-
-
+  <div class="button-row">
 
     <button
-      class="btn-primary"
-      onclick="getCurrentLocation()">
+      class="btn-gray"
+      onclick="exportCSV()">
 
-      📡 取得目前 GPS
+      匯出 CSV
 
     </button>
 
 
-    <div
-      class="status"
-      id="gpsStatus">
-    </div>
-
-
-
-    <label>
-      地點名稱
-    </label>
-
-
-    <input
-      type="text"
-      id="placeName"
-      placeholder="例如：桃園機場、福岡機場、博多車站"
-    >
-
-
-
-    <label>
-      備註
-    </label>
-
-
-    <textarea
-      id="note"
-      placeholder="例如：抵達、吃午餐、搭電車、開始逛街"
-    ></textarea>
-
-
-
     <button
-      class="btn-green"
-      onclick="saveLocation()">
+      class="btn-gray"
+      onclick="exportJSON()">
 
-      📍 紀錄這個位置
+      匯出 JSON
 
     </button>
 
+  </div>
+
+
+  <button
+    class="btn-orange"
+    onclick="
+      document
+      .getElementById('jsonImportInput')
+      .click()
+    ">
+
+    📥 匯入 JSON 備份
+
+  </button>
+
+
+  <input
+    type="file"
+    id="jsonImportInput"
+    accept=".json,application/json"
+    style="display:none"
+    onchange="importJSON(event)"
+  >
+
+
+  <div class="small-note">
+
+    支援 V2 / V3 / V4 JSON。
+    匯入會取代目前手機上的紀錄。
 
   </div>
 
 
+  <br>
 
-  <!-- =====================================================
-       統計
-  ====================================================== -->
 
-  <div class="card">
+  <button
+    class="btn-red"
+    onclick="clearAllRecords()">
 
+    🗑️ 清除全部紀錄
 
-    <div class="section-title">
-      📊 旅行統計
-    </div>
+  </button>
 
-
-    <div class="stats">
-
-
-      <div class="stat">
-
-        <div
-          class="stat-value"
-          id="recordCount">
-
-          0
-
-        </div>
-
-        <div class="stat-label">
-          足跡
-        </div>
-
-      </div>
-
-
-
-      <div class="stat">
-
-        <div
-          class="stat-value"
-          id="dayCount">
-
-          0
-
-        </div>
-
-        <div class="stat-label">
-          天數
-        </div>
-
-      </div>
-
-
-
-      <div class="stat">
-
-        <div
-          class="stat-value"
-          id="totalDistance">
-
-          0 km
-
-        </div>
-
-        <div class="stat-label">
-          總移動
-        </div>
-
-      </div>
-
-
-    </div>
-
-  </div>
-
-
-
-  <!-- =====================================================
-       足跡時間軸
-  ====================================================== -->
-
-  <div class="card">
-
-
-    <div class="section-title">
-      🕐 足跡時間軸
-    </div>
-
-
-    <div id="recordList"></div>
-
-
-  </div>
-
-
-
-  <!-- =====================================================
-       V3 修改：備份 / 匯入 / 匯出
-  ====================================================== -->
-
-  <div class="card">
-
-
-    <div class="section-title">
-      💾 備份 / 還原
-    </div>
-
-
-    <div class="button-row">
-
-
-      <button
-        class="btn-gray"
-        onclick="exportCSV()">
-
-        匯出 CSV
-
-      </button>
-
-
-      <button
-        class="btn-gray"
-        onclick="exportJSON()">
-
-        匯出 JSON
-
-      </button>
-
-
-    </div>
-
-
-    <!--
-      V3 新增：
-      JSON 匯入還原功能
-    -->
-
-    <button
-      class="btn-orange"
-      onclick="document.getElementById('jsonImportInput').click()">
-
-      📥 匯入 JSON 備份
-
-    </button>
-
-
-    <input
-      type="file"
-      id="jsonImportInput"
-      accept=".json,application/json"
-      style="display:none"
-      onchange="importJSON(event)"
-    >
-
-
-    <div class="small-note">
-
-      JSON 匯入會先檢查資料格式，
-      再詢問是否取代目前紀錄。
-
-    </div>
-
-
-    <br>
-
-
-    <button
-      class="btn-red"
-      onclick="clearAllRecords()">
-
-      🗑️ 清除全部紀錄
-
-    </button>
-
-
-  </div>
+</div>
 
 
 </div>
@@ -1216,7 +1271,7 @@ Version     : V3
 
 
 <!-- =====================================================
-     V3 新增：編輯足跡視窗
+     編輯 Modal
 ====================================================== -->
 
 <div
@@ -1224,128 +1279,185 @@ Version     : V3
   id="editModal"
 >
 
+<div class="modal">
 
-  <div class="modal">
+  <div class="modal-title">
+    ✏️ 編輯足跡
+  </div>
 
 
-    <div class="modal-title">
-      ✏️ 編輯足跡
+  <input
+    type="hidden"
+    id="editRecordId"
+  >
+
+
+  <label>
+    地點名稱
+  </label>
+
+  <input
+    type="text"
+    id="editPlace"
+  >
+
+
+  <label>
+    日期
+  </label>
+
+  <input
+    type="date"
+    id="editDate"
+  >
+
+
+  <label>
+    時間
+  </label>
+
+  <input
+    type="time"
+    id="editTime"
+    step="1"
+  >
+
+
+  <label>
+    備註
+  </label>
+
+  <textarea
+    id="editNote"
+  ></textarea>
+
+
+  <div class="gps-info">
+
+    <div>
+      GPS 座標維持不變
     </div>
 
-
-    <!--
-      V3 新增：
-      用 hidden 欄位記錄正在編輯哪一筆資料
-    -->
-
-    <input
-      type="hidden"
-      id="editRecordId"
-    >
-
-
-    <label>
-      地點名稱
-    </label>
-
-
-    <input
-      type="text"
-      id="editPlace"
-    >
-
-
-    <label>
-      日期
-    </label>
-
-
-    <input
-      type="date"
-      id="editDate"
-    >
-
-
-    <label>
-      時間
-    </label>
-
-
-    <input
-      type="time"
-      id="editTime"
-      step="1"
-    >
-
-
-    <label>
-      備註
-    </label>
-
-
-    <textarea
-      id="editNote"
-    ></textarea>
-
-
-    <div class="gps-info">
-
-      <div>
-        GPS 座標維持不變
-      </div>
-
-      <div id="editGPS">
-        --
-      </div>
-
+    <div id="editGPS">
+      --
     </div>
 
-
-    <div class="modal-actions">
-
-
-      <button
-        class="btn-gray"
-        onclick="closeEditModal()">
-
-        取消
-
-      </button>
+  </div>
 
 
-      <button
-        class="btn-green"
-        onclick="saveEditedRecord()">
+  <div class="modal-actions">
 
-        儲存修改
+    <button
+      class="btn-gray"
+      onclick="closeEditModal()">
 
-      </button>
+      取消
+
+    </button>
 
 
-    </div>
+    <button
+      class="btn-green"
+      onclick="saveEditedRecord()">
 
+      儲存修改
+
+    </button>
 
   </div>
 
 </div>
 
+</div>
 
 
-<!-- Leaflet JS -->
+
+<!-- =====================================================
+     V4 新增：通用自製對話框
+====================================================== -->
+
+<div
+  class="modal-overlay"
+  id="dialogModal"
+>
+
+<div class="modal">
+
+  <div
+    class="dialog-icon"
+    id="dialogIcon">
+
+    ℹ️
+
+  </div>
+
+
+  <div
+    class="dialog-title"
+    id="dialogTitle">
+
+    提示
+
+  </div>
+
+
+  <div
+    class="dialog-message"
+    id="dialogMessage">
+  </div>
+
+
+  <div
+    class="dialog-actions"
+    id="dialogActions">
+
+    <button
+      class="btn-gray"
+      id="dialogCancel">
+
+      取消
+
+    </button>
+
+
+    <button
+      class="btn-primary"
+      id="dialogConfirm">
+
+      確定
+
+    </button>
+
+  </div>
+
+</div>
+
+</div>
+
+
+
+<!-- =====================================================
+     V4 新增：Toast
+====================================================== -->
+
+<div
+  class="toast"
+  id="toast">
+</div>
+
+
 
 <script
   src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 </script>
 
 
-
 <script>
 
 
 /* =========================================================
-   全域變數
+   全域
 ========================================================= */
-
 
 let currentLat = null;
 
@@ -1353,48 +1465,37 @@ let currentLng = null;
 
 let currentAccuracy = null;
 
-
 let currentMarker = null;
 
 let pathLayer = null;
 
 let recordMarkers = [];
 
+let markerByRecordId =
+  new Map();
+
+let currentDateFilter =
+  "all";
+
+let toastTimer =
+  null;
 
 
 /* =========================================================
-   V3 新增：產生唯一 ID
+   ID
 ========================================================= */
-
-
-/*
-  V2 使用：
-
-  Date.now()
-
-  V3 優先使用：
-
-  crypto.randomUUID()
-
-  可以避免快速連續新增時
-  出現相同 ID。
-
-  如果舊版瀏覽器不支援 UUID，
-  才退回 Date.now + random。
-*/
 
 function generateRecordId() {
 
-
   if (
     window.crypto &&
-    typeof crypto.randomUUID === "function"
+    typeof crypto.randomUUID ===
+    "function"
   ) {
 
     return crypto.randomUUID();
 
   }
-
 
   return (
 
@@ -1409,21 +1510,229 @@ function generateRecordId() {
 }
 
 
+/* =========================================================
+   V4 新增：Toast
+========================================================= */
+
+function showToast(
+  message,
+  duration = 2200
+) {
+
+  const toast =
+    document.getElementById(
+      "toast"
+    );
+
+
+  toast.textContent =
+    message;
+
+
+  toast.classList.add(
+    "show"
+  );
+
+
+  clearTimeout(
+    toastTimer
+  );
+
+
+  toastTimer =
+    setTimeout(
+      () => {
+
+        toast
+          .classList
+          .remove(
+            "show"
+          );
+
+      },
+      duration
+    );
+
+}
+
+
+/* =========================================================
+   V4 新增：自製 Confirm / Message
+========================================================= */
+
+function showDialog({
+
+  title =
+    "提示",
+
+  message =
+    "",
+
+  icon =
+    "ℹ️",
+
+  confirmText =
+    "確定",
+
+  cancelText =
+    "取消",
+
+  showCancel =
+    true,
+
+  danger =
+    false
+
+}) {
+
+
+  return new Promise(
+    resolve => {
+
+
+      const modal =
+        document.getElementById(
+          "dialogModal"
+        );
+
+
+      const iconEl =
+        document.getElementById(
+          "dialogIcon"
+        );
+
+
+      const titleEl =
+        document.getElementById(
+          "dialogTitle"
+        );
+
+
+      const messageEl =
+        document.getElementById(
+          "dialogMessage"
+        );
+
+
+      const actions =
+        document.getElementById(
+          "dialogActions"
+        );
+
+
+      const confirmBtn =
+        document.getElementById(
+          "dialogConfirm"
+        );
+
+
+      const cancelBtn =
+        document.getElementById(
+          "dialogCancel"
+        );
+
+
+      iconEl.textContent =
+        icon;
+
+
+      titleEl.textContent =
+        title;
+
+
+      messageEl.textContent =
+        message;
+
+
+      confirmBtn.textContent =
+        confirmText;
+
+
+      cancelBtn.textContent =
+        cancelText;
+
+
+      confirmBtn.className =
+        danger
+          ? "btn-red"
+          : "btn-primary";
+
+
+      cancelBtn.style.display =
+        showCancel
+          ? ""
+          : "none";
+
+
+      actions.classList.toggle(
+        "single",
+        !showCancel
+      );
+
+
+      modal.classList.add(
+        "show"
+      );
+
+
+      function cleanup(
+        result
+      ) {
+
+        modal
+          .classList
+          .remove(
+            "show"
+          );
+
+
+        confirmBtn.onclick =
+          null;
+
+
+        cancelBtn.onclick =
+          null;
+
+
+        resolve(
+          result
+        );
+
+      }
+
+
+      confirmBtn.onclick =
+        () =>
+          cleanup(
+            true
+          );
+
+
+      cancelBtn.onclick =
+        () =>
+          cleanup(
+            false
+          );
+
+    }
+  );
+
+}
+
 
 /* =========================================================
    時區
 ========================================================= */
 
-
 function getCurrentTimeZone() {
-
 
   try {
 
     return Intl
       .DateTimeFormat()
       .resolvedOptions()
-      .timeZone || "UTC";
+      .timeZone ||
+      "UTC";
 
   }
 
@@ -1436,14 +1745,13 @@ function getCurrentTimeZone() {
 }
 
 
-
 function getGMTOffset(
   date = new Date()
 ) {
 
-
   const offsetMinutes =
-    -date.getTimezoneOffset();
+    -date
+      .getTimezoneOffset();
 
 
   const sign =
@@ -1488,12 +1796,11 @@ function getGMTOffset(
     hours +
     ":" +
     String(minutes)
-      .padStart(2, "0")
+      .padStart(2,"0")
 
   );
 
 }
-
 
 
 function getUTCOffsetMinutes() {
@@ -1506,14 +1813,11 @@ function getUTCOffsetMinutes() {
 }
 
 
-
 /* =========================================================
-   現在時間
+   Current Time
 ========================================================= */
 
-
 function updateCurrentTimeDisplay() {
-
 
   const now =
     new Date();
@@ -1616,9 +1920,7 @@ function updateCurrentTimeDisplay() {
 }
 
 
-
 updateCurrentTimeDisplay();
-
 
 setInterval(
   updateCurrentTimeDisplay,
@@ -1626,11 +1928,9 @@ setInterval(
 );
 
 
-
 /* =========================================================
-   地圖
+   Map
 ========================================================= */
-
 
 const map =
   L.map(
@@ -1643,7 +1943,6 @@ const map =
     ],
     5
   );
-
 
 
 L.tileLayer(
@@ -1663,14 +1962,11 @@ L.tileLayer(
 ).addTo(map);
 
 
-
 /* =========================================================
-   localStorage
+   Storage
 ========================================================= */
 
-
 function getRecords() {
-
 
   const data =
     localStorage.getItem(
@@ -1687,17 +1983,17 @@ function getRecords() {
 
   try {
 
-
-    const records =
+    const parsed =
       JSON.parse(
         data
       );
 
 
-    return Array.isArray(records)
-      ? records
+    return Array.isArray(
+      parsed
+    )
+      ? parsed
       : [];
-
 
   }
 
@@ -1710,11 +2006,9 @@ function getRecords() {
 }
 
 
-
 function saveRecords(
   records
 ) {
-
 
   localStorage.setItem(
 
@@ -1729,14 +2023,11 @@ function saveRecords(
 }
 
 
-
 /* =========================================================
    GPS
 ========================================================= */
 
-
 function getCurrentLocation() {
-
 
   const status =
     document.getElementById(
@@ -1748,20 +2039,16 @@ function getCurrentLocation() {
     !navigator.geolocation
   ) {
 
-
     status.textContent =
       "❌ 此瀏覽器不支援 GPS 定位。";
-
 
     return;
 
   }
 
 
-
   status.textContent =
     "📡 正在取得 GPS 位置...";
-
 
 
   navigator
@@ -1771,24 +2058,16 @@ function getCurrentLocation() {
 
       function(position) {
 
-
         currentLat =
-          position
-            .coords
-            .latitude;
+          position.coords.latitude;
 
 
         currentLng =
-          position
-            .coords
-            .longitude;
+          position.coords.longitude;
 
 
         currentAccuracy =
-          position
-            .coords
-            .accuracy;
-
+          position.coords.accuracy;
 
 
         document
@@ -1800,7 +2079,6 @@ function getCurrentLocation() {
             .toFixed(6);
 
 
-
         document
           .getElementById(
             "lng"
@@ -1808,7 +2086,6 @@ function getCurrentLocation() {
           .textContent =
           currentLng
             .toFixed(6);
-
 
 
         document
@@ -1823,10 +2100,8 @@ function getCurrentLocation() {
           " 公尺";
 
 
-
         status.textContent =
           "✅ GPS 定位成功";
-
 
 
         if (
@@ -1838,7 +2113,6 @@ function getCurrentLocation() {
           );
 
         }
-
 
 
         currentMarker =
@@ -1855,7 +2129,6 @@ function getCurrentLocation() {
           .openPopup();
 
 
-
         map.setView(
           [
             currentLat,
@@ -1865,19 +2138,15 @@ function getCurrentLocation() {
         );
 
 
-
         autoDetectPlaceName(
           currentLat,
           currentLng
         );
 
-
       },
 
 
-
       function(error) {
-
 
         console.error(
           error
@@ -1888,21 +2157,15 @@ function getCurrentLocation() {
           error.code
         ) {
 
-
-          case error
-            .PERMISSION_DENIED:
-
+          case error.PERMISSION_DENIED:
 
             status.textContent =
-              "❌ 定位權限被拒絕，請允許 Safari 使用位置。";
+              "❌ 定位權限被拒絕。";
 
             break;
 
 
-
-          case error
-            .POSITION_UNAVAILABLE:
-
+          case error.POSITION_UNAVAILABLE:
 
             status.textContent =
               "❌ 無法取得目前位置。";
@@ -1910,30 +2173,22 @@ function getCurrentLocation() {
             break;
 
 
-
-          case error
-            .TIMEOUT:
-
+          case error.TIMEOUT:
 
             status.textContent =
-              "❌ GPS 定位逾時，請再試一次。";
+              "❌ GPS 定位逾時。";
 
             break;
 
 
-
           default:
-
 
             status.textContent =
               "❌ GPS 定位失敗。";
 
-
         }
 
-
       },
-
 
 
       {
@@ -1949,23 +2204,19 @@ function getCurrentLocation() {
 
       }
 
-
     );
 
 }
 
 
-
 /* =========================================================
-   自動取得地名
+   Reverse Geocoding
 ========================================================= */
-
 
 async function autoDetectPlaceName(
   lat,
   lng
 ) {
-
 
   const input =
     document.getElementById(
@@ -1978,7 +2229,6 @@ async function autoDetectPlaceName(
 
 
   try {
-
 
     const url =
 
@@ -1993,7 +2243,6 @@ async function autoDetectPlaceName(
       encodeURIComponent(lng) +
 
       "&accept-language=zh-TW,zh,en";
-
 
 
     const response =
@@ -2014,7 +2263,6 @@ async function autoDetectPlaceName(
     }
 
 
-
     const data =
       await response.json();
 
@@ -2022,7 +2270,6 @@ async function autoDetectPlaceName(
     const address =
       data.address ||
       {};
-
 
 
     const name =
@@ -2062,8 +2309,9 @@ async function autoDetectPlaceName(
       "";
 
 
-
-    if (name) {
+    if (
+      name
+    ) {
 
       input.value =
         name;
@@ -2071,18 +2319,16 @@ async function autoDetectPlaceName(
     }
 
 
-
     input.placeholder =
       "例如：桃園機場、福岡機場、博多車站";
 
-
   }
 
-  catch (error) {
-
+  catch (
+    error
+  ) {
 
     console.log(
-      "Reverse geocoding error:",
       error
     );
 
@@ -2090,17 +2336,14 @@ async function autoDetectPlaceName(
     input.placeholder =
       "無法自動取得地名，請自行輸入";
 
-
   }
 
 }
 
 
-
 /* =========================================================
-   距離
+   Distance
 ========================================================= */
-
 
 function calculateDistanceKm(
   lat1,
@@ -2108,7 +2351,6 @@ function calculateDistanceKm(
   lat2,
   lon2
 ) {
-
 
   const R =
     6371;
@@ -2121,18 +2363,18 @@ function calculateDistanceKm(
       180;
 
 
-
   const dLat =
     toRad(
-      lat2 - lat1
+      lat2 -
+      lat1
     );
 
 
   const dLon =
     toRad(
-      lon2 - lon1
+      lon2 -
+      lon1
     );
-
 
 
   const a =
@@ -2154,7 +2396,6 @@ function calculateDistanceKm(
     ) ** 2;
 
 
-
   const c =
 
     2 *
@@ -2170,43 +2411,105 @@ function calculateDistanceKm(
     );
 
 
-
   return (
-    R * c
+    R *
+    c
   );
 
 }
 
 
+function calculateGroupDistance(
+  records
+) {
+
+  let total =
+    0;
+
+
+  for (
+    let i = 1;
+    i < records.length;
+    i++
+  ) {
+
+    total +=
+      calculateDistanceKm(
+
+        Number(
+          records[i - 1].latitude
+        ),
+
+        Number(
+          records[i - 1].longitude
+        ),
+
+        Number(
+          records[i].latitude
+        ),
+
+        Number(
+          records[i].longitude
+        )
+
+      );
+
+  }
+
+
+  return total;
+
+}
+
+
+function formatDistance(
+  km
+) {
+
+  if (
+    km < 1
+  ) {
+
+    return (
+      Math.round(
+        km *
+        1000
+      ) +
+      " m"
+    );
+
+  }
+
+
+  if (
+    km < 10
+  ) {
+
+    return (
+      km.toFixed(2) +
+      " km"
+    );
+
+  }
+
+
+  return (
+    km.toFixed(1) +
+    " km"
+  );
+
+}
+
 
 /* =========================================================
-   V3 新增：重複紀錄檢查
+   Duplicate Check
 ========================================================= */
-
-
-/*
-  條件：
-
-  最近一筆資料距離目前位置
-  小於 30 公尺
-
-  而且
-
-  距離上一筆紀錄
-  不超過 60 秒
-
-  就跳出提醒。
-
-  使用者仍可以選擇
-  「確定」繼續新增。
-*/
 
 function checkDuplicateRecord(
   newLat,
   newLng,
   newTime
 ) {
-
 
   const records =
     getRecords();
@@ -2221,23 +2524,20 @@ function checkDuplicateRecord(
   }
 
 
-
   const sorted =
     [...records]
       .sort(
-
-        (a, b) =>
-
+        (
+          a,
+          b
+        ) =>
           new Date(
             a.timestamp
           ) -
-
           new Date(
             b.timestamp
           )
-
       );
-
 
 
   const last =
@@ -2246,23 +2546,23 @@ function checkDuplicateRecord(
     ];
 
 
-
   const lastTime =
     new Date(
       last.timestamp
     );
 
 
-  const diffSeconds =
+  const seconds =
 
     Math.abs(
-      newTime - lastTime
+      newTime -
+      lastTime
     ) /
     1000;
 
 
+  const meters =
 
-  const distanceKm =
     calculateDistanceKm(
 
       Number(
@@ -2281,21 +2581,14 @@ function checkDuplicateRecord(
         newLng
       )
 
-    );
-
-
-
-  const distanceMeters =
-    distanceKm *
+    ) *
     1000;
 
 
-
   if (
-    diffSeconds <= 60 &&
-    distanceMeters <= 30
+    seconds <= 60 &&
+    meters <= 30
   ) {
-
 
     return {
 
@@ -2304,12 +2597,12 @@ function checkDuplicateRecord(
 
       seconds:
         Math.round(
-          diffSeconds
+          seconds
         ),
 
       meters:
         Math.round(
-          distanceMeters
+          meters
         )
 
     };
@@ -2317,36 +2610,42 @@ function checkDuplicateRecord(
   }
 
 
-
   return false;
 
 }
 
 
-
 /* =========================================================
-   新增足跡
+   Save Record
 ========================================================= */
 
-
-function saveLocation() {
-
+async function saveLocation() {
 
   if (
     currentLat === null ||
     currentLng === null
   ) {
 
+    await showDialog({
 
-    alert(
-      "請先按「取得目前 GPS」。"
-    );
+      icon:
+        "📍",
+
+      title:
+        "尚未定位",
+
+      message:
+        "請先按「取得目前 GPS」。",
+
+      showCancel:
+        false
+
+    });
 
 
     return;
 
   }
-
 
 
   const placeName =
@@ -2358,7 +2657,6 @@ function saveLocation() {
       .trim();
 
 
-
   const note =
     document
       .getElementById(
@@ -2368,22 +2666,17 @@ function saveLocation() {
       .trim();
 
 
-
   const recordTime =
     new Date();
-
-
-
-  /* =====================================================
-     V3 新增：重複紀錄提醒
-  ===================================================== */
 
 
   const duplicate =
     checkDuplicateRecord(
 
       currentLat,
+
       currentLng,
+
       recordTime
 
     );
@@ -2393,32 +2686,45 @@ function saveLocation() {
     duplicate
   ) {
 
-
     const ok =
-      confirm(
+      await showDialog({
 
-        "⚠️ 可能是重複紀錄\n\n" +
+        icon:
+          "⚠️",
 
-        "上一筆：" +
-        (
-          duplicate.record.place ||
-          "未命名地點"
-        ) +
+        title:
+          "可能是重複紀錄",
 
-        "\n時間相差：" +
-        duplicate.seconds +
-        " 秒" +
+        message:
 
-        "\n距離：約 " +
-        duplicate.meters +
-        " 公尺" +
+          "上一筆：" +
+          (
+            duplicate.record.place ||
+            "未命名地點"
+          ) +
 
-        "\n\n仍然要新增嗎？"
+          "\n時間相差：" +
+          duplicate.seconds +
+          " 秒" +
 
-      );
+          "\n距離：約 " +
+          duplicate.meters +
+          " 公尺" +
+
+          "\n\n仍然要新增嗎？",
+
+        confirmText:
+          "仍然新增",
+
+        cancelText:
+          "取消"
+
+      });
 
 
-    if (!ok) {
+    if (
+      !ok
+    ) {
 
       return;
 
@@ -2427,76 +2733,45 @@ function saveLocation() {
   }
 
 
-
   const timeZone =
     getCurrentTimeZone();
 
 
-  const gmtOffset =
-    getGMTOffset(
-      recordTime
-    );
-
-
-  const utcOffsetMinutes =
-    getUTCOffsetMinutes();
-
-
-
   const record = {
-
-
-    /*
-      V3 修改：
-
-      原本：
-
-      id: Date.now()
-
-      改成 UUID
-    */
 
     id:
       generateRecordId(),
 
-
     latitude:
       currentLat,
-
 
     longitude:
       currentLng,
 
-
     accuracy:
       currentAccuracy,
-
 
     place:
       placeName ||
       "未命名地點",
 
-
     note:
       note,
-
 
     timestamp:
       recordTime
         .toISOString(),
 
-
     timeZone:
       timeZone,
 
-
     gmtOffset:
-      gmtOffset,
-
+      getGMTOffset(
+        recordTime
+      ),
 
     utcOffsetMinutes:
-      utcOffsetMinutes,
-
+      getUTCOffsetMinutes(),
 
     localTime:
       formatDateTimeForZone(
@@ -2504,9 +2779,7 @@ function saveLocation() {
         timeZone
       )
 
-
   };
-
 
 
   const records =
@@ -2523,7 +2796,6 @@ function saveLocation() {
   );
 
 
-
   document
     .getElementById(
       "note"
@@ -2532,58 +2804,37 @@ function saveLocation() {
     "";
 
 
+  updateDateFilterOptions();
+
 
   renderRecords();
 
 
-
-  alert(
-
-    "✅ 足跡已紀錄\n\n" +
-
-    record.place +
-
-    "\n" +
-
-    record.localTime +
-
-    "\n" +
-
-    record.timeZone +
-
-    " · " +
-
-    record.gmtOffset
-
+  showToast(
+    "✅ 已紀錄：" +
+    record.place
   );
 
 }
 
 
-
 /* =========================================================
-   日期時間格式
+   Date / Time
 ========================================================= */
-
 
 function formatDateTimeForZone(
   date,
   timeZone
 ) {
 
-
   try {
-
 
     return date
       .toLocaleString(
-
         "zh-TW",
-
         {
 
-          timeZone:
-            timeZone,
+          timeZone,
 
           year:
             "numeric",
@@ -2607,36 +2858,26 @@ function formatDateTimeForZone(
             false
 
         }
-
       );
-
 
   }
 
   catch {
 
-
     return date
       .toLocaleString(
-        "zh-TW",
-        {
-          hour12:
-            false
-        }
+        "zh-TW"
       );
-
 
   }
 
 }
-
 
 
 function formatRecordTime(
   record
 ) {
 
-
   const date =
     new Date(
       record.timestamp
@@ -2648,72 +2889,32 @@ function formatRecordTime(
     getCurrentTimeZone();
 
 
-  try {
+  return date
+    .toLocaleTimeString(
+      "zh-TW",
+      {
 
+        timeZone,
 
-    return date
-      .toLocaleTimeString(
+        hour:
+          "2-digit",
 
-        "zh-TW",
+        minute:
+          "2-digit",
 
-        {
+        hour12:
+          false
 
-          timeZone:
-            timeZone,
-
-          hour:
-            "2-digit",
-
-          minute:
-            "2-digit",
-
-          hour12:
-            false
-
-        }
-
-      );
-
-
-  }
-
-  catch {
-
-
-    return date
-      .toLocaleTimeString(
-        "zh-TW",
-        {
-
-          hour:
-            "2-digit",
-
-          minute:
-            "2-digit",
-
-          hour12:
-            false
-
-        }
-      );
-
-
-  }
+      }
+    );
 
 }
-
-
-
-/* =========================================================
-   日期 Key
-========================================================= */
 
 
 function getRecordDateKey(
   record
 ) {
 
-
   const date =
     new Date(
       record.timestamp
@@ -2725,166 +2926,105 @@ function getRecordDateKey(
     getCurrentTimeZone();
 
 
-  try {
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
 
+        timeZone,
 
-    const parts =
-      new Intl
-        .DateTimeFormat(
-          "en-CA",
-          {
+        year:
+          "numeric",
 
-            timeZone:
-              timeZone,
+        month:
+          "2-digit",
 
-            year:
-              "numeric",
-
-            month:
-              "2-digit",
-
-            day:
-              "2-digit"
-
-          }
-        )
-        .formatToParts(
-          date
-        );
-
-
-    const values =
-      {};
-
-
-    parts.forEach(
-      part => {
-
-        values[
-          part.type
-        ] =
-        part.value;
+        day:
+          "2-digit"
 
       }
+    )
+    .formatToParts(
+      date
     );
 
 
-    return (
-
-      values.year +
-      "-" +
-      values.month +
-      "-" +
-      values.day
-
-    );
+  const values =
+    {};
 
 
-  }
+  parts.forEach(
+    part => {
 
-  catch {
+      values[
+        part.type
+      ] =
+      part.value;
+
+    }
+  );
 
 
-    return date
-      .toISOString()
-      .slice(
-        0,
-        10
-      );
+  return (
 
+    values.year +
+    "-" +
+    values.month +
+    "-" +
+    values.day
 
-  }
+  );
 
 }
-
-
-
-/* =========================================================
-   日期標題
-========================================================= */
 
 
 function formatDayTitle(
   record
 ) {
 
+  return new Date(
+    record.timestamp
+  )
+  .toLocaleDateString(
+    "zh-TW",
+    {
 
-  const date =
-    new Date(
-      record.timestamp
-    );
+      timeZone:
+        record.timeZone ||
+        getCurrentTimeZone(),
 
+      year:
+        "numeric",
 
-  const timeZone =
-    record.timeZone ||
-    getCurrentTimeZone();
+      month:
+        "2-digit",
 
+      day:
+        "2-digit",
 
-  try {
+      weekday:
+        "long"
 
-
-    return date
-      .toLocaleDateString(
-
-        "zh-TW",
-
-        {
-
-          timeZone:
-            timeZone,
-
-          year:
-            "numeric",
-
-          month:
-            "2-digit",
-
-          day:
-            "2-digit",
-
-          weekday:
-            "long"
-
-        }
-
-      );
-
-
-  }
-
-  catch {
-
-
-    return date
-      .toLocaleDateString(
-        "zh-TW"
-      );
-
-
-  }
+    }
+  );
 
 }
 
 
-
 /* =========================================================
-   分組
+   Group
 ========================================================= */
-
 
 function groupRecordsByDay(
   records
 ) {
 
-
   const groups =
     {};
 
 
-
   records.forEach(
     record => {
-
 
       const key =
         getRecordDateKey(
@@ -2907,10 +3047,8 @@ function groupRecordsByDay(
           record
         );
 
-
     }
   );
-
 
 
   return groups;
@@ -2918,203 +3056,275 @@ function groupRecordsByDay(
 }
 
 
-
 /* =========================================================
-   群組距離
+   V4 新增：日期 Filter
 ========================================================= */
 
+function updateDateFilterOptions() {
 
-function calculateGroupDistance(
-  records
-) {
-
-
-  let total =
-    0;
-
-
-  for (
-    let i = 1;
-    i < records.length;
-    i++
-  ) {
-
-
-    const previous =
-      records[
-        i - 1
-      ];
-
-
-    const current =
-      records[
-        i
-      ];
-
-
-
-    const distance =
-      calculateDistanceKm(
-
-        Number(
-          previous.latitude
-        ),
-
-        Number(
-          previous.longitude
-        ),
-
-        Number(
-          current.latitude
-        ),
-
-        Number(
-          current.longitude
-        )
-
-      );
-
-
-    if (
-      Number.isFinite(
-        distance
-      )
-    ) {
-
-      total +=
-        distance;
-
-    }
-
-  }
-
-
-
-  return total;
-
-}
-
-
-
-/* =========================================================
-   格式化距離
-========================================================= */
-
-
-function formatDistance(
-  km
-) {
-
-
-  if (
-    km < 1
-  ) {
-
-
-    return (
-      Math.round(
-        km * 1000
-      ) +
-      " m"
+  const select =
+    document.getElementById(
+      "dateFilter"
     );
-
-  }
-
-
-  if (
-    km < 10
-  ) {
-
-
-    return (
-      km.toFixed(2) +
-      " km"
-    );
-
-  }
-
-
-  return (
-    km.toFixed(1) +
-    " km"
-  );
-
-}
-
-
-
-/* =========================================================
-   時區顯示
-========================================================= */
-
-
-function getRecordTimeZone(
-  record
-) {
-
-
-  return (
-    record.timeZone ||
-    "舊版紀錄"
-  );
-
-}
-
-
-
-function getRecordGMT(
-  record
-) {
-
-
-  return (
-    record.gmtOffset ||
-    ""
-  );
-
-}
-
-
-
-/* =========================================================
-   顯示足跡
-========================================================= */
-
-
-function renderRecords() {
 
 
   const records =
     getRecords();
 
 
-  const list =
+  const keys =
+    [...new Set(
+
+      records.map(
+        getRecordDateKey
+      )
+
+    )]
+    .sort()
+    .reverse();
+
+
+  select.innerHTML =
+    '<option value="all">全部日期</option>';
+
+
+  keys.forEach(
+    key => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        key;
+
+
+      option.textContent =
+        key.replaceAll(
+          "-",
+          "/"
+        );
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
+
+  if (
+    currentDateFilter !==
+    "all" &&
+    keys.includes(
+      currentDateFilter
+    )
+  ) {
+
+    select.value =
+      currentDateFilter;
+
+  }
+
+  else {
+
+    currentDateFilter =
+      "all";
+
+    select.value =
+      "all";
+
+  }
+
+}
+
+
+function changeDateFilter() {
+
+  currentDateFilter =
     document
       .getElementById(
-        "recordList"
+        "dateFilter"
+      )
+      .value;
+
+
+  renderRecords();
+
+}
+
+
+/* =========================================================
+   V4 新增：Marker → Record
+========================================================= */
+
+function scrollToRecord(
+  id
+) {
+
+  const elements =
+    document.querySelectorAll(
+      ".record"
+    );
+
+
+  let target =
+    null;
+
+
+  elements.forEach(
+    element => {
+
+      if (
+        String(
+          element.dataset.recordId
+        ) ===
+        String(
+          id
+        )
+      ) {
+
+        target =
+          element;
+
+      }
+
+    }
+  );
+
+
+  if (
+    !target
+  ) {
+
+    return;
+
+  }
+
+
+  target.scrollIntoView({
+
+    behavior:
+      "smooth",
+
+    block:
+      "center"
+
+  });
+
+
+  target.classList.add(
+    "record-highlight"
+  );
+
+
+  setTimeout(
+    () => {
+
+      target
+        .classList
+        .remove(
+          "record-highlight"
+        );
+
+    },
+    1800
+  );
+
+}
+
+
+/* =========================================================
+   V4 新增：Record → Marker
+========================================================= */
+
+function focusRecordOnMap(
+  id
+) {
+
+  const marker =
+    markerByRecordId.get(
+      String(id)
+    );
+
+
+  if (
+    !marker
+  ) {
+
+    return;
+
+  }
+
+
+  const latLng =
+    marker.getLatLng();
+
+
+  map.setView(
+    latLng,
+    16
+  );
+
+
+  marker.openPopup();
+
+}
+
+
+/* =========================================================
+   Render
+========================================================= */
+
+function renderRecords() {
+
+  const allRecords =
+    getRecords()
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          new Date(
+            a.timestamp
+          ) -
+          new Date(
+            b.timestamp
+          )
       );
+
+
+  updateStats(
+    allRecords
+  );
+
+
+  const list =
+    document.getElementById(
+      "recordList"
+    );
 
 
   list.innerHTML =
     "";
 
 
-
-  recordMarkers
-    .forEach(
-
-      marker =>
-
-        map.removeLayer(
-          marker
-        )
-
-    );
+  recordMarkers.forEach(
+    marker =>
+      map.removeLayer(
+        marker
+      )
+  );
 
 
   recordMarkers =
     [];
 
+
+  markerByRecordId.clear();
 
 
   if (
@@ -3131,59 +3341,52 @@ function renderRecords() {
   }
 
 
+  let displayRecords =
+    allRecords;
+
 
   if (
-    records.length === 0
+    currentDateFilter !==
+    "all"
   ) {
 
+    displayRecords =
+      allRecords.filter(
+        record =>
+          getRecordDateKey(
+            record
+          ) ===
+          currentDateFilter
+      );
+
+  }
+
+
+  if (
+    displayRecords.length ===
+    0
+  ) {
 
     list.innerHTML =
-      '<div class="empty">' +
-      '尚未紀錄任何足跡' +
-      '</div>';
-
-
-    updateStats(
-      []
-    );
-
+      '<div class="empty">此日期沒有足跡</div>';
 
     return;
 
   }
 
 
-
-  const sorted =
-    [...records]
-      .sort(
-
-        (a, b) =>
-
-          new Date(
-            a.timestamp
-          ) -
-
-          new Date(
-            b.timestamp
-          )
-
-      );
-
-
-
   const groups =
     groupRecordsByDay(
-      sorted
+      displayRecords
     );
 
 
   const dateKeys =
-    Object.keys(
-      groups
-    )
-    .sort();
-
+    Object
+      .keys(
+        groups
+      )
+      .sort();
 
 
   const path =
@@ -3194,10 +3397,8 @@ function renderRecords() {
     1;
 
 
-
   dateKeys.forEach(
     dateKey => {
-
 
       const dayRecords =
         groups[
@@ -3211,32 +3412,27 @@ function renderRecords() {
         );
 
 
-
       const dayGroup =
-        document
-          .createElement(
-            "div"
-          );
+        document.createElement(
+          "div"
+        );
 
 
       dayGroup.className =
         "day-group";
 
 
-
-      const dayHeader =
-        document
-          .createElement(
-            "div"
-          );
+      const header =
+        document.createElement(
+          "div"
+        );
 
 
-      dayHeader.className =
+      header.className =
         "day-header";
 
 
-
-      dayHeader.innerHTML = `
+      header.innerHTML = `
 
         <div class="day-title">
 
@@ -3248,7 +3444,6 @@ function renderRecords() {
           )}
 
         </div>
-
 
         <div class="day-summary">
 
@@ -3269,53 +3464,16 @@ function renderRecords() {
       `;
 
 
-
       dayGroup.appendChild(
-        dayHeader
+        header
       );
 
 
-
       dayRecords.forEach(
-
         (
           record,
           index
         ) => {
-
-
-          const time =
-            formatRecordTime(
-              record
-            );
-
-
-          const zone =
-            getRecordTimeZone(
-              record
-            );
-
-
-          const gmt =
-            getRecordGMT(
-              record
-            );
-
-
-          const timezoneText =
-
-            gmt
-
-              ?
-
-              zone +
-              " · " +
-              gmt
-
-              :
-
-              zone;
-
 
 
           let distanceText =
@@ -3326,84 +3484,85 @@ function renderRecords() {
             index > 0
           ) {
 
+            distanceText =
+              formatDistance(
 
-            const previous =
-              dayRecords[
-                index - 1
-              ];
+                calculateDistanceKm(
 
+                  Number(
+                    dayRecords[index - 1]
+                      .latitude
+                  ),
 
-            const distance =
-              calculateDistanceKm(
+                  Number(
+                    dayRecords[index - 1]
+                      .longitude
+                  ),
 
-                Number(
-                  previous.latitude
-                ),
+                  Number(
+                    record.latitude
+                  ),
 
-                Number(
-                  previous.longitude
-                ),
+                  Number(
+                    record.longitude
+                  )
 
-                Number(
-                  record.latitude
-                ),
-
-                Number(
-                  record.longitude
                 )
 
               );
 
-
-            distanceText =
-              formatDistance(
-                distance
-              );
-
-
           }
 
 
+          const zone =
+            record.timeZone ||
+            "舊版紀錄";
+
+
+          const timezoneText =
+            record.gmtOffset
+              ? zone +
+                " · " +
+                record.gmtOffset
+              : zone;
+
 
           const div =
-            document
-              .createElement(
-                "div"
-              );
+            document.createElement(
+              "div"
+            );
 
 
           div.className =
             "record";
 
 
+          div.dataset.recordId =
+            String(
+              record.id
+            );
 
-          /*
-            V3 修改：
-
-            原本只有「刪除」
-
-            現在增加：
-
-            ✏️ 編輯
-            🗑️ 刪除
-
-            並且 ID 一律轉成字串傳入。
-          */
 
           div.innerHTML = `
 
             <div class="record-top">
 
-
-              <div>
-
+              <div
+                class="record-main"
+                onclick="
+                  focusRecordOnMap(
+                    '${String(record.id)}'
+                  )
+                "
+              >
 
                 <div class="record-time">
 
-                  ${time}
+                  ${formatRecordTime(
+                    record
+                  )}
 
                 </div>
-
 
                 <div class="record-place">
 
@@ -3414,17 +3573,20 @@ function renderRecords() {
 
                 </div>
 
-
               </div>
-
 
 
               <div class="record-actions">
 
-
                 <button
                   class="edit-btn"
-                  onclick="openEditModal('${String(record.id)}')">
+                  onclick="
+                    event.stopPropagation();
+                    openEditModal(
+                      '${String(record.id)}'
+                    );
+                  "
+                >
 
                   ✏️ 編輯
 
@@ -3433,25 +3595,33 @@ function renderRecords() {
 
                 <button
                   class="delete-btn"
-                  onclick="deleteRecord('${String(record.id)}')">
+                  onclick="
+                    event.stopPropagation();
+                    deleteRecord(
+                      '${String(record.id)}'
+                    );
+                  "
+                >
 
                   🗑️ 刪除
 
                 </button>
 
-
               </div>
-
 
             </div>
 
 
-
-            <div class="record-detail">
-
+            <div
+              class="record-detail"
+              onclick="
+                focusRecordOnMap(
+                  '${String(record.id)}'
+                )
+              "
+            >
 
               GPS：
-
               ${Number(
                 record.latitude
               ).toFixed(6)},
@@ -3460,25 +3630,21 @@ function renderRecords() {
                 record.longitude
               ).toFixed(6)}
 
-
               <br>
 
-
               精度：
-
               ±${Math.round(
                 record.accuracy ||
                 0
               )}
-
               公尺
-
 
               <br>
 
 
               <span
-                class="record-timezone">
+                class="record-timezone"
+              >
 
                 🕐
                 ${escapeHTML(
@@ -3496,7 +3662,8 @@ function renderRecords() {
                 `
 
                 <span
-                  class="record-distance">
+                  class="record-distance"
+                >
 
                   ↗ 前一站
                   ${distanceText}
@@ -3511,9 +3678,7 @@ function renderRecords() {
 
               }
 
-
             </div>
-
 
 
             ${
@@ -3523,8 +3688,7 @@ function renderRecords() {
 
               `
 
-              <div
-                class="record-note">
+              <div class="record-note">
 
                 📝
                 ${escapeHTML(
@@ -3544,39 +3708,42 @@ function renderRecords() {
           `;
 
 
-
-          dayGroup
-            .appendChild(
-              div
-            );
-
+          dayGroup.appendChild(
+            div
+          );
 
 
           const marker =
             L.marker(
               [
-                record.latitude,
-                record.longitude
+                Number(
+                  record.latitude
+                ),
+                Number(
+                  record.longitude
+                )
               ]
             )
-            .addTo(map)
+            .addTo(
+              map
+            )
             .bindPopup(
 
               `
 
               <b>
-
                 ${markerIndex}.
                 ${escapeHTML(
                   record.place
                 )}
-
               </b>
 
               <br>
 
               ${dateKey}
-              ${time}
+              ${formatRecordTime(
+                record
+              )}
 
               <br>
 
@@ -3590,11 +3757,34 @@ function renderRecords() {
             );
 
 
+          /*
+            V4 新增：
+            Marker 點擊 → 捲到紀錄
+          */
+
+          marker.on(
+            "click",
+            () => {
+
+              scrollToRecord(
+                record.id
+              );
+
+            }
+          );
+
 
           recordMarkers.push(
             marker
           );
 
+
+          markerByRecordId.set(
+            String(
+              record.id
+            ),
+            marker
+          );
 
 
           path.push(
@@ -3609,36 +3799,27 @@ function renderRecords() {
           );
 
 
-
           markerIndex++;
 
-
         }
-
       );
-
 
 
       list.appendChild(
         dayGroup
       );
 
-
     }
   );
-
 
 
   if (
     path.length >= 2
   ) {
 
-
     pathLayer =
       L.polyline(
-
         path,
-
         {
 
           weight:
@@ -3648,64 +3829,45 @@ function renderRecords() {
             0.7
 
         }
-
       )
-      .addTo(map);
-
+      .addTo(
+        map
+      );
 
   }
-
 
 
   if (
     path.length > 0
   ) {
 
-
-    const bounds =
+    map.fitBounds(
       L.latLngBounds(
         path
-      );
-
-
-    map.fitBounds(
-
-      bounds,
-
+      ),
       {
 
         padding:
-          [30, 30],
+          [30,30],
 
         maxZoom:
           16
 
       }
-
     );
 
-
   }
-
-
-
-  updateStats(
-    sorted
-  );
 
 }
 
 
-
 /* =========================================================
-   統計
+   Stats
 ========================================================= */
-
 
 function updateStats(
   records
 ) {
-
 
   document
     .getElementById(
@@ -3713,34 +3875,6 @@ function updateStats(
     )
     .textContent =
     records.length;
-
-
-
-  if (
-    records.length === 0
-  ) {
-
-
-    document
-      .getElementById(
-        "dayCount"
-      )
-      .textContent =
-      "0";
-
-
-    document
-      .getElementById(
-        "totalDistance"
-      )
-      .textContent =
-      "0 km";
-
-
-    return;
-
-  }
-
 
 
   const groups =
@@ -3760,8 +3894,7 @@ function updateStats(
     .length;
 
 
-
-  let totalDistance =
+  let total =
     0;
 
 
@@ -3769,18 +3902,12 @@ function updateStats(
     groups
   )
   .forEach(
-    dayRecords => {
-
-
-      totalDistance +=
+    day =>
+      total +=
         calculateGroupDistance(
-          dayRecords
-        );
-
-
-    }
+          day
+        )
   );
-
 
 
   document
@@ -3789,46 +3916,26 @@ function updateStats(
     )
     .textContent =
     formatDistance(
-      totalDistance
+      total
     );
 
 }
 
 
-
 /* =========================================================
-   V3 修改：單筆刪除
+   Delete
 ========================================================= */
 
-
-/*
-  V2：
-
-  item.id !== id
-
-  如果舊資料的 ID 是 number，
-  新資料 ID 是 string，
-  有可能比較失敗。
-
-  V3：
-
-  一律 String(item.id)
-  跟 String(id) 比較。
-*/
-
-function deleteRecord(
+async function deleteRecord(
   id
 ) {
-
 
   const records =
     getRecords();
 
 
-
   const target =
     records.find(
-
       item =>
         String(
           item.id
@@ -3836,57 +3943,66 @@ function deleteRecord(
         String(
           id
         )
-
     );
 
 
-
-  if (!target) {
-
-
-    alert(
-      "找不到這筆紀錄，請重新整理頁面後再試一次。"
-    );
-
+  if (
+    !target
+  ) {
 
     return;
 
   }
-
 
 
   const ok =
-    confirm(
+    await showDialog({
 
-      "確定要刪除這筆足跡嗎？\n\n" +
+      icon:
+        "🗑️",
 
-      "📍 " +
-      (
-        target.place ||
-        "未命名地點"
-      ) +
+      title:
+        "刪除足跡",
 
-      "\n" +
+      message:
 
-      formatRecordTime(
-        target
-      )
+        "確定要刪除這筆足跡嗎？\n\n" +
 
-    );
+        "📍 " +
+        (
+          target.place ||
+          "未命名地點"
+        ) +
+
+        "\n" +
+
+        formatRecordTime(
+          target
+        ),
+
+      confirmText:
+        "刪除",
+
+      cancelText:
+        "取消",
+
+      danger:
+        true
+
+    });
 
 
-
-  if (!ok) {
+  if (
+    !ok
+  ) {
 
     return;
 
   }
-
 
 
   const newRecords =
     records.filter(
-
       item =>
         String(
           item.id
@@ -3894,9 +4010,7 @@ function deleteRecord(
         String(
           id
         )
-
     );
-
 
 
   saveRecords(
@@ -3904,67 +4018,47 @@ function deleteRecord(
   );
 
 
+  updateDateFilterOptions();
+
   renderRecords();
 
 
-
-  alert(
-
-    "✅ 已刪除足跡\n\n" +
-
-    (
-      target.place ||
-      "未命名地點"
-    )
-
+  showToast(
+    "✅ 已刪除：" +
+    target.place
   );
 
 }
 
 
-
 /* =========================================================
-   V3 新增：開啟編輯視窗
+   Edit
 ========================================================= */
-
 
 function openEditModal(
   id
 ) {
 
-
-  const records =
-    getRecords();
-
-
-
   const record =
-    records.find(
-
-      item =>
-        String(
-          item.id
-        ) ===
-        String(
-          id
-        )
-
-    );
-
+    getRecords()
+      .find(
+        item =>
+          String(
+            item.id
+          ) ===
+          String(
+            id
+          )
+      );
 
 
-  if (!record) {
-
-
-    alert(
-      "找不到這筆紀錄。"
-    );
-
+  if (
+    !record
+  ) {
 
     return;
 
   }
-
 
 
   document
@@ -3977,7 +4071,6 @@ function openEditModal(
     );
 
 
-
   document
     .getElementById(
       "editPlace"
@@ -3987,7 +4080,6 @@ function openEditModal(
     "";
 
 
-
   document
     .getElementById(
       "editNote"
@@ -3995,7 +4087,6 @@ function openEditModal(
     .value =
     record.note ||
     "";
-
 
 
   document
@@ -4015,18 +4106,10 @@ function openEditModal(
     ).toFixed(6);
 
 
-
-  /*
-    將該筆紀錄依自己的時區
-    轉成日期與時間，
-    填入 date / time input。
-  */
-
   const parts =
     getEditableDateTimeParts(
       record
     );
-
 
 
   document
@@ -4037,14 +4120,12 @@ function openEditModal(
     parts.date;
 
 
-
   document
     .getElementById(
       "editTime"
     )
     .value =
     parts.time;
-
 
 
   document
@@ -4059,38 +4140,32 @@ function openEditModal(
 }
 
 
+function closeEditModal() {
 
-/* =========================================================
-   V3 新增：取得編輯用日期時間
-========================================================= */
+  document
+    .getElementById(
+      "editModal"
+    )
+    .classList
+    .remove(
+      "show"
+    );
+
+}
 
 
 function getEditableDateTimeParts(
   record
 ) {
 
-
-  const date =
-    new Date(
-      record.timestamp
-    );
-
-
-  const timeZone =
-    record.timeZone ||
-    getCurrentTimeZone();
-
-
-
-  const formatter =
+  const parts =
     new Intl.DateTimeFormat(
-
       "en-CA",
-
       {
 
         timeZone:
-          timeZone,
+          record.timeZone ||
+          getCurrentTimeZone(),
 
         year:
           "numeric",
@@ -4114,16 +4189,12 @@ function getEditableDateTimeParts(
           false
 
       }
-
+    )
+    .formatToParts(
+      new Date(
+        record.timestamp
+      )
     );
-
-
-
-  const parts =
-    formatter
-      .formatToParts(
-        date
-      );
 
 
   const values =
@@ -4131,20 +4202,15 @@ function getEditableDateTimeParts(
 
 
   parts.forEach(
-    part => {
-
+    part =>
       values[
         part.type
       ] =
-      part.value;
-
-    }
+      part.value
   );
 
 
-
   return {
-
 
     date:
 
@@ -4154,7 +4220,6 @@ function getEditableDateTimeParts(
       "-" +
       values.day,
 
-
     time:
 
       values.hour +
@@ -4163,60 +4228,16 @@ function getEditableDateTimeParts(
       ":" +
       values.second
 
-
   };
 
 }
 
-
-
-/* =========================================================
-   V3 新增：關閉編輯視窗
-========================================================= */
-
-
-function closeEditModal() {
-
-
-  document
-    .getElementById(
-      "editModal"
-    )
-    .classList
-    .remove(
-      "show"
-    );
-
-}
-
-
-
-/* =========================================================
-   V3 新增：將當地日期時間轉 UTC
-========================================================= */
-
-
-/*
-  編輯時間時，
-  使用者輸入的是「當地時間」。
-
-  例如：
-
-  2026-09-18
-  13:05:00
-
-  Asia/Tokyo
-
-  必須轉回正確 UTC timestamp，
-  才能維持資料排序正確。
-*/
 
 function localDateTimeToUTC(
   dateText,
   timeText,
   timeZone
 ) {
-
 
   const [
     year,
@@ -4228,7 +4249,6 @@ function localDateTimeToUTC(
     .map(Number);
 
 
-
   const [
     hour,
     minute,
@@ -4238,11 +4258,6 @@ function localDateTimeToUTC(
     .split(":")
     .map(Number);
 
-
-
-  /*
-    先建立一個暫時 UTC 日期
-  */
 
   const guess =
     new Date(
@@ -4257,21 +4272,12 @@ function localDateTimeToUTC(
     );
 
 
-
-  /*
-    透過 Intl 判斷
-    在指定時區顯示時的差異
-  */
-
-  const formatter =
+  const parts =
     new Intl.DateTimeFormat(
-
       "en-US",
-
       {
 
-        timeZone:
-          timeZone,
+        timeZone,
 
         year:
           "numeric",
@@ -4295,16 +4301,10 @@ function localDateTimeToUTC(
           false
 
       }
-
+    )
+    .formatToParts(
+      guess
     );
-
-
-
-  const parts =
-    formatter
-      .formatToParts(
-        guess
-      );
 
 
   const values =
@@ -4312,38 +4312,45 @@ function localDateTimeToUTC(
 
 
   parts.forEach(
-    part => {
-
+    part =>
       values[
         part.type
       ] =
-      part.value;
-
-    }
+      part.value
   );
 
 
-
-  const displayedAsUTC =
+  const displayed =
     Date.UTC(
 
-      Number(values.year),
+      Number(
+        values.year
+      ),
 
-      Number(values.month) - 1,
+      Number(
+        values.month
+      ) - 1,
 
-      Number(values.day),
+      Number(
+        values.day
+      ),
 
-      Number(values.hour),
+      Number(
+        values.hour
+      ),
 
-      Number(values.minute),
+      Number(
+        values.minute
+      ),
 
-      Number(values.second)
+      Number(
+        values.second
+      )
 
     );
 
 
-
-  const desiredAsUTC =
+  const desired =
     Date.UTC(
 
       year,
@@ -4361,29 +4368,20 @@ function localDateTimeToUTC(
     );
 
 
-
-  const difference =
-    desiredAsUTC -
-    displayedAsUTC;
-
-
-
   return new Date(
+
     guess.getTime() +
-    difference
+
+    desired -
+
+    displayed
+
   );
 
 }
 
 
-
-/* =========================================================
-   V3 新增：儲存修改
-========================================================= */
-
-
-function saveEditedRecord() {
-
+async function saveEditedRecord() {
 
   const id =
     document
@@ -4393,25 +4391,29 @@ function saveEditedRecord() {
       .value;
 
 
-
-  const place =
-    document
-      .getElementById(
-        "editPlace"
-      )
-      .value
-      .trim();
+  const records =
+    getRecords();
 
 
+  const index =
+    records.findIndex(
+      item =>
+        String(
+          item.id
+        ) ===
+        String(
+          id
+        )
+    );
 
-  const note =
-    document
-      .getElementById(
-        "editNote"
-      )
-      .value
-      .trim();
 
+  if (
+    index === -1
+  ) {
+
+    return;
+
+  }
 
 
   const dateText =
@@ -4422,7 +4424,6 @@ function saveEditedRecord() {
       .value;
 
 
-
   const timeText =
     document
       .getElementById(
@@ -4431,58 +4432,31 @@ function saveEditedRecord() {
       .value;
 
 
-
   if (
     !dateText ||
     !timeText
   ) {
 
+    await showDialog({
 
-    alert(
-      "請輸入日期與時間。"
-    );
+      icon:
+        "⚠️",
 
+      title:
+        "資料不完整",
 
-    return;
+      message:
+        "請輸入日期與時間。",
 
-  }
+      showCancel:
+        false
 
-
-
-  const records =
-    getRecords();
-
-
-
-  const index =
-    records.findIndex(
-
-      item =>
-        String(
-          item.id
-        ) ===
-        String(
-          id
-        )
-
-    );
-
-
-
-  if (
-    index === -1
-  ) {
-
-
-    alert(
-      "找不到要修改的紀錄。"
-    );
+    });
 
 
     return;
 
   }
-
 
 
   const record =
@@ -4491,11 +4465,9 @@ function saveEditedRecord() {
     ];
 
 
-
   const timeZone =
     record.timeZone ||
     getCurrentTimeZone();
-
 
 
   const newDate =
@@ -4510,49 +4482,41 @@ function saveEditedRecord() {
     );
 
 
-
-  /*
-    V3 修改：
-
-    GPS 座標不變。
-
-    只修改：
-
-    地點名稱
-    日期
-    時間
-    備註
-  */
-
   record.place =
-    place ||
+    document
+      .getElementById(
+        "editPlace"
+      )
+      .value
+      .trim() ||
     "未命名地點";
 
 
   record.note =
-    note;
+    document
+      .getElementById(
+        "editNote"
+      )
+      .value
+      .trim();
 
 
   record.timestamp =
-    newDate.toISOString();
+    newDate
+      .toISOString();
 
 
   record.localTime =
     formatDateTimeForZone(
-
       newDate,
-
       timeZone
-
     );
-
 
 
   records[
     index
   ] =
   record;
-
 
 
   saveRecords(
@@ -4563,65 +4527,88 @@ function saveEditedRecord() {
   closeEditModal();
 
 
+  updateDateFilterOptions();
+
   renderRecords();
 
 
-
-  alert(
+  showToast(
     "✅ 足跡已修改"
   );
 
 }
 
 
-
 /* =========================================================
-   清除全部
+   Clear
 ========================================================= */
 
-
-function clearAllRecords() {
-
+async function clearAllRecords() {
 
   const ok =
-    confirm(
+    await showDialog({
 
-      "⚠️ 確定要清除全部足跡？\n\n" +
+      icon:
+        "⚠️",
 
-      "建議先匯出 JSON 備份。\n\n" +
+      title:
+        "清除全部足跡",
 
-      "此操作無法復原。"
+      message:
 
-    );
+        "確定要清除全部紀錄嗎？\n\n" +
+
+        "建議先匯出 JSON 備份。\n" +
+
+        "此操作無法復原。",
+
+      confirmText:
+        "全部清除",
+
+      cancelText:
+        "取消",
+
+      danger:
+        true
+
+    });
 
 
-  if (!ok) {
+  if (
+    !ok
+  ) {
 
     return;
 
   }
 
 
+  localStorage.removeItem(
+    "travelFootprints"
+  );
 
-  localStorage
-    .removeItem(
-      "travelFootprints"
-    );
 
+  currentDateFilter =
+    "all";
+
+
+  updateDateFilterOptions();
 
   renderRecords();
+
+
+  showToast(
+    "🗑️ 已清除全部足跡"
+  );
 
 }
 
 
-
 /* =========================================================
-   CSV 匯出
+   CSV
 ========================================================= */
 
-
 function exportCSV() {
-
 
   const records =
     getRecords();
@@ -4631,120 +4618,92 @@ function exportCSV() {
     records.length === 0
   ) {
 
-
-    alert(
-      "目前沒有紀錄。"
+    showToast(
+      "目前沒有紀錄"
     );
-
 
     return;
 
   }
 
 
+  const rows = [[
 
-  const sorted =
-    [...records]
-      .sort(
+    "當地日期",
 
-        (a, b) =>
+    "當地時間",
 
-          new Date(
-            a.timestamp
-          ) -
+    "地點",
 
-          new Date(
-            b.timestamp
-          )
+    "時區",
 
-      );
+    "GMT",
 
+    "UTC時間",
 
+    "緯度",
 
-  const rows = [
+    "經度",
 
-    [
+    "GPS精度",
 
-      "當地日期",
+    "備註",
 
-      "當地時間",
+    "ID"
 
-      "地點",
-
-      "時區",
-
-      "GMT",
-
-      "UTC時間",
-
-      "緯度",
-
-      "經度",
-
-      "GPS精度",
-
-      "備註",
-
-      "ID"
-
-    ]
-
-  ];
+  ]];
 
 
+  records
+    .sort(
+      (
+        a,
+        b
+      ) =>
+        new Date(
+          a.timestamp
+        ) -
+        new Date(
+          b.timestamp
+        )
+    )
+    .forEach(
+      record => {
 
-  sorted.forEach(
-    record => {
+        rows.push([
 
+          getRecordDateKey(
+            record
+          ),
 
-      rows.push([
+          formatRecordTime(
+            record
+          ),
 
+          record.place,
 
-        getRecordDateKey(
-          record
-        ),
+          record.timeZone ||
+          "",
 
+          record.gmtOffset ||
+          "",
 
-        formatRecordTime(
-          record
-        ),
+          record.timestamp,
 
+          record.latitude,
 
-        record.place,
+          record.longitude,
 
+          record.accuracy,
 
-        record.timeZone ||
-        "",
+          record.note,
 
+          record.id
 
-        record.gmtOffset ||
-        "",
+        ]);
 
-
-        record.timestamp,
-
-
-        record.latitude,
-
-
-        record.longitude,
-
-
-        record.accuracy,
-
-
-        record.note,
-
-
-        record.id
-
-
-      ]);
-
-
-    }
-  );
-
+      }
+    );
 
 
   const csv =
@@ -4752,23 +4711,15 @@ function exportCSV() {
     "\uFEFF" +
 
     rows
-
       .map(
-
         row =>
-
           row
-
             .map(
               csvEscape
             )
-
             .join(",")
-
       )
-
       .join("\n");
-
 
 
   downloadFile(
@@ -4784,14 +4735,11 @@ function exportCSV() {
 }
 
 
-
 /* =========================================================
-   JSON 匯出
+   JSON Export
 ========================================================= */
 
-
 function exportJSON() {
-
 
   const records =
     getRecords();
@@ -4801,66 +4749,39 @@ function exportJSON() {
     records.length === 0
   ) {
 
-
-    alert(
-      "目前沒有紀錄。"
+    showToast(
+      "目前沒有紀錄"
     );
-
 
     return;
 
   }
 
 
-
-  /*
-    V3 修改：
-
-    JSON 最外層加入版本資訊。
-
-    舊版只有 array。
-
-    匯入功能兩種格式都支援。
-  */
-
   const backup = {
 
-
     version:
-      3,
-
+      4,
 
     exportedAt:
       new Date()
         .toISOString(),
 
-
     records:
       records
-
 
   };
 
 
-
-  const data =
-    JSON.stringify(
-
-      backup,
-
-      null,
-
-      2
-
-    );
-
-
-
   downloadFile(
 
-    data,
+    JSON.stringify(
+      backup,
+      null,
+      2
+    ),
 
-    "travel-footprints-v3.json",
+    "travel-footprints-v4.json",
 
     "application/json"
 
@@ -4869,42 +4790,37 @@ function exportJSON() {
 }
 
 
-
 /* =========================================================
-   V3 新增：JSON 匯入還原
+   JSON Import
 ========================================================= */
-
 
 function importJSON(
   event
 ) {
 
-
   const file =
-    event.target.files[
-      0
-    ];
+    event
+      .target
+      .files[0];
 
 
-  if (!file) {
+  if (
+    !file
+  ) {
 
     return;
 
   }
 
 
-
   const reader =
     new FileReader();
 
 
-
   reader.onload =
-    function(e) {
-
+    async function(e) {
 
       try {
-
 
         const data =
           JSON.parse(
@@ -4912,24 +4828,20 @@ function importJSON(
           );
 
 
-
-        /*
-          支援兩種格式：
-
-          舊版：
-          [ ... records ... ]
-
-          V3：
-          {
-            version: 3,
-            records: [...]
-          }
-        */
-
         let importedRecords =
           null;
 
 
+        /*
+          V2:
+          [ {...}, {...} ]
+
+          V3 / V4:
+          {
+            version: 3/4,
+            records: [...]
+          }
+        */
 
         if (
           Array.isArray(
@@ -4937,10 +4849,8 @@ function importJSON(
           )
         ) {
 
-
           importedRecords =
             data;
-
 
         }
 
@@ -4951,115 +4861,110 @@ function importJSON(
           )
         ) {
 
-
           importedRecords =
             data.records;
 
-
         }
-
 
 
         if (
           !importedRecords
         ) {
 
-
           throw new Error(
-            "JSON 格式不是足跡備份格式。"
+            "不是有效的足跡 JSON 備份。"
           );
 
         }
 
-
-
-        /*
-          基本資料檢查
-        */
 
         const valid =
-          importedRecords
-            .every(
-              record =>
+          importedRecords.every(
+            record =>
 
-                record &&
-                record.timestamp &&
-                record.latitude !== undefined &&
-                record.longitude !== undefined
+              record &&
 
-            );
+              record.timestamp &&
+
+              record.latitude !==
+              undefined &&
+
+              record.longitude !==
+              undefined
+          );
 
 
-
-        if (!valid) {
-
+        if (
+          !valid
+        ) {
 
           throw new Error(
-            "備份內含無效足跡資料。"
+            "備份中含有無效紀錄。"
           );
 
         }
 
 
-
-        /*
-          舊資料可能沒有 ID。
-
-          如果沒有，
-          V3 自動補 UUID。
-        */
-
         importedRecords =
-          importedRecords
-            .map(
-              record => {
+          importedRecords.map(
+            record => {
 
+              if (
+                record.id ===
+                undefined ||
+                record.id ===
+                null ||
+                record.id ===
+                ""
+              ) {
 
-                if (
-                  record.id === undefined ||
-                  record.id === null ||
-                  record.id === ""
-                ) {
-
-
-                  record.id =
-                    generateRecordId();
-
-
-                }
-
-
-                return record;
-
+                record.id =
+                  generateRecordId();
 
               }
-            );
 
+
+              return record;
+
+            }
+          );
 
 
         const ok =
-          confirm(
+          await showDialog({
 
-            "找到 " +
+            icon:
+              "📥",
 
-            importedRecords.length +
+            title:
+              "匯入 JSON 備份",
 
-            " 筆足跡。\n\n" +
+            message:
 
-            "匯入後會取代目前手機上的所有紀錄。\n\n" +
+              "找到 " +
+              importedRecords.length +
+              " 筆足跡。\n\n" +
 
-            "確定要繼續嗎？"
+              "匯入後會取代目前手機上的所有紀錄。\n\n" +
 
-          );
+              "確定要繼續嗎？",
+
+            confirmText:
+              "開始匯入",
+
+            cancelText:
+              "取消"
+
+          });
 
 
-
-        if (!ok) {
+        if (
+          !ok
+        ) {
 
           return;
 
         }
-
 
 
         saveRecords(
@@ -5067,61 +4972,57 @@ function importJSON(
         );
 
 
+        currentDateFilter =
+          "all";
+
+
+        updateDateFilterOptions();
+
         renderRecords();
 
 
+        showToast(
 
-        alert(
-
-          "✅ 備份還原完成\n\n" +
+          "✅ 已還原 " +
 
           importedRecords.length +
 
-          " 筆足跡已匯入。"
+          " 筆足跡"
 
         );
-
 
       }
 
-      catch (error) {
+      catch (
+        error
+      ) {
 
+        await showDialog({
 
-        console.error(
-          error
-        );
+          icon:
+            "❌",
 
+          title:
+            "匯入失敗",
 
-        alert(
+          message:
+            error.message,
 
-          "❌ JSON 匯入失敗\n\n" +
+          showCancel:
+            false
 
-          error.message
-
-        );
-
+        });
 
       }
 
       finally {
 
-
-        /*
-          清空 input。
-
-          這樣下一次即使選同一個檔案，
-          onchange 仍然會觸發。
-        */
-
         event.target.value =
           "";
 
-
       }
 
-
     };
-
 
 
   reader.readAsText(
@@ -5131,11 +5032,9 @@ function importJSON(
 }
 
 
-
 /* =========================================================
-   下載
+   Download
 ========================================================= */
-
 
 function downloadFile(
   content,
@@ -5143,19 +5042,13 @@ function downloadFile(
   type
 ) {
 
-
   const blob =
     new Blob(
-
       [content],
-
       {
-        type:
-          type
+        type
       }
-
     );
-
 
 
   const url =
@@ -5164,12 +5057,10 @@ function downloadFile(
     );
 
 
-
   const a =
-    document
-      .createElement(
-        "a"
-      );
+    document.createElement(
+      "a"
+    );
 
 
   a.href =
@@ -5178,7 +5069,6 @@ function downloadFile(
 
   a.download =
     filename;
-
 
 
   document.body
@@ -5196,34 +5086,24 @@ function downloadFile(
     );
 
 
-
   setTimeout(
-
-    () => {
-
+    () =>
       URL.revokeObjectURL(
         url
-      );
-
-    },
-
+      ),
     1000
-
   );
 
 }
 
 
-
 /* =========================================================
-   CSV Escape
+   Helpers
 ========================================================= */
-
 
 function csvEscape(
   value
 ) {
-
 
   if (
     value === null ||
@@ -5235,24 +5115,17 @@ function csvEscape(
   }
 
 
-
   const str =
     String(
       value
     );
 
 
-
   if (
-
     str.includes(",") ||
-
     str.includes('"') ||
-
     str.includes("\n")
-
   ) {
-
 
     return (
 
@@ -5270,32 +5143,24 @@ function csvEscape(
   }
 
 
-
   return str;
 
 }
-
-
-
-/* =========================================================
-   HTML Escape
-========================================================= */
 
 
 function escapeHTML(
   text
 ) {
 
-
   const div =
-    document
-      .createElement(
-        "div"
-      );
+    document.createElement(
+      "div"
+    );
 
 
   div.textContent =
-    text || "";
+    text ||
+    "";
 
 
   return div.innerHTML;
@@ -5303,49 +5168,38 @@ function escapeHTML(
 }
 
 
-
 /* =========================================================
-   V3 新增：
-   點擊 Modal 外部也可以關閉
+   Modal outside click
 ========================================================= */
-
 
 document
   .getElementById(
     "editModal"
   )
   .addEventListener(
-
     "click",
-
     function(event) {
-
 
       if (
         event.target ===
         this
       ) {
 
-
         closeEditModal();
-
 
       }
 
-
     }
-
   );
 
 
-
 /* =========================================================
-   啟動
+   App Start
 ========================================================= */
 
+updateDateFilterOptions();
 
 renderRecords();
-
 
 
 document.addEventListener(
@@ -5354,25 +5208,22 @@ document.addEventListener(
 
   function() {
 
-
     if (
       document.visibilityState ===
       "visible"
     ) {
 
-
       updateCurrentTimeDisplay();
 
+      map.invalidateSize();
 
     }
-
 
   }
 
 );
 
 </script>
-
 
 </body>
 
