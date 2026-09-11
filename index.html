@@ -2,76 +2,69 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V4.3
+  我的旅遊足跡 V4.3.1
 =============================================================
 
-【V4.3 新增 / 修改功能】
+【V4.3.1 新增 / 修改功能】
 
-1. 附近地點查詢改為多個 Overpass API 節點
-   - 節點 1：overpass-api.de
-   - 節點 2：overpass.kumi.systems
-   - 節點 3：overpass.private.coffee
-   - 前一個失敗才嘗試下一個
-   - 任一節點成功就立即停止
+1. GPS 成功後，同時查詢：
+   - Nominatim 自動地名
+   - Overpass API 節點 1
+   - Overpass API 節點 2
+   - Overpass API 節點 3
 
-2. Overpass 查詢加入 Timeout
-   - 每個 API 節點最多等待 1.2 秒
-   - 避免旅行途中因 API 太慢而卡住
-   - 最差約 3.6 ~ 4 秒內結束 Overpass 查詢
+2. Nominatim 與 Overpass 不再互相等待
+   - Nominatim 最多等待 3 秒
+   - Overpass 3 個節點同時查
+   - 哪一個先成功就使用哪一個結果
+   - Overpass 整體最多約 3 秒
 
-3. 附近地點查詢範圍改為固定 1000 公尺
-   - 不再先查 800m、再查 1500m
-   - 只送一次查詢
-   - 減少等待時間
+3. 自動地名優先填入
+   - Nominatim 成功後立即填入地點名稱
+   - 不需要等附近 5 個地點查完
 
-4. 附近地點只顯示最近 5 個
-   - 依 GPS 直線距離排序
-   - 不要求一定要湊滿 5 筆
-   - 找到 2 個就顯示 2 個
+4. 附近地點成功後再補上
+   - 最多顯示 5 個
+   - 1000 公尺範圍
+   - 依距離排序
+   - 同名地點去重
 
-5. 新增同名地點去重
-   - OSM 可能同一地點同時存在 Node / Way / Relation
-   - 例如「師大附中」可能出現兩筆
-   - V4.3 只保留距離最近的一筆
+5. 狀態顯示更清楚
+   - GPS 定位成功
+   - 自動地名搜尋中 / 成功 / 失敗
+   - 附近地點搜尋中 / 成功 / 失敗
 
-6. Overpass 全部失敗時
-   - 自動改用 Nominatim Reverse Geocoding
-   - 顯示：
-     「附近 5 個地點查詢失敗，已改用 GPS 自動判斷地名」
-   - 使用者仍可自行修改地點名稱
+6. Overpass 全部失敗
+   - 不影響 Nominatim
+   - 不影響手動輸入
+   - 不影響直接紀錄目前 GPS
 
-7. 保留附近地點選擇
-   - 點擊附近地點後
-   - 自動填入「地點名稱」
-   - 仍可手動修改
-
-8. 保留 V4.1 Record ID 修正
+7. 保留 V4.1 Record ID 修正
    - 缺少 ID 自動補 UUID
    - 重複 ID 自動換新 UUID
-   - 相同地點 / GPS / 時間仍可視為不同紀錄
 
-9. 保留 V4 功能
+8. 保留 V4 / V4.2 / V4.3 功能
    - 自製 Modal
    - Toast
    - 日期篩選
    - Marker ↔ 足跡列表連動
    - 自動時區
-   - GMT+8 / GMT+9
-   - 每日距離
-   - 旅行總距離
-   - CSV 匯出
+   - GMT
+   - 距離統計
+   - CSV
    - JSON 備份 / 還原
 
-10. JSON 相容
-    - 支援 V2
-    - 支援 V3
-    - 支援 V4
-    - 支援 V4.1
-    - 支援 V4.2
-    - 支援 V4.3
+9. JSON 相容
+   - V2
+   - V3
+   - V4
+   - V4.1
+   - V4.2
+   - V4.3
+   - V4.3.1
 
 Storage Key : travelFootprints
-Version     : V4.3
+Version     : V4.3.1
 =============================================================
 -->
 
@@ -90,7 +83,7 @@ Version     : V4.3
 
 <meta name="theme-color" content="#ffffff">
 
-<title>我的旅遊足跡 V4.3</title>
+<title>我的旅遊足跡 V4.3.1</title>
 
 <link
   rel="stylesheet"
@@ -155,34 +148,50 @@ header .date {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+
   margin-top: 6px;
+
   font-size: 13px;
   color: #555;
 }
 
 .timezone-badge {
   display: inline-block;
+
   padding: 3px 8px;
+
   border-radius: 999px;
+
   background: #eef4ff;
+
   color: #1659b7;
+
   font-weight: 600;
 }
 
 .version-badge {
   display: inline-block;
+
   margin-left: 4px;
+
   padding: 3px 7px;
+
   border-radius: 999px;
+
   background: #edf8f1;
+
   color: #13713d;
+
   font-size: 11px;
+
   font-weight: 700;
 }
 
 .container {
   max-width: 760px;
+
   margin: auto;
+
   padding: 14px;
 
   padding-bottom:
@@ -194,8 +203,11 @@ header .date {
 
 .card {
   background: white;
+
   border-radius: 16px;
+
   padding: 16px;
+
   margin-bottom: 14px;
 
   box-shadow:
@@ -211,10 +223,15 @@ header .date {
 
 .time-info {
   background: #fff8e8;
+
   padding: 12px;
+
   border-radius: 12px;
+
   margin-bottom: 14px;
+
   line-height: 1.8;
+
   font-size: 14px;
 }
 
@@ -224,24 +241,35 @@ header .date {
 
 #map {
   width: 100%;
+
   height: 330px;
+
   border-radius: 14px;
+
   overflow: hidden;
 }
 
 .gps-info {
   background: #f3f7ff;
+
   padding: 12px;
+
   border-radius: 12px;
+
   margin-bottom: 12px;
+
   line-height: 1.8;
+
   font-size: 14px;
 }
 
 label {
   display: block;
+
   margin-bottom: 6px;
+
   font-size: 14px;
+
   font-weight: 600;
 }
 
@@ -249,11 +277,17 @@ input,
 textarea,
 select {
   width: 100%;
+
   padding: 12px;
+
   border: 1px solid #ddd;
+
   border-radius: 10px;
+
   font-size: 16px;
+
   margin-bottom: 12px;
+
   background: white;
 }
 
@@ -264,14 +298,23 @@ textarea {
 
 button {
   width: 100%;
+
   border: none;
+
   border-radius: 12px;
+
   padding: 14px;
+
   font-size: 16px;
+
   font-weight: 700;
+
   cursor: pointer;
+
   margin-bottom: 8px;
-  -webkit-tap-highlight-color: transparent;
+
+  -webkit-tap-highlight-color:
+    transparent;
 }
 
 .btn-primary {
@@ -301,32 +344,80 @@ button {
 
 .button-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+
+  grid-template-columns:
+    1fr 1fr;
+
   gap: 8px;
 }
 
 .status {
   font-size: 14px;
+
   color: #666;
+
   text-align: center;
+
   margin-top: 5px;
+
   margin-bottom: 10px;
+
   min-height: 22px;
 }
 
 .small-note {
   font-size: 12px;
+
   color: #888;
+
   line-height: 1.6;
+
   margin-top: 4px;
 }
 
+
 /* =====================================================
-   V4.3：附近地點
+   V4.3.1 查詢狀態
+===================================================== */
+
+.lookup-status {
+  display: none;
+
+  margin-bottom: 12px;
+
+  background: #f6f8fb;
+
+  border-radius: 12px;
+
+  padding: 10px 12px;
+
+  font-size: 13px;
+
+  line-height: 1.8;
+
+  color: #555;
+}
+
+.lookup-status.show {
+  display: block;
+}
+
+.lookup-row {
+  display: flex;
+
+  gap: 6px;
+
+  align-items: flex-start;
+}
+
+
+/* =====================================================
+   Nearby Places
 ===================================================== */
 
 .nearby-section {
   display: none;
+
   margin-bottom: 14px;
 }
 
@@ -336,100 +427,132 @@ button {
 
 .nearby-title {
   font-size: 14px;
+
   font-weight: 700;
+
   margin-bottom: 8px;
 }
 
 .nearby-loading {
   background: #f6f8fb;
+
   border-radius: 10px;
+
   padding: 12px;
+
   color: #666;
+
   text-align: center;
+
   font-size: 14px;
 }
 
 .nearby-list {
   display: grid;
+
   gap: 8px;
 }
 
 .nearby-item {
   width: 100%;
-  text-align: left;
-  background: #f7f9fc;
-  color: #222;
-  border: 1px solid #e3e7ed;
-  padding: 11px 12px;
-  margin: 0;
-  border-radius: 10px;
-  font-weight: 500;
-}
 
-.nearby-item:hover {
-  background: #eef4ff;
+  text-align: left;
+
+  background: #f7f9fc;
+
+  color: #222;
+
+  border: 1px solid #e3e7ed;
+
+  padding: 11px 12px;
+
+  margin: 0;
+
+  border-radius: 10px;
+
+  font-weight: 500;
 }
 
 .nearby-name {
   font-weight: 700;
+
   display: block;
 }
 
 .nearby-meta {
   display: block;
+
   margin-top: 4px;
+
   font-size: 12px;
+
   color: #777;
 }
 
 .nearby-selected {
   background: #eaf7ef !important;
+
   border-color: #9ed4b0 !important;
 }
 
+
 /* =====================================================
-   Statistics
+   Stats
 ===================================================== */
 
 .stats {
   display: grid;
+
   grid-template-columns:
     repeat(3,1fr);
+
   gap: 8px;
 }
 
 .stat {
   background: #f6f7f9;
+
   padding: 12px 6px;
+
   border-radius: 12px;
+
   text-align: center;
 }
 
 .stat-value {
   font-weight: 700;
+
   font-size: 18px;
 }
 
 .stat-label {
   font-size: 12px;
+
   color: #777;
+
   margin-top: 3px;
 }
 
+
 /* =====================================================
-   Date Filter
+   Filter
 ===================================================== */
 
 .filter-box {
   background: #f6f8fb;
+
   border-radius: 12px;
+
   padding: 12px;
+
   margin-bottom: 14px;
 }
 
 .filter-title {
   font-size: 14px;
+
   font-weight: 700;
+
   margin-bottom: 8px;
 }
 
@@ -437,8 +560,9 @@ button {
   margin-bottom: 0;
 }
 
+
 /* =====================================================
-   Day / Record
+   Records
 ===================================================== */
 
 .day-group {
@@ -447,25 +571,34 @@ button {
 
 .day-header {
   background: #f6f8fb;
+
   border-radius: 12px;
+
   padding: 12px 14px;
+
   margin-bottom: 4px;
 }
 
 .day-title {
   font-size: 17px;
+
   font-weight: 700;
 }
 
 .day-summary {
   margin-top: 5px;
+
   font-size: 13px;
+
   color: #666;
 }
 
 .record {
   padding: 15px 8px;
-  border-bottom: 1px solid #eee;
+
+  border-bottom:
+    1px solid #eee;
+
   border-radius: 12px;
 
   transition:
@@ -491,89 +624,130 @@ button {
 
 .record-top {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+
+  justify-content:
+    space-between;
+
+  align-items:
+    flex-start;
+
   gap: 10px;
 }
 
 .record-time {
   font-weight: 700;
+
   font-size: 19px;
 }
 
 .record-place {
   font-size: 17px;
+
   margin-top: 5px;
+
   font-weight: 600;
 }
 
 .record-detail {
   margin-top: 7px;
+
   font-size: 13px;
+
   color: #777;
+
   line-height: 1.7;
 }
 
 .record-timezone {
   display: inline-block;
+
   margin-top: 5px;
+
   padding: 3px 7px;
+
   background: #eef4ff;
+
   color: #175bb6;
+
   border-radius: 7px;
+
   font-size: 12px;
+
   font-weight: 600;
 }
 
 .record-distance {
   display: inline-block;
+
   margin-top: 5px;
+
   margin-left: 4px;
+
   padding: 3px 7px;
+
   background: #edf8f1;
+
   color: #13713d;
+
   border-radius: 7px;
+
   font-size: 12px;
+
   font-weight: 600;
 }
 
 .record-note {
   margin-top: 8px;
+
   font-size: 14px;
+
   color: #444;
+
   background: #f7f7f7;
+
   padding: 8px 10px;
+
   border-radius: 8px;
 }
 
 .record-actions {
   display: flex;
+
   gap: 7px;
+
   flex-shrink: 0;
 }
 
 .record-actions button {
   width: auto;
+
   margin: 0;
+
   padding: 8px 10px;
+
   font-size: 13px;
 }
 
 .edit-btn {
   background: #fff6df;
+
   color: #9a6400;
 }
 
 .delete-btn {
   background: #fff0f0;
+
   color: #c62828;
 }
 
 .empty {
   color: #999;
+
   text-align: center;
+
   padding: 25px 5px;
 }
+
 
 /* =====================================================
    Modal
@@ -581,6 +755,7 @@ button {
 
 .modal-overlay {
   position: fixed;
+
   inset: 0;
 
   background:
@@ -589,6 +764,7 @@ button {
   display: none;
 
   align-items: center;
+
   justify-content: center;
 
   padding: 16px;
@@ -602,13 +778,17 @@ button {
 
 .modal {
   width: 100%;
+
   max-width: 520px;
+
   max-height: 90vh;
+
   overflow-y: auto;
 
   background: white;
 
   border-radius: 18px;
+
   padding: 18px;
 
   box-shadow:
@@ -618,54 +798,68 @@ button {
 
 .modal-title {
   font-size: 20px;
+
   font-weight: 700;
+
   margin-bottom: 16px;
 }
 
 .modal-actions {
   display: grid;
+
   grid-template-columns:
     1fr 1fr;
-  gap: 8px;
-  margin-top: 8px;
-}
 
-.modal-actions button {
-  margin-bottom: 0;
+  gap: 8px;
+
+  margin-top: 8px;
 }
 
 .dialog-icon {
   text-align: center;
+
   font-size: 42px;
+
   margin-bottom: 8px;
 }
 
 .dialog-title {
   text-align: center;
+
   font-size: 21px;
+
   font-weight: 700;
+
   margin-bottom: 12px;
 }
 
 .dialog-message {
   white-space: pre-line;
+
   text-align: center;
+
   color: #555;
+
   line-height: 1.7;
+
   font-size: 15px;
+
   margin-bottom: 16px;
 }
 
 .dialog-actions {
   display: grid;
+
   grid-template-columns:
     1fr 1fr;
+
   gap: 8px;
 }
 
 .dialog-actions.single {
   grid-template-columns: 1fr;
 }
+
 
 /* =====================================================
    Toast
@@ -720,6 +914,7 @@ button {
     translateY(0);
 }
 
+
 @media
 (max-width:480px) {
 
@@ -733,6 +928,7 @@ button {
 
   .card {
     border-radius: 14px;
+
     padding: 14px;
   }
 
@@ -747,7 +943,6 @@ button {
 </head>
 
 
-
 <body>
 
 
@@ -758,15 +953,17 @@ button {
   🌏 我的旅遊足跡
 
   <span class="version-badge">
-    V4.3
+    V4.3.1
   </span>
 
 </h1>
+
 
 <div
   class="date"
   id="todayText">
 </div>
+
 
 <div class="timezone-header">
 
@@ -788,10 +985,6 @@ button {
 
 <div class="container">
 
-
-<!-- =====================================================
-     CURRENT TIME
-====================================================== -->
 
 <div class="card">
 
@@ -828,10 +1021,6 @@ button {
 
 
 
-<!-- =====================================================
-     MAP
-====================================================== -->
-
 <div class="card">
 
   <div class="section-title">
@@ -844,15 +1033,12 @@ button {
 
 
 
-<!-- =====================================================
-     GPS
-====================================================== -->
-
 <div class="card">
 
   <div class="section-title">
     📍 紀錄目前位置
   </div>
+
 
   <div class="gps-info">
 
@@ -894,9 +1080,29 @@ button {
   </div>
 
 
-  <!-- =================================================
-       V4.3 附近地點
-  ================================================== -->
+  <!-- V4.3.1 狀態 -->
+
+  <div
+    class="lookup-status"
+    id="lookupStatus"
+  >
+
+    <div class="lookup-row">
+      <span>🏷️</span>
+      <span id="nameLookupStatus">
+        自動地名：尚未查詢
+      </span>
+    </div>
+
+    <div class="lookup-row">
+      <span>📍</span>
+      <span id="poiLookupStatus">
+        附近地點：尚未查詢
+      </span>
+    </div>
+
+  </div>
+
 
   <div
     class="nearby-section"
@@ -907,6 +1113,7 @@ button {
       📍 附近地點
     </div>
 
+
     <div
       class="nearby-loading"
       id="nearbyLoading"
@@ -914,10 +1121,10 @@ button {
       正在搜尋附近地點...
     </div>
 
+
     <div
       class="nearby-list"
-      id="nearbyList"
-    >
+      id="nearbyList">
     </div>
 
   </div>
@@ -955,15 +1162,12 @@ button {
 
 
 
-<!-- =====================================================
-     STATISTICS
-====================================================== -->
-
 <div class="card">
 
   <div class="section-title">
     📊 旅行統計
   </div>
+
 
   <div class="stats">
 
@@ -1017,10 +1221,6 @@ button {
 
 
 
-<!-- =====================================================
-     TIMELINE
-====================================================== -->
-
 <div class="card">
 
   <div class="section-title">
@@ -1053,10 +1253,6 @@ button {
 </div>
 
 
-
-<!-- =====================================================
-     BACKUP
-====================================================== -->
 
 <div class="card">
 
@@ -1108,7 +1304,7 @@ button {
 
   <div class="small-note">
 
-    支援 V2 / V3 / V4 / V4.1 / V4.2 / V4.3 JSON。
+    支援 V2 / V3 / V4 / V4.1 / V4.2 / V4.3 / V4.3.1 JSON。
     匯入會取代目前手機上的紀錄。
 
   </div>
@@ -1131,9 +1327,7 @@ button {
 
 
 
-<!-- =====================================================
-     EDIT MODAL
-====================================================== -->
+<!-- EDIT MODAL -->
 
 <div
   class="modal-overlay"
@@ -1231,9 +1425,7 @@ button {
 
 
 
-<!-- =====================================================
-     DIALOG
-====================================================== -->
+<!-- DIALOG -->
 
 <div
   class="modal-overlay"
@@ -1327,11 +1519,11 @@ let toastTimer =
 
 
 /* =========================================================
-   V4.3 OVERPASS SETTINGS
+   V4.3.1 LOOKUP SETTINGS
 ========================================================= */
 
-const OVERPASS_TIMEOUT_MS =
-  1200;
+const LOOKUP_TIMEOUT_MS =
+  3000;
 
 const OVERPASS_RADIUS =
   1000;
@@ -1363,12 +1555,15 @@ function generateRecordId() {
 
   }
 
+
   return (
+
     Date.now() +
     "-" +
     Math.random()
       .toString(36)
       .slice(2)
+
   );
 
 }
@@ -1497,35 +1692,42 @@ function showDialog({
   return new Promise(
     resolve => {
 
+
       const modal =
         document.getElementById(
           "dialogModal"
         );
+
 
       const iconEl =
         document.getElementById(
           "dialogIcon"
         );
 
+
       const titleEl =
         document.getElementById(
           "dialogTitle"
         );
+
 
       const messageEl =
         document.getElementById(
           "dialogMessage"
         );
 
+
       const actions =
         document.getElementById(
           "dialogActions"
         );
 
+
       const confirmBtn =
         document.getElementById(
           "dialogConfirm"
         );
+
 
       const cancelBtn =
         document.getElementById(
@@ -1536,14 +1738,18 @@ function showDialog({
       iconEl.textContent =
         icon;
 
+
       titleEl.textContent =
         title;
+
 
       messageEl.textContent =
         message;
 
+
       confirmBtn.textContent =
         confirmText;
+
 
       cancelBtn.textContent =
         cancelText;
@@ -1580,11 +1786,14 @@ function showDialog({
           "show"
         );
 
+
         confirmBtn.onclick =
           null;
 
+
         cancelBtn.onclick =
           null;
+
 
         resolve(
           result
@@ -1594,11 +1803,17 @@ function showDialog({
 
 
       confirmBtn.onclick =
-        () => cleanup(true);
+        () =>
+          cleanup(
+            true
+          );
 
 
       cancelBtn.onclick =
-        () => cleanup(false);
+        () =>
+          cleanup(
+            false
+          );
 
     }
   );
@@ -1921,6 +2136,7 @@ function getRecords() {
       error
     );
 
+
     return [];
 
   }
@@ -1941,6 +2157,129 @@ function saveRecords(
     )
 
   );
+
+}
+
+
+/* =========================================================
+   FETCH TIMEOUT
+========================================================= */
+
+async function fetchWithTimeout(
+  url,
+  options = {},
+  timeoutMs =
+    LOOKUP_TIMEOUT_MS
+) {
+
+  const controller =
+    new AbortController();
+
+
+  const timer =
+    setTimeout(
+      () => {
+
+        controller.abort();
+
+      },
+      timeoutMs
+    );
+
+
+  try {
+
+    return await fetch(
+      url,
+      {
+
+        ...options,
+
+        signal:
+          controller.signal
+
+      }
+    );
+
+  }
+
+  finally {
+
+    clearTimeout(
+      timer
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   LOOKUP STATUS
+========================================================= */
+
+function resetLookupUI() {
+
+  const box =
+    document.getElementById(
+      "lookupStatus"
+    );
+
+
+  box.classList.add(
+    "show"
+  );
+
+
+  document
+    .getElementById(
+      "nameLookupStatus"
+    )
+    .textContent =
+    "自動地名：搜尋中...";
+
+
+  document
+    .getElementById(
+      "poiLookupStatus"
+    )
+    .textContent =
+    "附近地點：搜尋中...";
+
+
+  const nearbySection =
+    document.getElementById(
+      "nearbySection"
+    );
+
+
+  const nearbyList =
+    document.getElementById(
+      "nearbyList"
+    );
+
+
+  const nearbyLoading =
+    document.getElementById(
+      "nearbyLoading"
+    );
+
+
+  nearbySection.classList.add(
+    "show"
+  );
+
+
+  nearbyList.innerHTML =
+    "";
+
+
+  nearbyLoading.style.display =
+    "block";
+
+
+  nearbyLoading.textContent =
+    "正在搜尋附近地點...";
 
 }
 
@@ -1973,25 +2312,19 @@ function getCurrentLocation() {
     "📡 正在取得 GPS 位置...";
 
 
-  /*
-    新的一次 GPS 定位，
-    先清掉舊的附近地點畫面
-  */
-
-  resetNearbyPlaces();
-
-
   navigator
     .geolocation
     .getCurrentPosition(
 
-      async function(position) {
+      function(position) {
 
         currentLat =
           position.coords.latitude;
 
+
         currentLng =
           position.coords.longitude;
+
 
         currentAccuracy =
           position.coords.accuracy;
@@ -2066,11 +2399,22 @@ function getCurrentLocation() {
 
 
         /*
-          V4.3：
-          GPS 成功後立即查附近 POI
+          V4.3.1
+          GPS 成功後，同時執行：
+          1. Nominatim
+          2. Overpass Race
         */
 
-        loadNearbyPlaces(
+        resetLookupUI();
+
+
+        lookupAutomaticPlaceName(
+          currentLat,
+          currentLng
+        );
+
+
+        lookupNearbyPlacesRace(
           currentLat,
           currentLng
         );
@@ -2142,94 +2486,152 @@ function getCurrentLocation() {
 
 
 /* =========================================================
-   V4.3
-   清除附近地點顯示
+   NOMINATIM
 ========================================================= */
 
-function resetNearbyPlaces() {
-
-  const section =
-    document.getElementById(
-      "nearbySection"
-    );
-
-  const list =
-    document.getElementById(
-      "nearbyList"
-    );
-
-  const loading =
-    document.getElementById(
-      "nearbyLoading"
-    );
-
-
-  section.classList.remove(
-    "show"
-  );
-
-
-  list.innerHTML =
-    "";
-
-
-  loading.style.display =
-    "block";
-
-
-  loading.textContent =
-    "正在搜尋附近地點...";
-
-}
-
-
-/* =========================================================
-   V4.3
-   fetch timeout
-========================================================= */
-
-async function fetchWithTimeout(
-  url,
-  options = {},
-  timeoutMs = 1200
+async function lookupAutomaticPlaceName(
+  lat,
+  lng
 ) {
 
-  const controller =
-    new AbortController();
+  const status =
+    document.getElementById(
+      "nameLookupStatus"
+    );
 
 
-  const timer =
-    setTimeout(
-      () => {
-
-        controller.abort();
-
-      },
-      timeoutMs
+  const input =
+    document.getElementById(
+      "placeName"
     );
 
 
   try {
 
-    return await fetch(
-      url,
-      {
+    const url =
 
-        ...options,
+      "https://nominatim.openstreetmap.org/reverse" +
 
-        signal:
-          controller.signal
+      "?format=jsonv2" +
 
-      }
-    );
+      "&lat=" +
+      encodeURIComponent(lat) +
+
+      "&lon=" +
+      encodeURIComponent(lng) +
+
+      "&accept-language=zh-TW,zh,en";
+
+
+    const response =
+      await fetchWithTimeout(
+        url,
+        {},
+        LOOKUP_TIMEOUT_MS
+      );
+
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        "HTTP " +
+        response.status
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    const address =
+      data.address ||
+      {};
+
+
+    const name =
+
+      data.name ||
+
+      address.attraction ||
+
+      address.tourism ||
+
+      address.station ||
+
+      address.railway ||
+
+      address.shop ||
+
+      address.amenity ||
+
+      address.hotel ||
+
+      address.building ||
+
+      address.neighbourhood ||
+
+      address.suburb ||
+
+      address.quarter ||
+
+      address.city_district ||
+
+      address.city ||
+
+      address.town ||
+
+      address.village ||
+
+      "";
+
+
+    if (
+      name
+    ) {
+
+      /*
+        每次重新 GPS 定位，
+        允許新的自動地名更新輸入框。
+
+        如果使用者之後點附近地點，
+        還是會覆蓋成所選地點。
+      */
+
+      input.value =
+        name;
+
+
+      status.textContent =
+        "自動地名：✅ " +
+        name;
+
+    }
+
+    else {
+
+      status.textContent =
+        "自動地名：⚠️ 找不到名稱";
+
+    }
 
   }
 
-  finally {
+  catch (
+    error
+  ) {
 
-    clearTimeout(
-      timer
+    console.log(
+      "Nominatim Error:",
+      error
     );
+
+
+    status.textContent =
+      "自動地名：⚠️ 暫時無法取得";
 
   }
 
@@ -2237,8 +2639,7 @@ async function fetchWithTimeout(
 
 
 /* =========================================================
-   V4.3
-   建立 Overpass Query
+   OVERPASS QUERY
 ========================================================= */
 
 function buildOverpassQuery(
@@ -2253,10 +2654,13 @@ function buildOverpassQuery(
 
 (
   nwr(around:${radius},${lat},${lng})["name"]["amenity"];
+
   nwr(around:${radius},${lat},${lng})["name"]["shop"];
+
   nwr(around:${radius},${lat},${lng})["name"]["tourism"];
 
   nwr(around:${radius},${lat},${lng})["name"]["railway"="station"];
+
   nwr(around:${radius},${lat},${lng})["name"]["railway"="halt"];
 
   nwr(around:${radius},${lat},${lng})["name"]["public_transport"];
@@ -2276,14 +2680,122 @@ out center tags;
 
 
 /* =========================================================
-   V4.3
-   多 Overpass Server 輪流嘗試
+   SINGLE OVERPASS REQUEST
 ========================================================= */
 
-async function fetchNearbyPlaces(
+async function requestOverpassServer(
+  server,
+  query,
   lat,
   lng
 ) {
+
+  const response =
+    await fetchWithTimeout(
+
+      server,
+
+      {
+
+        method:
+          "POST",
+
+        headers: {
+
+          "Content-Type":
+            "application/x-www-form-urlencoded;charset=UTF-8"
+
+        },
+
+        body:
+
+          "data=" +
+          encodeURIComponent(
+            query
+          )
+
+      },
+
+      LOOKUP_TIMEOUT_MS
+
+    );
+
+
+  if (
+    !response.ok
+  ) {
+
+    throw new Error(
+      "HTTP " +
+      response.status
+    );
+
+  }
+
+
+  const data =
+    await response.json();
+
+
+  const places =
+    parseNearbyPlaces(
+      data,
+      lat,
+      lng
+    );
+
+
+  /*
+    有成功連線但沒有任何 POI，
+    也當成這個節點沒提供可用結果，
+    讓其他節點繼續 Race。
+  */
+
+  if (
+    places.length ===
+    0
+  ) {
+
+    throw new Error(
+      "No POI"
+    );
+
+  }
+
+
+  return {
+
+    server:
+      server,
+
+    places:
+      places
+
+  };
+
+}
+
+
+/* =========================================================
+   V4.3.1 OVERPASS RACE
+========================================================= */
+
+async function lookupNearbyPlacesRace(
+  lat,
+  lng
+) {
+
+  const status =
+    document.getElementById(
+      "poiLookupStatus"
+    );
+
+
+  const loading =
+    document.getElementById(
+      "nearbyLoading"
+    );
+
 
   const query =
     buildOverpassQuery(
@@ -2293,123 +2805,82 @@ async function fetchNearbyPlaces(
     );
 
 
-  let lastError =
-    null;
-
-
-  for (
-    const server of
-    OVERPASS_SERVERS
-  ) {
-
-    try {
-
-      console.log(
-        "Overpass Try:",
-        server
-      );
-
-
-      const response =
-        await fetchWithTimeout(
-
+  const requests =
+    OVERPASS_SERVERS.map(
+      server =>
+        requestOverpassServer(
           server,
-
-          {
-
-            method:
-              "POST",
-
-            headers: {
-
-              "Content-Type":
-                "application/x-www-form-urlencoded;charset=UTF-8"
-
-            },
-
-            body:
-
-              "data=" +
-              encodeURIComponent(
-                query
-              )
-
-          },
-
-          OVERPASS_TIMEOUT_MS
-
-        );
+          query,
+          lat,
+          lng
+        )
+    );
 
 
-      if (
-        !response.ok
-      ) {
+  try {
 
-        throw new Error(
-          "HTTP " +
-          response.status
-        );
+    /*
+      Promise.any：
+      任一節點成功即返回。
+      其他節點不需要等完才顯示結果。
+    */
 
-      }
-
-
-      const data =
-        await response.json();
-
-
-      console.log(
-        "Overpass Success:",
-        server
+    const result =
+      await Promise.any(
+        requests
       );
 
 
-      return parseNearbyPlaces(
-        data,
-        lat,
-        lng
-      );
-
-    }
-
-    catch (
-      error
-    ) {
-
-      lastError =
-        error;
+    status.textContent =
+      "附近地點：✅ 已取得 " +
+      result.places.length +
+      " 個";
 
 
-      console.log(
+    loading.style.display =
+      "none";
 
-        "Overpass Failed:",
 
-        server,
+    renderNearbyPlaces(
+      result.places
+    );
 
-        error.name ||
-        error.message
 
-      );
-
-    }
+    console.log(
+      "Overpass Winner:",
+      result.server
+    );
 
   }
 
+  catch (
+    error
+  ) {
 
-  throw (
-    lastError ||
-    new Error(
-      "所有 Overpass API 都失敗"
-    )
-  );
+    console.log(
+      "All Overpass failed:",
+      error
+    );
+
+
+    status.textContent =
+      "附近地點：⚠️ 暫時無法取得";
+
+
+    loading.style.display =
+      "block";
+
+
+    loading.textContent =
+      "⚠️ 附近地點暫時無法取得，可直接使用自動地名或手動輸入。";
+
+  }
 
 }
 
 
 /* =========================================================
-   V4.3
-   解析 POI
-   + 距離排序
-   + 同名去重
+   PARSE POI
 ========================================================= */
 
 function parseNearbyPlaces(
@@ -2507,10 +2978,6 @@ function parseNearbyPlaces(
   }
 
 
-  /*
-    先依距離排序
-  */
-
   candidates.sort(
     (
       a,
@@ -2522,11 +2989,7 @@ function parseNearbyPlaces(
 
 
   /*
-    V4.3：
-    同名去重。
-
-    因為已依距離排序，
-    第一筆一定是最近的。
+    同名去重
   */
 
   const seenNames =
@@ -2541,11 +3004,6 @@ function parseNearbyPlaces(
     const place of
     candidates
   ) {
-
-    /*
-      去除前後空白 + 小寫
-      當成名稱比較 Key
-    */
 
     const key =
       place.name
@@ -2573,10 +3031,6 @@ function parseNearbyPlaces(
       place
     );
 
-
-    /*
-      最多只需要 5 個
-    */
 
     if (
       uniquePlaces.length >=
@@ -2705,127 +3159,7 @@ function detectPoiCategory(
 
 
 /* =========================================================
-   V4.3
-   載入附近地點
-========================================================= */
-
-async function loadNearbyPlaces(
-  lat,
-  lng
-) {
-
-  const section =
-    document.getElementById(
-      "nearbySection"
-    );
-
-
-  const loading =
-    document.getElementById(
-      "nearbyLoading"
-    );
-
-
-  const list =
-    document.getElementById(
-      "nearbyList"
-    );
-
-
-  section.classList.add(
-    "show"
-  );
-
-
-  loading.style.display =
-    "block";
-
-
-  loading.textContent =
-    "正在搜尋附近地點...";
-
-
-  list.innerHTML =
-    "";
-
-
-  try {
-
-    const places =
-      await fetchNearbyPlaces(
-        lat,
-        lng
-      );
-
-
-    /*
-      Overpass 有成功，
-      但完全找不到 POI
-    */
-
-    if (
-      places.length === 0
-    ) {
-
-      loading.textContent =
-        "附近沒有找到可選地點，已改用 GPS 自動判斷地名。";
-
-
-      await autoDetectPlaceName(
-        lat,
-        lng
-      );
-
-
-      return;
-
-    }
-
-
-    loading.style.display =
-      "none";
-
-
-    renderNearbyPlaces(
-      places
-    );
-
-  }
-
-  catch (
-    error
-  ) {
-
-    console.error(
-      "Nearby POI Error:",
-      error
-    );
-
-
-    loading.style.display =
-      "block";
-
-
-    loading.textContent =
-      "⚠️ 附近 5 個地點查詢失敗，已改用 GPS 自動判斷地名。";
-
-
-    /*
-      Overpass 全失敗才進 Nominatim
-    */
-
-    await autoDetectPlaceName(
-      lat,
-      lng
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   顯示附近地點
+   RENDER NEARBY
 ========================================================= */
 
 function renderNearbyPlaces(
@@ -2896,21 +3230,17 @@ function renderNearbyPlaces(
             .forEach(
               item => {
 
-                item
-                  .classList
-                  .remove(
-                    "nearby-selected"
-                  );
+                item.classList.remove(
+                  "nearby-selected"
+                );
 
               }
             );
 
 
-          button
-            .classList
-            .add(
-              "nearby-selected"
-            );
+          button.classList.add(
+            "nearby-selected"
+          );
 
 
           document
@@ -2935,136 +3265,6 @@ function renderNearbyPlaces(
 
     }
   );
-
-}
-
-
-/* =========================================================
-   NOMINATIM FALLBACK
-========================================================= */
-
-async function autoDetectPlaceName(
-  lat,
-  lng
-) {
-
-  const input =
-    document.getElementById(
-      "placeName"
-    );
-
-
-  try {
-
-    const url =
-
-      "https://nominatim.openstreetmap.org/reverse" +
-
-      "?format=jsonv2" +
-
-      "&lat=" +
-      encodeURIComponent(lat) +
-
-      "&lon=" +
-      encodeURIComponent(lng) +
-
-      "&accept-language=zh-TW,zh,en";
-
-
-    /*
-      Nominatim 也加 timeout，
-      避免 fallback 又卡太久。
-      這裡給 1.5 秒。
-    */
-
-    const response =
-      await fetchWithTimeout(
-        url,
-        {},
-        1500
-      );
-
-
-    if (
-      !response.ok
-    ) {
-
-      throw new Error(
-        "HTTP " +
-        response.status
-      );
-
-    }
-
-
-    const data =
-      await response.json();
-
-
-    const address =
-      data.address ||
-      {};
-
-
-    const name =
-
-      data.name ||
-
-      address.attraction ||
-
-      address.tourism ||
-
-      address.station ||
-
-      address.railway ||
-
-      address.shop ||
-
-      address.amenity ||
-
-      address.hotel ||
-
-      address.building ||
-
-      address.neighbourhood ||
-
-      address.suburb ||
-
-      address.quarter ||
-
-      address.city_district ||
-
-      address.city ||
-
-      address.town ||
-
-      address.village ||
-
-      "";
-
-
-    if (
-      name &&
-      !input.value.trim()
-    ) {
-
-      input.value =
-        name;
-
-    }
-
-  }
-
-  catch (
-    error
-  ) {
-
-    console.log(
-      "Nominatim fallback failed:",
-      error
-    );
-
-  }
 
 }
 
@@ -3348,7 +3548,7 @@ function checkDuplicateRecord(
 
 
 /* =========================================================
-   SAVE RECORD
+   SAVE
 ========================================================= */
 
 async function saveLocation() {
@@ -3787,7 +3987,7 @@ function groupRecordsByDay(
 
 
 /* =========================================================
-   DATE FILTER
+   FILTER
 ========================================================= */
 
 function updateDateFilterOptions() {
@@ -4281,9 +4481,11 @@ function renderRecords() {
               >
 
                 <div class="record-time">
+
                   ${formatRecordTime(
                     record
                   )}
+
                 </div>
 
                 <div class="record-place">
@@ -5477,7 +5679,7 @@ function exportJSON() {
   const backup = {
 
     version:
-      4.3,
+      "4.3.1",
 
     exportedAt:
       new Date()
@@ -5497,7 +5699,7 @@ function exportJSON() {
       2
     ),
 
-    "travel-footprints-v4-3.json",
+    "travel-footprints-v4-3-1.json",
 
     "application/json"
 
@@ -5872,7 +6074,7 @@ function escapeHTML(
 
 
 /* =========================================================
-   MODAL OUTSIDE CLICK
+   MODAL OUTSIDE
 ========================================================= */
 
 document
