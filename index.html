@@ -2,69 +2,61 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V4.3.1
+  我的旅遊足跡 V4.4
 =============================================================
 
-【V4.3.1 新增 / 修改功能】
+【V4.4 新增 / 修改功能】
 
-1. GPS 成功後，同時查詢：
-   - Nominatim 自動地名
-   - Overpass API 節點 1
-   - Overpass API 節點 2
-   - Overpass API 節點 3
+1. 附近地點搜尋改成「精簡 POI」
+   - 餐廳
+   - 咖啡店
+   - 速食
+   - Food Court
+   - 商店
+   - 車站
+   - 飯店
+   - 景點
+   - 博物館
 
-2. Nominatim 與 Overpass 不再互相等待
-   - Nominatim 最多等待 3 秒
-   - Overpass 3 個節點同時查
-   - 哪一個先成功就使用哪一個結果
-   - Overpass 整體最多約 3 秒
+2. 搜尋半徑改成 500 公尺
+   - 降低 Overpass 查詢負擔
+   - 提升手機搜尋速度
 
-3. 自動地名優先填入
-   - Nominatim 成功後立即填入地點名稱
-   - 不需要等附近 5 個地點查完
+3. Overpass 仍採 3 節點並行
+   - 任一成功立即使用
+   - timeout：3 秒
 
-4. 附近地點成功後再補上
+4. Nominatim 與 Overpass 同時查
+   - Nominatim：自動地名
+   - Overpass：附近 5 個地點
+
+5. 修正非同步覆蓋問題
+   - 使用者已手動輸入名稱後
+   - Nominatim 不再覆蓋
+   - 使用者點選附近地點後
+   - Nominatim 不再覆蓋
+
+6. 附近地點
+   - 依 GPS 距離排序
+   - 同名去重
    - 最多顯示 5 個
-   - 1000 公尺範圍
-   - 依距離排序
-   - 同名地點去重
 
-5. 狀態顯示更清楚
-   - GPS 定位成功
-   - 自動地名搜尋中 / 成功 / 失敗
-   - 附近地點搜尋中 / 成功 / 失敗
-
-6. Overpass 全部失敗
-   - 不影響 Nominatim
-   - 不影響手動輸入
-   - 不影響直接紀錄目前 GPS
-
-7. 保留 V4.1 Record ID 修正
-   - 缺少 ID 自動補 UUID
-   - 重複 ID 自動換新 UUID
-
-8. 保留 V4 / V4.2 / V4.3 功能
-   - 自製 Modal
-   - Toast
-   - 日期篩選
-   - Marker ↔ 足跡列表連動
+7. 保留既有功能
+   - GPS
    - 自動時區
    - GMT
+   - Leaflet 地圖
    - 距離統計
-   - CSV
+   - 日期篩選
+   - 編輯
+   - 單筆刪除
+   - 重複紀錄提醒
+   - CSV 匯出
    - JSON 備份 / 還原
-
-9. JSON 相容
-   - V2
-   - V3
-   - V4
-   - V4.1
-   - V4.2
-   - V4.3
-   - V4.3.1
+   - V2 ~ V4.4 JSON 相容
 
 Storage Key : travelFootprints
-Version     : V4.3.1
+Version     : V4.4
 =============================================================
 -->
 
@@ -83,7 +75,7 @@ Version     : V4.3.1
 
 <meta name="theme-color" content="#ffffff">
 
-<title>我的旅遊足跡 V4.3.1</title>
+<title>我的旅遊足跡 V4.4</title>
 
 <link
   rel="stylesheet"
@@ -217,7 +209,9 @@ header .date {
 
 .section-title {
   font-size: 18px;
+
   font-weight: 700;
+
   margin-bottom: 12px;
 }
 
@@ -293,6 +287,7 @@ select {
 
 textarea {
   resize: vertical;
+
   min-height: 70px;
 }
 
@@ -319,26 +314,31 @@ button {
 
 .btn-primary {
   background: #1f6feb;
+
   color: white;
 }
 
 .btn-green {
   background: #138a4b;
+
   color: white;
 }
 
 .btn-gray {
   background: #eceef1;
+
   color: #222;
 }
 
 .btn-red {
   background: #d73a49;
+
   color: white;
 }
 
 .btn-orange {
   background: #e58a00;
+
   color: white;
 }
 
@@ -375,10 +375,9 @@ button {
   margin-top: 4px;
 }
 
-
-/* =====================================================
-   V4.3.1 查詢狀態
-===================================================== */
+/* =========================================================
+   Lookup Status
+========================================================= */
 
 .lookup-status {
   display: none;
@@ -410,10 +409,9 @@ button {
   align-items: flex-start;
 }
 
-
-/* =====================================================
-   Nearby Places
-===================================================== */
+/* =========================================================
+   Nearby
+========================================================= */
 
 .nearby-section {
   display: none;
@@ -474,9 +472,9 @@ button {
 }
 
 .nearby-name {
-  font-weight: 700;
-
   display: block;
+
+  font-weight: 700;
 }
 
 .nearby-meta {
@@ -495,10 +493,9 @@ button {
   border-color: #9ed4b0 !important;
 }
 
-
-/* =====================================================
+/* =========================================================
    Stats
-===================================================== */
+========================================================= */
 
 .stats {
   display: grid;
@@ -533,10 +530,9 @@ button {
   margin-top: 3px;
 }
 
-
-/* =====================================================
+/* =========================================================
    Filter
-===================================================== */
+========================================================= */
 
 .filter-box {
   background: #f6f8fb;
@@ -560,10 +556,9 @@ button {
   margin-bottom: 0;
 }
 
-
-/* =====================================================
-   Records
-===================================================== */
+/* =========================================================
+   Record
+========================================================= */
 
 .day-group {
   margin-bottom: 22px;
@@ -748,10 +743,9 @@ button {
   padding: 25px 5px;
 }
 
-
-/* =====================================================
+/* =========================================================
    Modal
-===================================================== */
+========================================================= */
 
 .modal-overlay {
   position: fixed;
@@ -860,10 +854,9 @@ button {
   grid-template-columns: 1fr;
 }
 
-
-/* =====================================================
+/* =========================================================
    Toast
-===================================================== */
+========================================================= */
 
 .toast {
   position: fixed;
@@ -914,7 +907,6 @@ button {
     translateY(0);
 }
 
-
 @media
 (max-width:480px) {
 
@@ -942,28 +934,22 @@ button {
 
 </head>
 
-
 <body>
-
 
 <header>
 
 <h1>
-
   🌏 我的旅遊足跡
 
   <span class="version-badge">
-    V4.3.1
+    V4.4
   </span>
-
 </h1>
-
 
 <div
   class="date"
   id="todayText">
 </div>
-
 
 <div class="timezone-header">
 
@@ -981,10 +967,7 @@ button {
 
 </header>
 
-
-
 <div class="container">
-
 
 <div class="card">
 
@@ -996,30 +979,22 @@ button {
 
     <div>
       當地時間：
-      <strong id="currentLocalTime">
-        --
-      </strong>
+      <strong id="currentLocalTime">--</strong>
     </div>
 
     <div>
       時區：
-      <strong id="currentTimeZone">
-        --
-      </strong>
+      <strong id="currentTimeZone">--</strong>
     </div>
 
     <div>
       GMT：
-      <strong id="currentGMT">
-        --
-      </strong>
+      <strong id="currentGMT">--</strong>
     </div>
 
   </div>
 
 </div>
-
-
 
 <div class="card">
 
@@ -1031,14 +1006,11 @@ button {
 
 </div>
 
-
-
 <div class="card">
 
   <div class="section-title">
     📍 紀錄目前位置
   </div>
-
 
   <div class="gps-info">
 
@@ -1065,7 +1037,6 @@ button {
 
   </div>
 
-
   <button
     class="btn-primary"
     onclick="getCurrentLocation()"
@@ -1073,14 +1044,10 @@ button {
     📡 取得目前 GPS
   </button>
 
-
   <div
     class="status"
     id="gpsStatus">
   </div>
-
-
-  <!-- V4.3.1 狀態 -->
 
   <div
     class="lookup-status"
@@ -1089,6 +1056,7 @@ button {
 
     <div class="lookup-row">
       <span>🏷️</span>
+
       <span id="nameLookupStatus">
         自動地名：尚未查詢
       </span>
@@ -1096,15 +1064,15 @@ button {
 
     <div class="lookup-row">
       <span>📍</span>
+
       <span id="poiLookupStatus">
         附近地點：尚未查詢
       </span>
     </div>
 
   </div>
-
-
-  <div
+  
+    <div
     class="nearby-section"
     id="nearbySection"
   >
@@ -1113,7 +1081,6 @@ button {
       📍 附近地點
     </div>
 
-
     <div
       class="nearby-loading"
       id="nearbyLoading"
@@ -1121,14 +1088,13 @@ button {
       正在搜尋附近地點...
     </div>
 
-
     <div
       class="nearby-list"
-      id="nearbyList">
+      id="nearbyList"
+    >
     </div>
 
   </div>
-
 
   <label>
     地點名稱
@@ -1140,7 +1106,6 @@ button {
     placeholder="例如：桃園機場、福岡機場、博多車站"
   >
 
-
   <label>
     備註
   </label>
@@ -1149,7 +1114,6 @@ button {
     id="note"
     placeholder="例如：抵達、吃午餐、搭電車、開始逛街"
   ></textarea>
-
 
   <button
     class="btn-green"
@@ -1160,14 +1124,11 @@ button {
 
 </div>
 
-
-
 <div class="card">
 
   <div class="section-title">
     📊 旅行統計
   </div>
-
 
   <div class="stats">
 
@@ -1175,7 +1136,8 @@ button {
 
       <div
         class="stat-value"
-        id="recordCount">
+        id="recordCount"
+      >
         0
       </div>
 
@@ -1185,12 +1147,12 @@ button {
 
     </div>
 
-
     <div class="stat">
 
       <div
         class="stat-value"
-        id="dayCount">
+        id="dayCount"
+      >
         0
       </div>
 
@@ -1200,12 +1162,12 @@ button {
 
     </div>
 
-
     <div class="stat">
 
       <div
         class="stat-value"
-        id="totalDistance">
+        id="totalDistance"
+      >
         0 km
       </div>
 
@@ -1219,14 +1181,11 @@ button {
 
 </div>
 
-
-
 <div class="card">
 
   <div class="section-title">
     🕐 足跡時間軸
   </div>
-
 
   <div class="filter-box">
 
@@ -1247,19 +1206,15 @@ button {
 
   </div>
 
-
   <div id="recordList"></div>
 
 </div>
-
-
 
 <div class="card">
 
   <div class="section-title">
     💾 備份 / 還原
   </div>
-
 
   <div class="button-row">
 
@@ -1270,7 +1225,6 @@ button {
       匯出 CSV
     </button>
 
-
     <button
       class="btn-gray"
       onclick="exportJSON()"
@@ -1280,18 +1234,16 @@ button {
 
   </div>
 
-
   <button
     class="btn-orange"
     onclick="
       document
-      .getElementById('jsonImportInput')
-      .click()
+        .getElementById('jsonImportInput')
+        .click()
     "
   >
     📥 匯入 JSON 備份
   </button>
-
 
   <input
     type="file"
@@ -1301,17 +1253,12 @@ button {
     onchange="importJSON(event)"
   >
 
-
   <div class="small-note">
-
-    支援 V2 / V3 / V4 / V4.1 / V4.2 / V4.3 / V4.3.1 JSON。
+    支援 V2 / V3 / V4 / V4.1 / V4.2 / V4.3 / V4.3.1 / V4.4 JSON。
     匯入會取代目前手機上的紀錄。
-
   </div>
 
-
   <br>
-
 
   <button
     class="btn-red"
@@ -1322,12 +1269,11 @@ button {
 
 </div>
 
-
 </div>
 
-
-
-<!-- EDIT MODAL -->
+<!-- =========================================================
+     EDIT MODAL
+========================================================= -->
 
 <div
   class="modal-overlay"
@@ -1340,12 +1286,10 @@ button {
     ✏️ 編輯足跡
   </div>
 
-
   <input
     type="hidden"
     id="editRecordId"
   >
-
 
   <label>
     地點名稱
@@ -1356,7 +1300,6 @@ button {
     id="editPlace"
   >
 
-
   <label>
     日期
   </label>
@@ -1365,7 +1308,6 @@ button {
     type="date"
     id="editDate"
   >
-
 
   <label>
     時間
@@ -1377,7 +1319,6 @@ button {
     step="1"
   >
 
-
   <label>
     備註
   </label>
@@ -1385,7 +1326,6 @@ button {
   <textarea
     id="editNote"
   ></textarea>
-
 
   <div class="gps-info">
 
@@ -1399,7 +1339,6 @@ button {
 
   </div>
 
-
   <div class="modal-actions">
 
     <button
@@ -1408,7 +1347,6 @@ button {
     >
       取消
     </button>
-
 
     <button
       class="btn-green"
@@ -1423,9 +1361,9 @@ button {
 
 </div>
 
-
-
-<!-- DIALOG -->
+<!-- =========================================================
+     DIALOG
+========================================================= -->
 
 <div
   class="modal-overlay"
@@ -1479,20 +1417,15 @@ button {
 
 </div>
 
-
-
 <div
   class="toast"
-  id="toast">
+  id="toast"
+>
 </div>
 
-
-
 <script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-</script>
-
-
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
 
 <script>
 
@@ -1517,16 +1450,51 @@ let currentDateFilter =
 let toastTimer =
   null;
 
+/*
+  V4.4：
+  用來判斷地點名稱目前來源。
+
+  none   = 尚未設定
+  auto   = Nominatim 自動地名
+  nearby = 使用者點選附近地點
+  manual = 使用者手動輸入
+*/
+
+let placeNameSource =
+  "none";
+
+/*
+  防止舊的一輪 GPS / API 結果
+  覆蓋最新一輪查詢。
+*/
+
+let locationLookupSequence =
+  0;
 
 /* =========================================================
-   V4.3.1 LOOKUP SETTINGS
+   V4.4 SEARCH SETTINGS
 ========================================================= */
+
+/*
+  Nominatim 與 Overpass
+  各自最多等 3 秒。
+*/
 
 const LOOKUP_TIMEOUT_MS =
   3000;
 
+/*
+  V4.4 改成 500 公尺，
+  減少 Overpass 查詢量。
+*/
+
 const OVERPASS_RADIUS =
-  1000;
+  500;
+
+/*
+  三個 Overpass API 同時查詢。
+  哪個最快成功就使用哪個。
+*/
 
 const OVERPASS_SERVERS = [
 
@@ -1538,9 +1506,54 @@ const OVERPASS_SERVERS = [
 
 ];
 
+/* =========================================================
+   PLACE NAME INPUT
+========================================================= */
+
+document
+  .getElementById(
+    "placeName"
+  )
+  .addEventListener(
+    "input",
+    function() {
+
+      /*
+        使用者只要開始自己輸入，
+        就標記為 manual。
+
+        之後較晚回來的 Nominatim
+        不可以再覆蓋。
+      */
+
+      placeNameSource =
+        "manual";
+
+      /*
+        如果之前有點選附近地點，
+        使用者開始手動修改後，
+        移除選取顏色。
+      */
+
+      document
+        .querySelectorAll(
+          ".nearby-item"
+        )
+        .forEach(
+          item => {
+
+            item.classList.remove(
+              "nearby-selected"
+            );
+
+          }
+        );
+
+    }
+  );
 
 /* =========================================================
-   ID
+   RECORD ID
 ========================================================= */
 
 function generateRecordId() {
@@ -1555,7 +1568,6 @@ function generateRecordId() {
 
   }
 
-
   return (
 
     Date.now() +
@@ -1568,11 +1580,6 @@ function generateRecordId() {
 
 }
 
-
-/* =========================================================
-   NORMALIZE ID
-========================================================= */
-
 function normalizeRecordIds(
   records
 ) {
@@ -1583,7 +1590,6 @@ function normalizeRecordIds(
   let changed =
     false;
 
-
   records.forEach(
     record => {
 
@@ -1592,7 +1598,6 @@ function normalizeRecordIds(
         record.id !== null
           ? String(record.id)
           : "";
-
 
       if (
         !id ||
@@ -1612,7 +1617,6 @@ function normalizeRecordIds(
 
       }
 
-
       usedIds.add(
         id
       );
@@ -1620,14 +1624,12 @@ function normalizeRecordIds(
     }
   );
 
-
   return {
     records,
     changed
   };
 
 }
-
 
 /* =========================================================
    TOAST
@@ -1643,20 +1645,16 @@ function showToast(
       "toast"
     );
 
-
   toast.textContent =
     message;
-
 
   toast.classList.add(
     "show"
   );
 
-
   clearTimeout(
     toastTimer
   );
-
 
   toastTimer =
     setTimeout(
@@ -1671,7 +1669,6 @@ function showToast(
     );
 
 }
-
 
 /* =========================================================
    DIALOG
@@ -1692,91 +1689,74 @@ function showDialog({
   return new Promise(
     resolve => {
 
-
       const modal =
         document.getElementById(
           "dialogModal"
         );
-
 
       const iconEl =
         document.getElementById(
           "dialogIcon"
         );
 
-
       const titleEl =
         document.getElementById(
           "dialogTitle"
         );
-
 
       const messageEl =
         document.getElementById(
           "dialogMessage"
         );
 
-
       const actions =
         document.getElementById(
           "dialogActions"
         );
-
 
       const confirmBtn =
         document.getElementById(
           "dialogConfirm"
         );
 
-
       const cancelBtn =
         document.getElementById(
           "dialogCancel"
         );
 
-
       iconEl.textContent =
         icon;
-
 
       titleEl.textContent =
         title;
 
-
       messageEl.textContent =
         message;
-
 
       confirmBtn.textContent =
         confirmText;
 
-
       cancelBtn.textContent =
         cancelText;
-
 
       confirmBtn.className =
         danger
           ? "btn-red"
           : "btn-primary";
 
-
       cancelBtn.style.display =
         showCancel
           ? ""
           : "none";
-
 
       actions.classList.toggle(
         "single",
         !showCancel
       );
 
-
       modal.classList.add(
         "show"
       );
-
 
       function cleanup(
         result
@@ -1786,14 +1766,11 @@ function showDialog({
           "show"
         );
 
-
         confirmBtn.onclick =
           null;
 
-
         cancelBtn.onclick =
           null;
-
 
         resolve(
           result
@@ -1801,13 +1778,11 @@ function showDialog({
 
       }
 
-
       confirmBtn.onclick =
         () =>
           cleanup(
             true
           );
-
 
       cancelBtn.onclick =
         () =>
@@ -1819,7 +1794,6 @@ function showDialog({
   );
 
 }
-
 
 /* =========================================================
    TIMEZONE
@@ -1845,7 +1819,6 @@ function getCurrentTimeZone() {
 
 }
 
-
 function getGMTOffset(
   date = new Date()
 ) {
@@ -1853,28 +1826,23 @@ function getGMTOffset(
   const offsetMinutes =
     -date.getTimezoneOffset();
 
-
   const sign =
     offsetMinutes >= 0
       ? "+"
       : "-";
-
 
   const absoluteMinutes =
     Math.abs(
       offsetMinutes
     );
 
-
   const hours =
     Math.floor(
       absoluteMinutes / 60
     );
 
-
   const minutes =
     absoluteMinutes % 60;
-
 
   if (
     minutes === 0
@@ -1887,7 +1855,6 @@ function getGMTOffset(
     );
 
   }
-
 
   return (
 
@@ -1902,7 +1869,6 @@ function getGMTOffset(
 
 }
 
-
 function getUTCOffsetMinutes() {
 
   return (
@@ -1912,9 +1878,8 @@ function getUTCOffsetMinutes() {
 
 }
 
-
 /* =========================================================
-   CURRENT TIME
+   CURRENT TIME DISPLAY
 ========================================================= */
 
 function updateCurrentTimeDisplay() {
@@ -1922,16 +1887,13 @@ function updateCurrentTimeDisplay() {
   const now =
     new Date();
 
-
   const timeZone =
     getCurrentTimeZone();
-
 
   const gmt =
     getGMTOffset(
       now
     );
-
 
   document
     .getElementById(
@@ -1940,14 +1902,12 @@ function updateCurrentTimeDisplay() {
     .textContent =
     timeZone;
 
-
   document
     .getElementById(
       "currentGMT"
     )
     .textContent =
     gmt;
-
 
   document
     .getElementById(
@@ -1957,7 +1917,6 @@ function updateCurrentTimeDisplay() {
     timeZone +
     " · " +
     gmt;
-
 
   document
     .getElementById(
@@ -1992,7 +1951,6 @@ function updateCurrentTimeDisplay() {
       }
     );
 
-
   document
     .getElementById(
       "todayText"
@@ -2019,14 +1977,12 @@ function updateCurrentTimeDisplay() {
 
 }
 
-
 updateCurrentTimeDisplay();
 
 setInterval(
   updateCurrentTimeDisplay,
   1000
 );
-
 
 /* =========================================================
    MAP
@@ -2044,7 +2000,6 @@ const map =
     5
   );
 
-
 L.tileLayer(
 
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -2061,7 +2016,6 @@ L.tileLayer(
 
 ).addTo(map);
 
-
 /* =========================================================
    STORAGE
 ========================================================= */
@@ -2073,13 +2027,11 @@ function getRecords() {
       "travelFootprints"
     );
 
-
   if (!data) {
 
     return [];
 
   }
-
 
   try {
 
@@ -2087,7 +2039,6 @@ function getRecords() {
       JSON.parse(
         data
       );
-
 
     if (
       !Array.isArray(
@@ -2099,12 +2050,10 @@ function getRecords() {
 
     }
 
-
     const result =
       normalizeRecordIds(
         parsed
       );
-
 
     if (
       result.changed
@@ -2122,7 +2071,6 @@ function getRecords() {
 
     }
 
-
     return result.records;
 
   }
@@ -2136,13 +2084,11 @@ function getRecords() {
       error
     );
 
-
     return [];
 
   }
 
 }
-
 
 function saveRecords(
   records
@@ -2160,9 +2106,8 @@ function saveRecords(
 
 }
 
-
 /* =========================================================
-   FETCH TIMEOUT
+   FETCH WITH TIMEOUT
 ========================================================= */
 
 async function fetchWithTimeout(
@@ -2175,7 +2120,6 @@ async function fetchWithTimeout(
   const controller =
     new AbortController();
 
-
   const timer =
     setTimeout(
       () => {
@@ -2185,7 +2129,6 @@ async function fetchWithTimeout(
       },
       timeoutMs
     );
-
 
   try {
 
@@ -2213,23 +2156,29 @@ async function fetchWithTimeout(
 
 }
 
-
 /* =========================================================
-   LOOKUP STATUS
+   RESET LOOKUP UI
 ========================================================= */
 
 function resetLookupUI() {
 
-  const box =
-    document.getElementById(
+  placeNameSource =
+    "auto";
+
+  document
+    .getElementById(
+      "placeName"
+    )
+    .value =
+    "";
+
+  document
+    .getElementById(
       "lookupStatus"
+    )
+    .classList.add(
+      "show"
     );
-
-
-  box.classList.add(
-    "show"
-  );
-
 
   document
     .getElementById(
@@ -2238,7 +2187,6 @@ function resetLookupUI() {
     .textContent =
     "自動地名：搜尋中...";
 
-
   document
     .getElementById(
       "poiLookupStatus"
@@ -2246,43 +2194,35 @@ function resetLookupUI() {
     .textContent =
     "附近地點：搜尋中...";
 
-
   const nearbySection =
     document.getElementById(
       "nearbySection"
     );
-
 
   const nearbyList =
     document.getElementById(
       "nearbyList"
     );
 
-
   const nearbyLoading =
     document.getElementById(
       "nearbyLoading"
     );
 
-
   nearbySection.classList.add(
     "show"
   );
 
-
   nearbyList.innerHTML =
     "";
 
-
   nearbyLoading.style.display =
     "block";
-
 
   nearbyLoading.textContent =
     "正在搜尋附近地點...";
 
 }
-
 
 /* =========================================================
    GPS
@@ -2295,7 +2235,6 @@ function getCurrentLocation() {
       "gpsStatus"
     );
 
-
   if (
     !navigator.geolocation
   ) {
@@ -2307,10 +2246,19 @@ function getCurrentLocation() {
 
   }
 
-
   status.textContent =
     "📡 正在取得 GPS 位置...";
 
+  /*
+    每次定位都產生新的 sequence。
+
+    如果使用者很快連按兩次，
+    舊的一次 API 結果回來時
+    不會蓋掉新的一次。
+  */
+
+  const lookupId =
+    ++locationLookupSequence;
 
   navigator
     .geolocation
@@ -2318,17 +2266,23 @@ function getCurrentLocation() {
 
       function(position) {
 
+        if (
+          lookupId !==
+          locationLookupSequence
+        ) {
+
+          return;
+
+        }
+
         currentLat =
           position.coords.latitude;
-
 
         currentLng =
           position.coords.longitude;
 
-
         currentAccuracy =
           position.coords.accuracy;
-
 
         document
           .getElementById(
@@ -2337,14 +2291,12 @@ function getCurrentLocation() {
           .textContent =
           currentLat.toFixed(6);
 
-
         document
           .getElementById(
             "lng"
           )
           .textContent =
           currentLng.toFixed(6);
-
 
         document
           .getElementById(
@@ -2357,10 +2309,8 @@ function getCurrentLocation() {
           ) +
           " 公尺";
 
-
         status.textContent =
           "✅ GPS 定位成功";
-
 
         if (
           currentMarker
@@ -2371,7 +2321,6 @@ function getCurrentLocation() {
           );
 
         }
-
 
         currentMarker =
           L.marker(
@@ -2388,7 +2337,6 @@ function getCurrentLocation() {
           )
           .openPopup();
 
-
         map.setView(
           [
             currentLat,
@@ -2397,37 +2345,50 @@ function getCurrentLocation() {
           16
         );
 
-
         /*
-          V4.3.1
-          GPS 成功後，同時執行：
-          1. Nominatim
-          2. Overpass Race
+          初始化搜尋畫面
         */
 
         resetLookupUI();
 
+        /*
+          V4.4：
+
+          GPS 成功後，
+          Nominatim 與 Overpass
+          同時開始。
+
+          不互相等待。
+        */
 
         lookupAutomaticPlaceName(
           currentLat,
-          currentLng
+          currentLng,
+          lookupId
         );
-
 
         lookupNearbyPlacesRace(
           currentLat,
-          currentLng
+          currentLng,
+          lookupId
         );
 
       },
 
-
       function(error) {
+
+        if (
+          lookupId !==
+          locationLookupSequence
+        ) {
+
+          return;
+
+        }
 
         console.error(
           error
         );
-
 
         switch (
           error.code
@@ -2440,7 +2401,6 @@ function getCurrentLocation() {
 
             break;
 
-
           case error.POSITION_UNAVAILABLE:
 
             status.textContent =
@@ -2448,14 +2408,12 @@ function getCurrentLocation() {
 
             break;
 
-
           case error.TIMEOUT:
 
             status.textContent =
               "❌ GPS 定位逾時。";
 
             break;
-
 
           default:
 
@@ -2465,7 +2423,6 @@ function getCurrentLocation() {
         }
 
       },
-
 
       {
 
@@ -2484,14 +2441,14 @@ function getCurrentLocation() {
 
 }
 
-
 /* =========================================================
-   NOMINATIM
+   V4.4 NOMINATIM 自動地名
 ========================================================= */
 
 async function lookupAutomaticPlaceName(
   lat,
-  lng
+  lng,
+  lookupId
 ) {
 
   const status =
@@ -2499,29 +2456,21 @@ async function lookupAutomaticPlaceName(
       "nameLookupStatus"
     );
 
-
   const input =
     document.getElementById(
       "placeName"
     );
 
-
   try {
 
     const url =
-
       "https://nominatim.openstreetmap.org/reverse" +
-
       "?format=jsonv2" +
-
       "&lat=" +
       encodeURIComponent(lat) +
-
       "&lon=" +
       encodeURIComponent(lng) +
-
       "&accept-language=zh-TW,zh,en";
-
 
     const response =
       await fetchWithTimeout(
@@ -2530,6 +2479,19 @@ async function lookupAutomaticPlaceName(
         LOOKUP_TIMEOUT_MS
       );
 
+    /*
+      如果這是舊的一輪 GPS 查詢，
+      直接忽略。
+    */
+
+    if (
+      lookupId !==
+      locationLookupSequence
+    ) {
+
+      return;
+
+    }
 
     if (
       !response.ok
@@ -2542,15 +2504,18 @@ async function lookupAutomaticPlaceName(
 
     }
 
-
     const data =
       await response.json();
-
 
     const address =
       data.address ||
       {};
 
+    /*
+      Nominatim 回傳很多欄位，
+      依照「較像實際地點名稱」
+      的優先順序挑選。
+    */
 
     const name =
 
@@ -2588,26 +2553,39 @@ async function lookupAutomaticPlaceName(
 
       "";
 
-
     if (
       name
     ) {
 
-      /*
-        每次重新 GPS 定位，
-        允許新的自動地名更新輸入框。
-
-        如果使用者之後點附近地點，
-        還是會覆蓋成所選地點。
-      */
-
-      input.value =
-        name;
-
-
       status.textContent =
         "自動地名：✅ " +
         name;
+
+      /*
+        V4.4 修正：
+
+        只有當使用者尚未：
+        - 手動輸入
+        - 點選附近地點
+
+        才允許 Nominatim
+        自動填入名稱。
+      */
+
+      if (
+        placeNameSource ===
+        "auto" ||
+        placeNameSource ===
+        "none"
+      ) {
+
+        input.value =
+          name;
+
+        placeNameSource =
+          "auto";
+
+      }
 
     }
 
@@ -2624,11 +2602,19 @@ async function lookupAutomaticPlaceName(
     error
   ) {
 
+    if (
+      lookupId !==
+      locationLookupSequence
+    ) {
+
+      return;
+
+    }
+
     console.log(
       "Nominatim Error:",
       error
     );
-
 
     status.textContent =
       "自動地名：⚠️ 暫時無法取得";
@@ -2639,7 +2625,7 @@ async function lookupAutomaticPlaceName(
 
 
 /* =========================================================
-   OVERPASS QUERY
+   V4.4 精簡 OVERPASS QUERY
 ========================================================= */
 
 function buildOverpassQuery(
@@ -2648,28 +2634,37 @@ function buildOverpassQuery(
   radius
 ) {
 
+  /*
+    V4.4 不再搜尋：
+    - building
+    - office
+    - leisure
+    - 一般 public_transport
+
+    只搜尋比較有可能是旅行中
+    真正想紀錄的地點。
+  */
+
   return `
 
-[out:json][timeout:10];
+[out:json][timeout:8];
 
 (
-  nwr(around:${radius},${lat},${lng})["name"]["amenity"];
+  nwr(around:${radius},${lat},${lng})
+    ["name"]
+    ["amenity"~"restaurant|cafe|fast_food|bar|pub|food_court"];
 
-  nwr(around:${radius},${lat},${lng})["name"]["shop"];
+  nwr(around:${radius},${lat},${lng})
+    ["name"]
+    ["shop"];
 
-  nwr(around:${radius},${lat},${lng})["name"]["tourism"];
+  nwr(around:${radius},${lat},${lng})
+    ["name"]
+    ["railway"~"station|halt"];
 
-  nwr(around:${radius},${lat},${lng})["name"]["railway"="station"];
-
-  nwr(around:${radius},${lat},${lng})["name"]["railway"="halt"];
-
-  nwr(around:${radius},${lat},${lng})["name"]["public_transport"];
-
-  nwr(around:${radius},${lat},${lng})["name"]["leisure"];
-
-  nwr(around:${radius},${lat},${lng})["name"]["office"];
-
-  nwr(around:${radius},${lat},${lng})["name"]["building"];
+  nwr(around:${radius},${lat},${lng})
+    ["name"]
+    ["tourism"~"hotel|hostel|guest_house|attraction|museum|gallery|viewpoint"];
 );
 
 out center tags;
@@ -2680,7 +2675,7 @@ out center tags;
 
 
 /* =========================================================
-   SINGLE OVERPASS REQUEST
+   單一 OVERPASS SERVER
 ========================================================= */
 
 async function requestOverpassServer(
@@ -2708,7 +2703,6 @@ async function requestOverpassServer(
         },
 
         body:
-
           "data=" +
           encodeURIComponent(
             query
@@ -2719,7 +2713,6 @@ async function requestOverpassServer(
       LOOKUP_TIMEOUT_MS
 
     );
-
 
   if (
     !response.ok
@@ -2732,10 +2725,8 @@ async function requestOverpassServer(
 
   }
 
-
   const data =
     await response.json();
-
 
   const places =
     parseNearbyPlaces(
@@ -2744,11 +2735,10 @@ async function requestOverpassServer(
       lng
     );
 
-
   /*
-    有成功連線但沒有任何 POI，
-    也當成這個節點沒提供可用結果，
-    讓其他節點繼續 Race。
+    Server 有回應，
+    但這個區域沒有可用 POI，
+    就讓其他 Server 繼續競速。
   */
 
   if (
@@ -2761,7 +2751,6 @@ async function requestOverpassServer(
     );
 
   }
-
 
   return {
 
@@ -2777,12 +2766,13 @@ async function requestOverpassServer(
 
 
 /* =========================================================
-   V4.3.1 OVERPASS RACE
+   V4.4 OVERPASS 3 節點並行
 ========================================================= */
 
 async function lookupNearbyPlacesRace(
   lat,
-  lng
+  lng,
+  lookupId
 ) {
 
   const status =
@@ -2790,12 +2780,10 @@ async function lookupNearbyPlacesRace(
       "poiLookupStatus"
     );
 
-
   const loading =
     document.getElementById(
       "nearbyLoading"
     );
-
 
   const query =
     buildOverpassQuery(
@@ -2804,6 +2792,13 @@ async function lookupNearbyPlacesRace(
       OVERPASS_RADIUS
     );
 
+  /*
+    三個節點同時送出。
+
+    Promise.any：
+    只要任何一個成功，
+    就立刻採用該結果。
+  */
 
   const requests =
     OVERPASS_SERVERS.map(
@@ -2816,35 +2811,33 @@ async function lookupNearbyPlacesRace(
         )
     );
 
-
   try {
-
-    /*
-      Promise.any：
-      任一節點成功即返回。
-      其他節點不需要等完才顯示結果。
-    */
 
     const result =
       await Promise.any(
         requests
       );
 
+    if (
+      lookupId !==
+      locationLookupSequence
+    ) {
+
+      return;
+
+    }
 
     status.textContent =
       "附近地點：✅ 已取得 " +
       result.places.length +
       " 個";
 
-
     loading.style.display =
       "none";
-
 
     renderNearbyPlaces(
       result.places
     );
-
 
     console.log(
       "Overpass Winner:",
@@ -2857,19 +2850,25 @@ async function lookupNearbyPlacesRace(
     error
   ) {
 
+    if (
+      lookupId !==
+      locationLookupSequence
+    ) {
+
+      return;
+
+    }
+
     console.log(
-      "All Overpass failed:",
+      "All Overpass Failed:",
       error
     );
-
 
     status.textContent =
       "附近地點：⚠️ 暫時無法取得";
 
-
     loading.style.display =
       "block";
-
 
     loading.textContent =
       "⚠️ 附近地點暫時無法取得，可直接使用自動地名或手動輸入。";
@@ -2880,7 +2879,7 @@ async function lookupNearbyPlacesRace(
 
 
 /* =========================================================
-   PARSE POI
+   V4.4 PARSE NEARBY
 ========================================================= */
 
 function parseNearbyPlaces(
@@ -2892,7 +2891,6 @@ function parseNearbyPlaces(
   const candidates =
     [];
 
-
   for (
     const element of
     data.elements || []
@@ -2902,14 +2900,12 @@ function parseNearbyPlaces(
       element.tags ||
       {};
 
-
     const name =
       tags.name
         ? String(
             tags.name
           ).trim()
         : "";
-
 
     if (
       !name
@@ -2919,16 +2915,21 @@ function parseNearbyPlaces(
 
     }
 
+    /*
+      node：
+      element.lat / element.lon
+
+      way / relation：
+      element.center.lat / lng
+    */
 
     const pLat =
       element.lat ??
       element.center?.lat;
 
-
     const pLng =
       element.lon ??
       element.center?.lon;
-
 
     if (
       pLat === undefined ||
@@ -2938,7 +2939,6 @@ function parseNearbyPlaces(
       continue;
 
     }
-
 
     const distanceKm =
       calculateDistanceKm(
@@ -2952,7 +2952,6 @@ function parseNearbyPlaces(
         Number(pLng)
 
       );
-
 
     candidates.push({
 
@@ -2977,6 +2976,9 @@ function parseNearbyPlaces(
 
   }
 
+  /*
+    先依距離排序。
+  */
 
   candidates.sort(
     (
@@ -2987,18 +2989,19 @@ function parseNearbyPlaces(
       b.distanceKm
   );
 
-
   /*
-    同名去重
+    V4.4：
+    同名地點去重。
+
+    因為已經先依距離排序，
+    所以同名只保留最近那個。
   */
 
   const seenNames =
     new Set();
 
-
   const uniquePlaces =
     [];
-
 
   for (
     const place of
@@ -3010,7 +3013,6 @@ function parseNearbyPlaces(
         .trim()
         .toLocaleLowerCase();
 
-
     if (
       seenNames.has(
         key
@@ -3021,16 +3023,17 @@ function parseNearbyPlaces(
 
     }
 
-
     seenNames.add(
       key
     );
-
 
     uniquePlaces.push(
       place
     );
 
+    /*
+      最多只顯示最近 5 個。
+    */
 
     if (
       uniquePlaces.length >=
@@ -3042,7 +3045,6 @@ function parseNearbyPlaces(
     }
 
   }
-
 
   return uniquePlaces;
 
@@ -3068,7 +3070,6 @@ function detectPoiCategory(
 
   }
 
-
   if (
     tags.amenity ===
     "restaurant"
@@ -3077,7 +3078,6 @@ function detectPoiCategory(
     return "餐廳";
 
   }
-
 
   if (
     tags.amenity ===
@@ -3088,25 +3088,34 @@ function detectPoiCategory(
 
   }
 
-
   if (
     tags.amenity ===
     "fast_food"
   ) {
 
-    return "餐飲";
+    return "速食";
 
   }
-
 
   if (
-    tags.amenity
+    tags.amenity ===
+    "food_court"
   ) {
 
-    return "設施";
+    return "美食街";
 
   }
 
+  if (
+    tags.amenity ===
+    "bar" ||
+    tags.amenity ===
+    "pub"
+  ) {
+
+    return "酒吧";
+
+  }
 
   if (
     tags.shop
@@ -3116,6 +3125,45 @@ function detectPoiCategory(
 
   }
 
+  if (
+    tags.tourism ===
+    "hotel" ||
+    tags.tourism ===
+    "hostel" ||
+    tags.tourism ===
+    "guest_house"
+  ) {
+
+    return "住宿";
+
+  }
+
+  if (
+    tags.tourism ===
+    "museum"
+  ) {
+
+    return "博物館";
+
+  }
+
+  if (
+    tags.tourism ===
+    "gallery"
+  ) {
+
+    return "展覽";
+
+  }
+
+  if (
+    tags.tourism ===
+    "viewpoint"
+  ) {
+
+    return "觀景點";
+
+  }
 
   if (
     tags.tourism
@@ -3125,41 +3173,13 @@ function detectPoiCategory(
 
   }
 
-
-  if (
-    tags.leisure
-  ) {
-
-    return "休閒";
-
-  }
-
-
-  if (
-    tags.office
-  ) {
-
-    return "辦公地點";
-
-  }
-
-
-  if (
-    tags.building
-  ) {
-
-    return "建築";
-
-  }
-
-
   return "地點";
 
 }
 
 
 /* =========================================================
-   RENDER NEARBY
+   顯示附近 5 個地點
 ========================================================= */
 
 function renderNearbyPlaces(
@@ -3171,10 +3191,8 @@ function renderNearbyPlaces(
       "nearbyList"
     );
 
-
   list.innerHTML =
     "";
-
 
   places.forEach(
     place => {
@@ -3184,14 +3202,11 @@ function renderNearbyPlaces(
           "button"
         );
 
-
       button.type =
         "button";
 
-
       button.className =
         "nearby-item";
-
 
       button.innerHTML = `
 
@@ -3219,9 +3234,12 @@ function renderNearbyPlaces(
 
       `;
 
-
       button.onclick =
         function() {
+
+          /*
+            清除其他選取狀態
+          */
 
           document
             .querySelectorAll(
@@ -3237,11 +3255,17 @@ function renderNearbyPlaces(
               }
             );
 
+          /*
+            標記目前選擇
+          */
 
           button.classList.add(
             "nearby-selected"
           );
 
+          /*
+            填入地點名稱
+          */
 
           document
             .getElementById(
@@ -3250,6 +3274,15 @@ function renderNearbyPlaces(
             .value =
             place.name;
 
+          /*
+            標記為使用者已經選了附近地點。
+
+            如果 Nominatim 稍後才回傳，
+            不准覆蓋這個名稱。
+          */
+
+          placeNameSource =
+            "nearby";
 
           showToast(
             "✅ 已選擇：" +
@@ -3257,7 +3290,6 @@ function renderNearbyPlaces(
           );
 
         };
-
 
       list.appendChild(
         button
@@ -3283,13 +3315,11 @@ function calculateDistanceKm(
   const R =
     6371;
 
-
   const toRad =
     value =>
       value *
       Math.PI /
       180;
-
 
   const dLat =
     toRad(
@@ -3297,13 +3327,11 @@ function calculateDistanceKm(
       lat1
     );
 
-
   const dLon =
     toRad(
       lon2 -
       lon1
     );
-
 
   const a =
 
@@ -3323,7 +3351,6 @@ function calculateDistanceKm(
       dLon / 2
     ) ** 2;
 
-
   const c =
 
     2 *
@@ -3338,7 +3365,6 @@ function calculateDistanceKm(
 
     );
 
-
   return (
     R *
     c
@@ -3347,13 +3373,16 @@ function calculateDistanceKm(
 }
 
 
+/* =========================================================
+   每日移動距離
+========================================================= */
+
 function calculateGroupDistance(
   records
 ) {
 
   let total =
     0;
-
 
   for (
     let i = 1;
@@ -3388,11 +3417,14 @@ function calculateGroupDistance(
 
   }
 
-
   return total;
 
 }
 
+
+/* =========================================================
+   距離顯示格式
+========================================================= */
 
 function formatDistance(
   km
@@ -3412,7 +3444,6 @@ function formatDistance(
 
   }
 
-
   if (
     km < 10
   ) {
@@ -3424,7 +3455,6 @@ function formatDistance(
 
   }
 
-
   return (
     km.toFixed(1) +
     " km"
@@ -3434,7 +3464,7 @@ function formatDistance(
 
 
 /* =========================================================
-   DUPLICATE CHECK
+   重複紀錄檢查
 ========================================================= */
 
 function checkDuplicateRecord(
@@ -3446,15 +3476,14 @@ function checkDuplicateRecord(
   const records =
     getRecords();
 
-
   if (
-    records.length === 0
+    records.length ===
+    0
   ) {
 
     return false;
 
   }
-
 
   const sorted =
     [...records]
@@ -3471,18 +3500,15 @@ function checkDuplicateRecord(
           )
       );
 
-
   const last =
     sorted[
       sorted.length - 1
     ];
 
-
   const lastTime =
     new Date(
       last.timestamp
     );
-
 
   const seconds =
 
@@ -3491,7 +3517,6 @@ function checkDuplicateRecord(
       lastTime
     ) /
     1000;
-
 
   const meters =
 
@@ -3516,6 +3541,11 @@ function checkDuplicateRecord(
     ) *
     1000;
 
+  /*
+    60 秒內
+    且 30 公尺內
+    → 視為可能重複紀錄
+  */
 
   if (
     seconds <= 60 &&
@@ -3541,14 +3571,12 @@ function checkDuplicateRecord(
 
   }
 
-
   return false;
 
 }
 
-
 /* =========================================================
-   SAVE
+   SAVE RECORD
 ========================================================= */
 
 async function saveLocation() {
@@ -3574,11 +3602,9 @@ async function saveLocation() {
 
     });
 
-
     return;
 
   }
-
 
   const placeName =
     document
@@ -3588,7 +3614,6 @@ async function saveLocation() {
       .value
       .trim();
 
-
   const note =
     document
       .getElementById(
@@ -3597,10 +3622,8 @@ async function saveLocation() {
       .value
       .trim();
 
-
   const recordTime =
     new Date();
-
 
   const duplicate =
     checkDuplicateRecord(
@@ -3612,7 +3635,6 @@ async function saveLocation() {
       recordTime
 
     );
-
 
   if (
     duplicate
@@ -3653,7 +3675,6 @@ async function saveLocation() {
 
       });
 
-
     if (
       !ok
     ) {
@@ -3664,10 +3685,8 @@ async function saveLocation() {
 
   }
 
-
   const timeZone =
     getCurrentTimeZone();
-
 
   const record = {
 
@@ -3713,20 +3732,23 @@ async function saveLocation() {
 
   };
 
-
   const records =
     getRecords();
-
 
   records.push(
     record
   );
 
-
   saveRecords(
     records
   );
 
+  /*
+    新增成功後：
+    - 清除備註
+    - 地點名稱保留
+      方便短時間連續紀錄
+  */
 
   document
     .getElementById(
@@ -3735,11 +3757,9 @@ async function saveLocation() {
     .value =
     "";
 
-
   updateDateFilterOptions();
 
   renderRecords();
-
 
   showToast(
     "✅ 已紀錄：" +
@@ -3765,7 +3785,9 @@ function formatDateTimeForZone(
         "zh-TW",
         {
 
-          timeZone,
+          timeZone:
+
+            timeZone,
 
           year:
             "numeric",
@@ -3793,7 +3815,9 @@ function formatDateTimeForZone(
 
   }
 
-  catch {
+  catch (
+    error
+  ) {
 
     return date
       .toLocaleString(
@@ -3805,6 +3829,10 @@ function formatDateTimeForZone(
 }
 
 
+/* =========================================================
+   顯示單筆紀錄時間
+========================================================= */
+
 function formatRecordTime(
   record
 ) {
@@ -3814,18 +3842,17 @@ function formatRecordTime(
       record.timestamp
     );
 
-
   const timeZone =
     record.timeZone ||
     getCurrentTimeZone();
-
 
   return date
     .toLocaleTimeString(
       "zh-TW",
       {
 
-        timeZone,
+        timeZone:
+          timeZone,
 
         hour:
           "2-digit",
@@ -3842,6 +3869,10 @@ function formatRecordTime(
 }
 
 
+/* =========================================================
+   取得紀錄日期 YYYY-MM-DD
+========================================================= */
+
 function getRecordDateKey(
   record
 ) {
@@ -3851,18 +3882,17 @@ function getRecordDateKey(
       record.timestamp
     );
 
-
   const timeZone =
     record.timeZone ||
     getCurrentTimeZone();
-
 
   const parts =
     new Intl.DateTimeFormat(
       "en-CA",
       {
 
-        timeZone,
+        timeZone:
+          timeZone,
 
         year:
           "numeric",
@@ -3879,10 +3909,8 @@ function getRecordDateKey(
       date
     );
 
-
   const values =
     {};
-
 
   parts.forEach(
     part => {
@@ -3894,7 +3922,6 @@ function getRecordDateKey(
 
     }
   );
-
 
   return (
 
@@ -3908,6 +3935,10 @@ function getRecordDateKey(
 
 }
 
+
+/* =========================================================
+   日期標題
+========================================================= */
 
 function formatDayTitle(
   record
@@ -3943,7 +3974,7 @@ function formatDayTitle(
 
 
 /* =========================================================
-   GROUP
+   GROUP BY DAY
 ========================================================= */
 
 function groupRecordsByDay(
@@ -3953,7 +3984,6 @@ function groupRecordsByDay(
   const groups =
     {};
 
-
   records.forEach(
     record => {
 
@@ -3961,7 +3991,6 @@ function groupRecordsByDay(
         getRecordDateKey(
           record
         );
-
 
       if (
         !groups[key]
@@ -3972,7 +4001,6 @@ function groupRecordsByDay(
 
       }
 
-
       groups[key].push(
         record
       );
@@ -3980,14 +4008,13 @@ function groupRecordsByDay(
     }
   );
 
-
   return groups;
 
 }
 
 
 /* =========================================================
-   FILTER
+   DATE FILTER OPTIONS
 ========================================================= */
 
 function updateDateFilterOptions() {
@@ -3997,10 +4024,8 @@ function updateDateFilterOptions() {
       "dateFilter"
     );
 
-
   const records =
     getRecords();
-
 
   const keys =
     [...new Set(
@@ -4013,10 +4038,8 @@ function updateDateFilterOptions() {
     .sort()
     .reverse();
 
-
   select.innerHTML =
     '<option value="all">全部日期</option>';
-
 
   keys.forEach(
     key => {
@@ -4026,10 +4049,8 @@ function updateDateFilterOptions() {
           "option"
         );
 
-
       option.value =
         key;
-
 
       option.textContent =
         key.replaceAll(
@@ -4037,14 +4058,12 @@ function updateDateFilterOptions() {
           "/"
         );
 
-
       select.appendChild(
         option
       );
 
     }
   );
-
 
   if (
     currentDateFilter !==
@@ -4072,6 +4091,10 @@ function updateDateFilterOptions() {
 }
 
 
+/* =========================================================
+   CHANGE DATE FILTER
+========================================================= */
+
 function changeDateFilter() {
 
   currentDateFilter =
@@ -4081,50 +4104,45 @@ function changeDateFilter() {
       )
       .value;
 
-
   renderRecords();
 
 }
 
 
 /* =========================================================
-   MAP ↔ RECORD
+   MAP MARKER → RECORD
 ========================================================= */
 
 function scrollToRecord(
   id
 ) {
 
-  const elements =
-    document.querySelectorAll(
-      ".record"
-    );
-
-
   let target =
     null;
 
+  document
+    .querySelectorAll(
+      ".record"
+    )
+    .forEach(
+      element => {
 
-  elements.forEach(
-    element => {
+        if (
+          String(
+            element.dataset.recordId
+          ) ===
+          String(
+            id
+          )
+        ) {
 
-      if (
-        String(
-          element.dataset.recordId
-        ) ===
-        String(
-          id
-        )
-      ) {
+          target =
+            element;
 
-        target =
-          element;
+        }
 
       }
-
-    }
-  );
-
+    );
 
   if (
     !target
@@ -4133,7 +4151,6 @@ function scrollToRecord(
     return;
 
   }
-
 
   target.scrollIntoView({
 
@@ -4145,20 +4162,16 @@ function scrollToRecord(
 
   });
 
-
   target.classList.add(
     "record-highlight"
   );
 
-
   setTimeout(
     () => {
 
-      target
-        .classList
-        .remove(
-          "record-highlight"
-        );
+      target.classList.remove(
+        "record-highlight"
+      );
 
     },
     1800
@@ -4166,6 +4179,10 @@ function scrollToRecord(
 
 }
 
+
+/* =========================================================
+   RECORD → MAP MARKER
+========================================================= */
 
 function focusRecordOnMap(
   id
@@ -4176,7 +4193,6 @@ function focusRecordOnMap(
       String(id)
     );
 
-
   if (
     !marker
   ) {
@@ -4185,12 +4201,10 @@ function focusRecordOnMap(
 
   }
 
-
   map.setView(
     marker.getLatLng(),
     16
   );
-
 
   marker.openPopup();
 
@@ -4198,7 +4212,7 @@ function focusRecordOnMap(
 
 
 /* =========================================================
-   RENDER
+   RENDER RECORDS
 ========================================================= */
 
 function renderRecords() {
@@ -4218,21 +4232,21 @@ function renderRecords() {
           )
       );
 
-
   updateStats(
     allRecords
   );
-
 
   const list =
     document.getElementById(
       "recordList"
     );
 
-
   list.innerHTML =
     "";
 
+  /*
+    清除舊 Marker
+  */
 
   recordMarkers.forEach(
     marker =>
@@ -4241,13 +4255,14 @@ function renderRecords() {
       )
   );
 
-
   recordMarkers =
     [];
 
-
   markerByRecordId.clear();
 
+  /*
+    清除舊路線
+  */
 
   if (
     pathLayer
@@ -4262,10 +4277,12 @@ function renderRecords() {
 
   }
 
-
   let displayRecords =
     allRecords;
 
+  /*
+    日期篩選
+  */
 
   if (
     currentDateFilter !==
@@ -4283,7 +4300,6 @@ function renderRecords() {
 
   }
 
-
   if (
     displayRecords.length ===
     0
@@ -4296,12 +4312,10 @@ function renderRecords() {
 
   }
 
-
   const groups =
     groupRecordsByDay(
       displayRecords
     );
-
 
   const dateKeys =
     Object
@@ -4310,14 +4324,11 @@ function renderRecords() {
       )
       .sort();
 
-
   const path =
     [];
 
-
   let markerIndex =
     1;
-
 
   dateKeys.forEach(
     dateKey => {
@@ -4327,32 +4338,26 @@ function renderRecords() {
           dateKey
         ];
 
-
       const dayDistance =
         calculateGroupDistance(
           dayRecords
         );
-
 
       const dayGroup =
         document.createElement(
           "div"
         );
 
-
       dayGroup.className =
         "day-group";
-
 
       const header =
         document.createElement(
           "div"
         );
 
-
       header.className =
         "day-header";
-
 
       header.innerHTML = `
 
@@ -4385,11 +4390,9 @@ function renderRecords() {
 
       `;
 
-
       dayGroup.appendChild(
         header
       );
-
 
       dayRecords.forEach(
         (
@@ -4397,10 +4400,8 @@ function renderRecords() {
           index
         ) => {
 
-
           let distanceText =
             "";
-
 
           if (
             index > 0
@@ -4437,11 +4438,9 @@ function renderRecords() {
 
           }
 
-
           const zone =
             record.timeZone ||
             "舊版紀錄";
-
 
           const timezoneText =
             record.gmtOffset
@@ -4450,22 +4449,18 @@ function renderRecords() {
                 record.gmtOffset
               : zone;
 
-
           const div =
             document.createElement(
               "div"
             );
 
-
           div.className =
             "record";
-
 
           div.dataset.recordId =
             String(
               record.id
             );
-
 
           div.innerHTML = `
 
@@ -4561,7 +4556,6 @@ function renderRecords() {
 
               <br>
 
-
               <span
                 class="record-timezone"
               >
@@ -4572,7 +4566,6 @@ function renderRecords() {
                 )}
 
               </span>
-
 
               ${
                 distanceText
@@ -4595,7 +4588,6 @@ function renderRecords() {
               }
 
             </div>
-
 
             ${
               record.note
@@ -4621,11 +4613,13 @@ function renderRecords() {
 
           `;
 
-
           dayGroup.appendChild(
             div
           );
 
+          /*
+            建立 Marker
+          */
 
           const marker =
             L.marker(
@@ -4672,7 +4666,6 @@ function renderRecords() {
 
             );
 
-
           marker.on(
             "click",
             () => {
@@ -4684,11 +4677,9 @@ function renderRecords() {
             }
           );
 
-
           recordMarkers.push(
             marker
           );
-
 
           markerByRecordId.set(
             String(
@@ -4697,6 +4688,9 @@ function renderRecords() {
             marker
           );
 
+          /*
+            加入路線
+          */
 
           path.push(
             [
@@ -4709,12 +4703,10 @@ function renderRecords() {
             ]
           );
 
-
           markerIndex++;
 
         }
       );
-
 
       list.appendChild(
         dayGroup
@@ -4723,20 +4715,26 @@ function renderRecords() {
     }
   );
 
+  /*
+    畫路線
+  */
 
   if (
-    path.length >= 2
+    path.length >=
+    2
   ) {
 
     pathLayer =
       L.polyline(
         path,
         {
+
           weight:
             4,
 
           opacity:
             0.7
+
         }
       )
       .addTo(
@@ -4745,9 +4743,13 @@ function renderRecords() {
 
   }
 
+  /*
+    自動調整地圖視野
+  */
 
   if (
-    path.length > 0
+    path.length >
+    0
   ) {
 
     map.fitBounds(
@@ -4771,7 +4773,7 @@ function renderRecords() {
 
 
 /* =========================================================
-   STATS
+   STATISTICS
 ========================================================= */
 
 function updateStats(
@@ -4785,12 +4787,10 @@ function updateStats(
     .textContent =
     records.length;
 
-
   const groups =
     groupRecordsByDay(
       records
     );
-
 
   document
     .getElementById(
@@ -4802,10 +4802,8 @@ function updateStats(
     )
     .length;
 
-
   let total =
     0;
-
 
   Object.values(
     groups
@@ -4821,7 +4819,6 @@ function updateStats(
     }
   );
 
-
   document
     .getElementById(
       "totalDistance"
@@ -4835,7 +4832,7 @@ function updateStats(
 
 
 /* =========================================================
-   DELETE
+   DELETE RECORD
 ========================================================= */
 
 async function deleteRecord(
@@ -4844,7 +4841,6 @@ async function deleteRecord(
 
   const records =
     getRecords();
-
 
   const target =
     records.find(
@@ -4857,7 +4853,6 @@ async function deleteRecord(
         )
     );
 
-
   if (
     !target
   ) {
@@ -4865,7 +4860,6 @@ async function deleteRecord(
     return;
 
   }
-
 
   const ok =
     await showDialog({
@@ -4903,7 +4897,6 @@ async function deleteRecord(
 
     });
 
-
   if (
     !ok
   ) {
@@ -4911,7 +4904,6 @@ async function deleteRecord(
     return;
 
   }
-
 
   const newRecords =
     records.filter(
@@ -4924,16 +4916,13 @@ async function deleteRecord(
         )
     );
 
-
   saveRecords(
     newRecords
   );
 
-
   updateDateFilterOptions();
 
   renderRecords();
-
 
   showToast(
     "✅ 已刪除：" +
@@ -4944,7 +4933,7 @@ async function deleteRecord(
 
 
 /* =========================================================
-   EDIT
+   OPEN EDIT MODAL
 ========================================================= */
 
 function openEditModal(
@@ -4963,7 +4952,6 @@ function openEditModal(
           )
       );
 
-
   if (
     !record
   ) {
@@ -4971,7 +4959,6 @@ function openEditModal(
     return;
 
   }
-
 
   document
     .getElementById(
@@ -4982,7 +4969,6 @@ function openEditModal(
       record.id
     );
 
-
   document
     .getElementById(
       "editPlace"
@@ -4991,7 +4977,6 @@ function openEditModal(
     record.place ||
     "";
 
-
   document
     .getElementById(
       "editNote"
@@ -4999,7 +4984,6 @@ function openEditModal(
     .value =
     record.note ||
     "";
-
 
   document
     .getElementById(
@@ -5017,12 +5001,10 @@ function openEditModal(
       record.longitude
     ).toFixed(6);
 
-
   const parts =
     getEditableDateTimeParts(
       record
     );
-
 
   document
     .getElementById(
@@ -5031,7 +5013,6 @@ function openEditModal(
     .value =
     parts.date;
 
-
   document
     .getElementById(
       "editTime"
@@ -5039,18 +5020,20 @@ function openEditModal(
     .value =
     parts.time;
 
-
   document
     .getElementById(
       "editModal"
     )
-    .classList
-    .add(
+    .classList.add(
       "show"
     );
 
 }
 
+
+/* =========================================================
+   CLOSE EDIT
+========================================================= */
 
 function closeEditModal() {
 
@@ -5058,13 +5041,16 @@ function closeEditModal() {
     .getElementById(
       "editModal"
     )
-    .classList
-    .remove(
+    .classList.remove(
       "show"
     );
 
 }
 
+
+/* =========================================================
+   EDIT DATE/TIME PARTS
+========================================================= */
 
 function getEditableDateTimeParts(
   record
@@ -5108,10 +5094,8 @@ function getEditableDateTimeParts(
       )
     );
 
-
   const values =
     {};
-
 
   parts.forEach(
     part => {
@@ -5123,7 +5107,6 @@ function getEditableDateTimeParts(
 
     }
   );
-
 
   return {
 
@@ -5148,6 +5131,10 @@ function getEditableDateTimeParts(
 }
 
 
+/* =========================================================
+   LOCAL DATE/TIME → UTC
+========================================================= */
+
 function localDateTimeToUTC(
   dateText,
   timeText,
@@ -5163,7 +5150,6 @@ function localDateTimeToUTC(
     .split("-")
     .map(Number);
 
-
   const [
     hour,
     minute,
@@ -5172,7 +5158,6 @@ function localDateTimeToUTC(
   timeText
     .split(":")
     .map(Number);
-
 
   const guess =
     new Date(
@@ -5186,13 +5171,13 @@ function localDateTimeToUTC(
       )
     );
 
-
   const parts =
     new Intl.DateTimeFormat(
       "en-US",
       {
 
-        timeZone,
+        timeZone:
+          timeZone,
 
         year:
           "numeric",
@@ -5221,10 +5206,8 @@ function localDateTimeToUTC(
       guess
     );
 
-
   const values =
     {};
-
 
   parts.forEach(
     part => {
@@ -5236,7 +5219,6 @@ function localDateTimeToUTC(
 
     }
   );
-
 
   const displayed =
     Date.UTC(
@@ -5267,7 +5249,6 @@ function localDateTimeToUTC(
 
     );
 
-
   const desired =
     Date.UTC(
 
@@ -5285,7 +5266,6 @@ function localDateTimeToUTC(
 
     );
 
-
   return new Date(
 
     guess.getTime() +
@@ -5299,6 +5279,10 @@ function localDateTimeToUTC(
 }
 
 
+/* =========================================================
+   SAVE EDITED RECORD
+========================================================= */
+
 async function saveEditedRecord() {
 
   const id =
@@ -5308,10 +5292,8 @@ async function saveEditedRecord() {
       )
       .value;
 
-
   const records =
     getRecords();
-
 
   const index =
     records.findIndex(
@@ -5324,15 +5306,14 @@ async function saveEditedRecord() {
         )
     );
 
-
   if (
-    index === -1
+    index ===
+    -1
   ) {
 
     return;
 
   }
-
 
   const dateText =
     document
@@ -5341,14 +5322,12 @@ async function saveEditedRecord() {
       )
       .value;
 
-
   const timeText =
     document
       .getElementById(
         "editTime"
       )
       .value;
-
 
   if (
     !dateText ||
@@ -5371,22 +5350,18 @@ async function saveEditedRecord() {
 
     });
 
-
     return;
 
   }
-
 
   const record =
     records[
       index
     ];
 
-
   const timeZone =
     record.timeZone ||
     getCurrentTimeZone();
-
 
   const newDate =
     localDateTimeToUTC(
@@ -5399,7 +5374,6 @@ async function saveEditedRecord() {
 
     );
 
-
   record.place =
     document
       .getElementById(
@@ -5409,7 +5383,6 @@ async function saveEditedRecord() {
       .trim() ||
     "未命名地點";
 
-
   record.note =
     document
       .getElementById(
@@ -5418,11 +5391,9 @@ async function saveEditedRecord() {
       .value
       .trim();
 
-
   record.timestamp =
     newDate
       .toISOString();
-
 
   record.localTime =
     formatDateTimeForZone(
@@ -5430,25 +5401,20 @@ async function saveEditedRecord() {
       timeZone
     );
 
-
   records[
     index
   ] =
   record;
 
-
   saveRecords(
     records
   );
 
-
   closeEditModal();
-
 
   updateDateFilterOptions();
 
   renderRecords();
-
 
   showToast(
     "✅ 足跡已修改"
@@ -5458,7 +5424,7 @@ async function saveEditedRecord() {
 
 
 /* =========================================================
-   CLEAR
+   CLEAR ALL
 ========================================================= */
 
 async function clearAllRecords() {
@@ -5491,7 +5457,6 @@ async function clearAllRecords() {
 
     });
 
-
   if (
     !ok
   ) {
@@ -5500,20 +5465,16 @@ async function clearAllRecords() {
 
   }
 
-
   localStorage.removeItem(
     "travelFootprints"
   );
 
-
   currentDateFilter =
     "all";
-
 
   updateDateFilterOptions();
 
   renderRecords();
-
 
   showToast(
     "🗑️ 已清除全部足跡"
@@ -5531,9 +5492,9 @@ function exportCSV() {
   const records =
     getRecords();
 
-
   if (
-    records.length === 0
+    records.length ===
+    0
   ) {
 
     showToast(
@@ -5543,7 +5504,6 @@ function exportCSV() {
     return;
 
   }
-
 
   const rows = [[
 
@@ -5570,7 +5530,6 @@ function exportCSV() {
     "ID"
 
   ]];
-
 
   records
     .sort(
@@ -5623,7 +5582,6 @@ function exportCSV() {
       }
     );
 
-
   const csv =
 
     "\uFEFF" +
@@ -5638,7 +5596,6 @@ function exportCSV() {
             .join(",")
       )
       .join("\n");
-
 
   downloadFile(
 
@@ -5662,9 +5619,9 @@ function exportJSON() {
   const records =
     getRecords();
 
-
   if (
-    records.length === 0
+    records.length ===
+    0
   ) {
 
     showToast(
@@ -5675,11 +5632,10 @@ function exportJSON() {
 
   }
 
-
   const backup = {
 
     version:
-      "4.3.1",
+      "4.4",
 
     exportedAt:
       new Date()
@@ -5690,7 +5646,6 @@ function exportJSON() {
 
   };
 
-
   downloadFile(
 
     JSON.stringify(
@@ -5699,7 +5654,7 @@ function exportJSON() {
       2
     ),
 
-    "travel-footprints-v4-3-1.json",
+    "travel-footprints-v4-4.json",
 
     "application/json"
 
@@ -5721,7 +5676,6 @@ function importJSON(
       .target
       .files[0];
 
-
   if (
     !file
   ) {
@@ -5730,10 +5684,8 @@ function importJSON(
 
   }
 
-
   const reader =
     new FileReader();
-
 
   reader.onload =
     async function(e) {
@@ -5745,10 +5697,21 @@ function importJSON(
             e.target.result
           );
 
-
         let importedRecords =
           null;
 
+        /*
+          V2：
+          [
+            {...}
+          ]
+
+          V3 以後：
+          {
+            version: "...",
+            records: [...]
+          }
+        */
 
         if (
           Array.isArray(
@@ -5773,7 +5736,6 @@ function importJSON(
 
         }
 
-
         if (
           !importedRecords
         ) {
@@ -5784,6 +5746,9 @@ function importJSON(
 
         }
 
+        /*
+          基本資料驗證
+        */
 
         const valid =
           importedRecords.every(
@@ -5800,7 +5765,6 @@ function importJSON(
               undefined
           );
 
-
         if (
           !valid
         ) {
@@ -5811,16 +5775,19 @@ function importJSON(
 
         }
 
+        /*
+          修復舊版：
+          - 缺少 ID
+          - 重複 ID
+        */
 
         const normalized =
           normalizeRecordIds(
             importedRecords
           );
 
-
         importedRecords =
           normalized.records;
-
 
         const ok =
           await showDialog({
@@ -5861,7 +5828,6 @@ function importJSON(
 
           });
 
-
         if (
           !ok
         ) {
@@ -5870,20 +5836,16 @@ function importJSON(
 
         }
 
-
         saveRecords(
           importedRecords
         );
 
-
         currentDateFilter =
           "all";
-
 
         updateDateFilterOptions();
 
         renderRecords();
-
 
         showToast(
 
@@ -5928,7 +5890,6 @@ function importJSON(
 
     };
 
-
   reader.readAsText(
     file
   );
@@ -5937,7 +5898,7 @@ function importJSON(
 
 
 /* =========================================================
-   DOWNLOAD
+   DOWNLOAD FILE
 ========================================================= */
 
 function downloadFile(
@@ -5950,43 +5911,36 @@ function downloadFile(
     new Blob(
       [content],
       {
-        type
+        type:
+          type
       }
     );
-
 
   const url =
     URL.createObjectURL(
       blob
     );
 
-
   const a =
     document.createElement(
       "a"
     );
 
-
   a.href =
     url;
 
-
   a.download =
     filename;
-
 
   document.body.appendChild(
     a
   );
 
-
   a.click();
-
 
   document.body.removeChild(
     a
   );
-
 
   setTimeout(
     () => {
@@ -6003,7 +5957,7 @@ function downloadFile(
 
 
 /* =========================================================
-   HELPERS
+   CSV ESCAPE
 ========================================================= */
 
 function csvEscape(
@@ -6019,12 +5973,10 @@ function csvEscape(
 
   }
 
-
   const str =
     String(
       value
     );
-
 
   if (
     str.includes(",") ||
@@ -6047,11 +5999,14 @@ function csvEscape(
 
   }
 
-
   return str;
 
 }
 
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
 
 function escapeHTML(
   text
@@ -6062,11 +6017,9 @@ function escapeHTML(
       "div"
     );
 
-
   div.textContent =
     text ||
     "";
-
 
   return div.innerHTML;
 
@@ -6074,7 +6027,7 @@ function escapeHTML(
 
 
 /* =========================================================
-   MODAL OUTSIDE
+   EDIT MODAL：點背景關閉
 ========================================================= */
 
 document
@@ -6099,13 +6052,18 @@ document
 
 
 /* =========================================================
-   START
+   APP START
 ========================================================= */
 
 updateDateFilterOptions();
 
 renderRecords();
 
+
+/*
+  iPhone 從背景回到 Safari 時，
+  重新更新時間及 Leaflet 尺寸。
+*/
 
 document.addEventListener(
 
