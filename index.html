@@ -2,53 +2,52 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V4.8
+  我的旅遊足跡 V4.9
 =============================================================
 
-【V4.8 新增】
+【V4.9 新增：操作便利性】
 
-1. 🔎 足跡搜尋
-   - 搜尋地點名稱
-   - 搜尋備註
-   - 搜尋旅程名稱
-   - 可搭配旅程 / 日期篩選
+1. ⚡ 快速檢視
+   - 今天
+   - 目前旅程
+   - 全部足跡
 
-2. 🗺️ 每日路線編號
-   - 每日從 1 開始編號
-   - 地圖 Marker 顯示編號
-   - 時間軸同步顯示站點編號
-   - 不改變原本 previousRecordId 鏈結邏輯
+2. 🏷️ 類型快速篩選
+   - 全部
+   - 景點
+   - 餐廳
+   - 飯店
+   - 車站
+   - 機場
+   - 購物
+   - 休息
+   - 其他
 
-3. 📊 旅程摘要
-   - 總足跡
-   - 總天數
-   - 已追蹤移動
-   - 第一筆
-   - 最後一筆
-   - 類型統計
+3. ⏬ 跳到最新一筆
+   - 跳到目前篩選條件下最新一筆足跡
+   - 自動高亮
 
-4. 用詞修正
-   - 「有效移動」
-   → 「已追蹤移動」
+4. 🗺️ 快速回地圖
+   - 從時間軸快速回到地圖
 
-【保留】
+【保留 V4.8】
 
+- 足跡搜尋
+- 每日路線編號
+- 旅程摘要
+- 每日摘要
+- 已追蹤移動
 - previousRecordId
 - linkTracked
-- 刪除中間紀錄不重新接線
-- 前一站已刪除警告
-- 不推算舊版前一站
-- 每日摘要
+- 斷鏈保護
 - 至下一筆紀錄時間
 - Nominatim
 - Overpass
-- 旅程管理
 - CSV / JSON
-- Leaflet 地圖
 
 Storage Key : travelFootprints
 Trips Key   : travelFootprintTrips
-Version     : V4.8
+Version     : V4.9
 =============================================================
 -->
 
@@ -73,7 +72,7 @@ Version     : V4.8
 >
 
 <title>
-  我的旅遊足跡 V4.8
+  我的旅遊足跡 V4.9
 </title>
 
 <link
@@ -206,7 +205,7 @@ header .date {
 
   padding-bottom:
     calc(
-      30px +
+      100px +
       env(safe-area-inset-bottom)
     );
 }
@@ -273,11 +272,12 @@ header .date {
 
 
 /* =========================================================
-   V4.8 NUMBER MARKER
+   NUMBER MARKER
 ========================================================= */
 
 .route-number-icon {
   background: transparent;
+
   border: none;
 }
 
@@ -385,7 +385,7 @@ header .date {
 
 
 /* =========================================================
-   V4.8 TRIP SUMMARY
+   TRIP SUMMARY
 ========================================================= */
 
 .trip-summary-box {
@@ -408,7 +408,7 @@ header .date {
   display: grid;
 
   grid-template-columns:
-    repeat(3, 1fr);
+    repeat(3,1fr);
 
   gap: 8px;
 
@@ -950,7 +950,7 @@ button:disabled {
 
 
 /* =========================================================
-   V4.8 RECORD NUMBER
+   RECORD NUMBER
 ========================================================= */
 
 .record-number {
@@ -1046,7 +1046,7 @@ button:disabled {
 
 
 /* =========================================================
-   V4.8 SEARCH
+   SEARCH
 ========================================================= */
 
 .search-wrap {
@@ -1095,6 +1095,137 @@ button:disabled {
   color: #777;
 
   min-height: 18px;
+}
+
+
+/* =========================================================
+   V4.9 QUICK VIEW
+========================================================= */
+
+.quick-view-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 7px;
+
+  margin-bottom: 12px;
+}
+
+.quick-view-btn {
+  margin: 0;
+
+  padding: 10px 6px;
+
+  background: #ffffff;
+
+  border: 1px solid #dfe3e8;
+
+  color: #444;
+
+  font-size: 13px;
+}
+
+.quick-view-btn.active {
+  background: #e9f3ff;
+
+  border-color: #7db5ef;
+
+  color: #1659b7;
+}
+
+
+/* =========================================================
+   V4.9 TYPE FILTER
+========================================================= */
+
+.type-filter-row {
+  display: flex;
+
+  gap: 7px;
+
+  overflow-x: auto;
+
+  padding-bottom: 4px;
+
+  margin-bottom: 12px;
+
+  -webkit-overflow-scrolling:
+    touch;
+
+  scrollbar-width:
+    none;
+}
+
+.type-filter-row::-webkit-scrollbar {
+  display: none;
+}
+
+.type-filter-chip {
+  flex: 0 0 auto;
+
+  width: auto;
+
+  margin: 0;
+
+  padding: 8px 11px;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  border: 1px solid #dfe3e8;
+
+  color: #555;
+
+  font-size: 13px;
+
+  white-space: nowrap;
+}
+
+.type-filter-chip.active {
+  background: #1f6feb;
+
+  border-color: #1f6feb;
+
+  color: white;
+}
+
+
+/* =========================================================
+   V4.9 TIMELINE ACTIONS
+========================================================= */
+
+.timeline-actions {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 8px;
+
+  margin-bottom: 14px;
+}
+
+.timeline-actions button {
+  margin: 0;
+
+  padding: 11px 8px;
+
+  font-size: 14px;
+}
+
+.latest-btn {
+  background: #edf8f1;
+
+  color: #13713d;
+}
+
+.map-back-btn {
+  background: #eef4ff;
+
+  color: #175bb6;
 }
 
 
@@ -1388,7 +1519,8 @@ button:disabled {
 }
 
 .dialog-actions.single {
-  grid-template-columns: 1fr;
+  grid-template-columns:
+    1fr;
 }
 
 
@@ -1459,6 +1591,12 @@ button:disabled {
 
   .container {
     padding: 10px;
+
+    padding-bottom:
+      calc(
+        100px +
+        env(safe-area-inset-bottom)
+      );
   }
 
   .card {
@@ -1495,7 +1633,7 @@ button:disabled {
   🌏 我的旅遊足跡
 
   <span class="version-badge">
-    V4.8
+    V4.9
   </span>
 </h1>
 
@@ -1521,6 +1659,7 @@ button:disabled {
 </div>
 
 </header>
+
 
 <div class="container">
 
@@ -1579,7 +1718,7 @@ button:disabled {
 
 
 <!-- =========================================================
-     V4.8 TRIP SUMMARY
+     TRIP SUMMARY
 ========================================================= -->
 
 <div class="card">
@@ -1810,6 +1949,7 @@ button:disabled {
     </div>
 
   </div>
+  
     <div
     class="nearby-section"
     id="nearbySection"
@@ -2040,7 +2180,49 @@ button:disabled {
 
   <div class="filter-box">
 
-    <!-- V4.8 Search -->
+    <!-- =====================================================
+         V4.9 QUICK VIEW
+    ====================================================== -->
+
+    <div class="filter-title">
+      ⚡ 快速檢視
+    </div>
+
+    <div class="quick-view-grid">
+
+      <button
+        type="button"
+        class="quick-view-btn"
+        id="quickViewToday"
+        onclick="quickViewToday()"
+      >
+        📅 今天
+      </button>
+
+      <button
+        type="button"
+        class="quick-view-btn"
+        id="quickViewTrip"
+        onclick="quickViewCurrentTrip()"
+      >
+        🧳 目前旅程
+      </button>
+
+      <button
+        type="button"
+        class="quick-view-btn active"
+        id="quickViewAll"
+        onclick="quickViewAll()"
+      >
+        🌏 全部足跡
+      </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         SEARCH
+    ====================================================== -->
 
     <div class="filter-title">
       🔎 搜尋足跡
@@ -2075,6 +2257,103 @@ button:disabled {
     </div>
 
 
+    <!-- =====================================================
+         V4.9 TYPE FILTER
+    ====================================================== -->
+
+    <div class="filter-title">
+      🏷️ 類型快速篩選
+    </div>
+
+    <div
+      class="type-filter-row"
+      id="typeFilterRow"
+    >
+
+      <button
+        type="button"
+        class="type-filter-chip active"
+        data-filter-type="all"
+        onclick="setTypeFilter('all')"
+      >
+        全部
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="attraction"
+        onclick="setTypeFilter('attraction')"
+      >
+        📷 景點
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="restaurant"
+        onclick="setTypeFilter('restaurant')"
+      >
+        🍜 餐廳
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="hotel"
+        onclick="setTypeFilter('hotel')"
+      >
+        🏨 飯店
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="station"
+        onclick="setTypeFilter('station')"
+      >
+        🚉 車站
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="airport"
+        onclick="setTypeFilter('airport')"
+      >
+        ✈️ 機場
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="shopping"
+        onclick="setTypeFilter('shopping')"
+      >
+        🛍️ 購物
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="rest"
+        onclick="setTypeFilter('rest')"
+      >
+        ☕ 休息
+      </button>
+
+      <button
+        type="button"
+        class="type-filter-chip"
+        data-filter-type="other"
+        onclick="setTypeFilter('other')"
+      >
+        📍 其他
+      </button>
+
+    </div>
+
+
     <div class="filter-title">
       🧳 旅程
     </div>
@@ -2101,6 +2380,31 @@ button:disabled {
         全部日期
       </option>
     </select>
+
+  </div>
+
+
+  <!-- =====================================================
+       V4.9 TIMELINE ACTIONS
+  ====================================================== -->
+
+  <div class="timeline-actions">
+
+    <button
+      type="button"
+      class="latest-btn"
+      onclick="jumpToLatestRecord()"
+    >
+      ⏬ 最新一筆
+    </button>
+
+    <button
+      type="button"
+      class="map-back-btn"
+      onclick="scrollBackToMap()"
+    >
+      🗺️ 回地圖
+    </button>
 
   </div>
 
@@ -2497,14 +2801,23 @@ let currentDateFilter =
 let currentTripFilter =
   "all";
 
-
-/*
-  V4.8
-  搜尋字串
-*/
+let currentTypeFilter =
+  "all";
 
 let currentSearchText =
   "";
+
+
+/*
+  V4.9 快速檢視狀態
+
+  all
+  today
+  trip
+*/
+
+let currentQuickView =
+  "all";
 
 
 let toastTimer =
@@ -3062,6 +3375,35 @@ function changeCurrentTrip() {
   renderTripSummary();
 
 
+  /*
+    如果正在「目前旅程」快速檢視，
+    切換旅程後自動跟著更新
+  */
+
+  if (
+    currentQuickView ===
+    "trip"
+  ) {
+
+    currentTripFilter =
+      id;
+
+
+    document
+      .getElementById(
+        "tripFilter"
+      )
+      .value =
+      id;
+
+
+    updateDateFilterOptions();
+
+    renderRecords();
+
+  }
+
+
   showToast(
     "🧳 已切換旅程：" +
     getCurrentTrip().name
@@ -3084,8 +3426,18 @@ function changeTripFilter() {
       .value;
 
 
-  updateDateFilterOptions();
+  /*
+    手動調旅程篩選後，
+    快速檢視不再強制顯示為「目前旅程」
+  */
 
+  currentQuickView =
+    "custom";
+
+
+  updateQuickViewButtons();
+
+  updateDateFilterOptions();
 
   renderRecords();
 
@@ -6693,7 +7045,7 @@ async function saveLocation() {
 
 
 /* =========================================================
-   V4.8 SEARCH
+   SEARCH
 ========================================================= */
 
 function normalizeSearchText(
@@ -6781,6 +7133,12 @@ function changeRecordSearch() {
       .value;
 
 
+  currentQuickView =
+    "custom";
+
+
+  updateQuickViewButtons();
+
   renderRecords();
 
 }
@@ -6804,6 +7162,532 @@ function clearRecordSearch() {
 
 }
 
+
+/* =========================================================
+   V4.9 TODAY KEY
+========================================================= */
+
+function getTodayDateKey() {
+
+  const now =
+    new Date();
+
+
+  const timeZone =
+    getCurrentTimeZone();
+
+
+  const parts =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+
+        timeZone:
+          timeZone,
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit"
+
+      }
+    )
+    .formatToParts(
+      now
+    );
+
+
+  const values =
+    {};
+
+
+  parts.forEach(
+    part => {
+
+      values[
+        part.type
+      ] =
+      part.value;
+
+    }
+  );
+
+
+  return (
+
+    values.year +
+    "-" +
+    values.month +
+    "-" +
+    values.day
+
+  );
+
+}
+
+
+/* =========================================================
+   V4.9 QUICK VIEW BUTTON STATE
+========================================================= */
+
+function updateQuickViewButtons() {
+
+  const mapButtons = {
+
+    today:
+      "quickViewToday",
+
+    trip:
+      "quickViewTrip",
+
+    all:
+      "quickViewAll"
+
+  };
+
+
+  Object.entries(
+    mapButtons
+  )
+  .forEach(
+    (
+      [
+        mode,
+        id
+      ]
+    ) => {
+
+      const button =
+        document.getElementById(
+          id
+        );
+
+
+      if (
+        !button
+      ) {
+
+        return;
+
+      }
+
+
+      button
+        .classList
+        .toggle(
+
+          "active",
+
+          currentQuickView ===
+          mode
+
+        );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   V4.9 RESET TYPE FILTER
+========================================================= */
+
+function resetTypeFilter() {
+
+  currentTypeFilter =
+    "all";
+
+
+  document
+    .querySelectorAll(
+      ".type-filter-chip"
+    )
+    .forEach(
+      button => {
+
+        button
+          .classList
+          .toggle(
+
+            "active",
+
+            button.dataset.filterType ===
+            "all"
+
+          );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   V4.9 QUICK VIEW : TODAY
+========================================================= */
+
+function quickViewToday() {
+
+  currentQuickView =
+    "today";
+
+
+  currentTripFilter =
+    "all";
+
+
+  currentDateFilter =
+    getTodayDateKey();
+
+
+  currentSearchText =
+    "";
+
+
+  document
+    .getElementById(
+      "recordSearch"
+    )
+    .value =
+    "";
+
+
+  resetTypeFilter();
+
+
+  document
+    .getElementById(
+      "tripFilter"
+    )
+    .value =
+    "all";
+
+
+  updateDateFilterOptions();
+
+
+  const dateFilter =
+    document.getElementById(
+      "dateFilter"
+    );
+
+
+  if (
+    [
+      ...dateFilter.options
+    ]
+    .some(
+      option =>
+        option.value ===
+        currentDateFilter
+    )
+  ) {
+
+    dateFilter.value =
+      currentDateFilter;
+
+  }
+
+
+  updateQuickViewButtons();
+
+  renderRecords();
+
+
+  showToast(
+    "📅 已切換到今天"
+  );
+
+}
+
+
+/* =========================================================
+   V4.9 QUICK VIEW : CURRENT TRIP
+========================================================= */
+
+function quickViewCurrentTrip() {
+
+  const trip =
+    getCurrentTrip();
+
+
+  currentQuickView =
+    "trip";
+
+
+  currentTripFilter =
+    trip.id;
+
+
+  currentDateFilter =
+    "all";
+
+
+  currentSearchText =
+    "";
+
+
+  document
+    .getElementById(
+      "recordSearch"
+    )
+    .value =
+    "";
+
+
+  resetTypeFilter();
+
+
+  document
+    .getElementById(
+      "tripFilter"
+    )
+    .value =
+    trip.id;
+
+
+  updateDateFilterOptions();
+
+
+  document
+    .getElementById(
+      "dateFilter"
+    )
+    .value =
+    "all";
+
+
+  updateQuickViewButtons();
+
+  renderRecords();
+
+
+  showToast(
+    "🧳 目前旅程：" +
+    trip.name
+  );
+
+}
+
+
+/* =========================================================
+   V4.9 QUICK VIEW : ALL
+========================================================= */
+
+function quickViewAll() {
+
+  currentQuickView =
+    "all";
+
+
+  currentTripFilter =
+    "all";
+
+
+  currentDateFilter =
+    "all";
+
+
+  currentSearchText =
+    "";
+
+
+  document
+    .getElementById(
+      "recordSearch"
+    )
+    .value =
+    "";
+
+
+  resetTypeFilter();
+
+
+  document
+    .getElementById(
+      "tripFilter"
+    )
+    .value =
+    "all";
+
+
+  updateDateFilterOptions();
+
+
+  document
+    .getElementById(
+      "dateFilter"
+    )
+    .value =
+    "all";
+
+
+  updateQuickViewButtons();
+
+  renderRecords();
+
+
+  showToast(
+    "🌏 已顯示全部足跡"
+  );
+
+}
+
+
+/* =========================================================
+   V4.9 TYPE FILTER
+========================================================= */
+
+function setTypeFilter(
+  type
+) {
+
+  if (
+    type !==
+    "all" &&
+    !TYPE_INFO[
+      type
+    ]
+  ) {
+
+    type =
+      "all";
+
+  }
+
+
+  currentTypeFilter =
+    type;
+
+
+  currentQuickView =
+    "custom";
+
+
+  document
+    .querySelectorAll(
+      ".type-filter-chip"
+    )
+    .forEach(
+      button => {
+
+        button
+          .classList
+          .toggle(
+
+            "active",
+
+            button.dataset.filterType ===
+            type
+
+          );
+
+      }
+    );
+
+
+  updateQuickViewButtons();
+
+  renderRecords();
+
+}
+
+
+/* =========================================================
+   V4.9 JUMP TO LATEST RECORD
+========================================================= */
+
+function jumpToLatestRecord() {
+
+  const records =
+    getDisplayRecords()
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          new Date(
+            a.timestamp
+          ) -
+          new Date(
+            b.timestamp
+          )
+      );
+
+
+  if (
+    records.length ===
+    0
+  ) {
+
+    showToast(
+      "目前沒有符合條件的足跡"
+    );
+
+
+    return;
+
+  }
+
+
+  const latest =
+    records[
+      records.length - 1
+    ];
+
+
+  scrollToRecord(
+    latest.id
+  );
+
+
+  showToast(
+    "⏬ 已跳到最新一筆：" +
+    latest.place
+  );
+
+}
+
+
+/* =========================================================
+   V4.9 BACK TO MAP
+========================================================= */
+
+function scrollBackToMap() {
+
+  const mapElement =
+    document.getElementById(
+      "map"
+    );
+
+
+  mapElement.scrollIntoView({
+
+    behavior:
+      "smooth",
+
+    block:
+      "center"
+
+  });
+
+
+  setTimeout(
+    () => {
+
+      map.invalidateSize();
+
+    },
+    450
+  );
+
+}
+
 /* =========================================================
    DATE / TIME
 ========================================================= */
@@ -6815,46 +7699,44 @@ function formatDateTimeForZone(
 
   try {
 
-    return date
-      .toLocaleString(
-        "zh-TW",
-        {
+    return date.toLocaleString(
+      "zh-TW",
+      {
 
-          timeZone:
-            timeZone,
+        timeZone:
+          timeZone,
 
-          year:
-            "numeric",
+        year:
+          "numeric",
 
-          month:
-            "2-digit",
+        month:
+          "2-digit",
 
-          day:
-            "2-digit",
+        day:
+          "2-digit",
 
-          hour:
-            "2-digit",
+        hour:
+          "2-digit",
 
-          minute:
-            "2-digit",
+        minute:
+          "2-digit",
 
-          second:
-            "2-digit",
+        second:
+          "2-digit",
 
-          hour12:
-            false
+        hour12:
+          false
 
-        }
-      );
+      }
+    );
 
   }
 
   catch {
 
-    return date
-      .toLocaleString(
-        "zh-TW"
-      );
+    return date.toLocaleString(
+      "zh-TW"
+    );
 
   }
 
@@ -6876,25 +7758,24 @@ function formatRecordTime(
     getCurrentTimeZone();
 
 
-  return date
-    .toLocaleTimeString(
-      "zh-TW",
-      {
+  return date.toLocaleTimeString(
+    "zh-TW",
+    {
 
-        timeZone:
-          timeZone,
+      timeZone:
+        timeZone,
 
-        hour:
-          "2-digit",
+      hour:
+        "2-digit",
 
-        minute:
-          "2-digit",
+      minute:
+        "2-digit",
 
-        hour12:
-          false
+      hour12:
+        false
 
-      }
-    );
+    }
+  );
 
 }
 
@@ -7108,6 +7989,21 @@ function getDisplayRecords() {
 
 
   if (
+    currentTypeFilter !==
+    "all"
+  ) {
+
+    records =
+      records.filter(
+        record =>
+          record.type ===
+          currentTypeFilter
+      );
+
+  }
+
+
+  if (
     normalizeSearchText(
       currentSearchText
     )
@@ -7192,29 +8088,46 @@ function updateDateFilterOptions() {
   );
 
 
+  /*
+    V4.9：
+    「今天」即使沒有紀錄，
+    仍保留今天選項，避免跳回全部日期。
+  */
+
   if (
     currentDateFilter !==
     "all" &&
-    keys.includes(
+    !keys.includes(
       currentDateFilter
     )
   ) {
 
-    select.value =
+    const option =
+      document.createElement(
+        "option"
+      );
+
+
+    option.value =
       currentDateFilter;
 
+
+    option.textContent =
+      currentDateFilter.replaceAll(
+        "-",
+        "/"
+      );
+
+
+    select.appendChild(
+      option
+    );
+
   }
 
-  else {
 
-    currentDateFilter =
-      "all";
-
-
-    select.value =
-      "all";
-
-  }
+  select.value =
+    currentDateFilter;
 
 }
 
@@ -7228,6 +8141,12 @@ function changeDateFilter() {
       )
       .value;
 
+
+  currentQuickView =
+    "custom";
+
+
+  updateQuickViewButtons();
 
   renderRecords();
 
@@ -7569,7 +8488,7 @@ function getTypeSummary(
 
 
 /* =========================================================
-   V4.8 TRIP SUMMARY
+   TRIP SUMMARY
 ========================================================= */
 
 function renderTripSummary() {
@@ -7743,30 +8662,26 @@ function renderTripSummary() {
   `;
 
 
-  const typeSummary =
+  types.innerHTML =
     getTypeSummary(
       records
-    );
+    )
+    .map(
+      item => `
 
+        <span class="trip-summary-chip">
 
-  types.innerHTML =
-    typeSummary
-      .map(
-        item => `
+          ${item.icon}
+          ${escapeHTML(
+            item.label
+          )}
+          ${item.count}
 
-          <span class="trip-summary-chip">
+        </span>
 
-            ${item.icon}
-            ${escapeHTML(
-              item.label
-            )}
-            ${item.count}
-
-          </span>
-
-        `
-      )
-      .join("");
+      `
+    )
+    .join("");
 
 }
 
@@ -7776,11 +8691,11 @@ function renderTripSummary() {
 ========================================================= */
 
 function buildDailyTypeSummaryHTML(
-  dayRecords
+  records
 ) {
 
   return getTypeSummary(
-    dayRecords
+    records
   )
   .map(
     item => `
@@ -7803,7 +8718,7 @@ function buildDailyTypeSummaryHTML(
 
 
 /* =========================================================
-   V4.8 NUMBERED ICON
+   NUMBERED MARKER
 ========================================================= */
 
 function createNumberedMarkerIcon(
@@ -7861,7 +8776,7 @@ function renderRecords() {
       );
 
 
-  const tripRecords =
+  const statsRecords =
     getTripFilteredRecords()
       .sort(
         (
@@ -7878,7 +8793,7 @@ function renderRecords() {
 
 
   updateStats(
-    tripRecords,
+    statsRecords,
     allRecords
   );
 
@@ -7911,16 +8826,45 @@ function renderRecords() {
     );
 
 
+  const activeFilters =
+    [];
+
+
   if (
     keyword
   ) {
 
+    activeFilters.push(
+      `搜尋「${currentSearchText.trim()}」`
+    );
+
+  }
+
+
+  if (
+    currentTypeFilter !==
+    "all"
+  ) {
+
+    activeFilters.push(
+      getTypeInfo(
+        currentTypeFilter
+      ).label
+    );
+
+  }
+
+
+  if (
+    activeFilters.length >
+    0
+  ) {
+
     resultInfo.textContent =
+
       "找到 " +
       displayRecords.length +
-      " 筆符合「" +
-      currentSearchText.trim() +
-      "」的足跡";
+      " 筆符合條件的足跡";
 
   }
 
@@ -7942,6 +8886,10 @@ function renderRecords() {
     "";
 
 
+  /*
+    清除 Marker
+  */
+
   recordMarkers.forEach(
     marker => {
 
@@ -7959,6 +8907,10 @@ function renderRecords() {
 
   markerByRecordId.clear();
 
+
+  /*
+    清除 route
+  */
 
   routeLayers.forEach(
     layer => {
@@ -8396,6 +9348,7 @@ function renderRecords() {
 
               <br>
 
+
               <span class="type-badge">
 
                 ${typeInfo.icon}
@@ -8614,10 +9567,6 @@ function renderRecords() {
             ]
           );
 
-
-          /*
-            只畫真正有效、且目前畫面中存在的鏈結
-          */
 
           if (
             link.state ===
@@ -9500,11 +10449,6 @@ async function saveEditedRecord() {
     );
 
 
-  /*
-    跨旅程搬移：
-    不猜新的前一站
-  */
-
   if (
     String(
       oldTripId
@@ -9537,7 +10481,6 @@ async function saveEditedRecord() {
 
   closeEditModal();
 
-
   renderTripSelectors();
 
   updateDateFilterOptions();
@@ -9555,7 +10498,7 @@ async function saveEditedRecord() {
 
 
 /* =========================================================
-   CLEAR
+   CLEAR ALL
 ========================================================= */
 
 async function clearAllRecords() {
@@ -9628,8 +10571,16 @@ async function clearAllRecords() {
     "all";
 
 
+  currentTypeFilter =
+    "all";
+
+
   currentSearchText =
     "";
+
+
+  currentQuickView =
+    "all";
 
 
   document
@@ -9639,6 +10590,10 @@ async function clearAllRecords() {
     .value =
     "";
 
+
+  resetTypeFilter();
+
+  updateQuickViewButtons();
 
   renderTripSelectors();
 
@@ -9806,7 +10761,7 @@ function exportCSV() {
 
     csv,
 
-    "travel-footprints-v4-8.csv",
+    "travel-footprints-v4-9.csv",
 
     "text/csv;charset=utf-8"
 
@@ -9846,7 +10801,7 @@ function exportJSON() {
       "Travel Footprints",
 
     version:
-      "4.8",
+      "4.9",
 
     exportedAt:
       new Date()
@@ -9872,7 +10827,7 @@ function exportJSON() {
       2
     ),
 
-    "travel-footprints-v4-8.json",
+    "travel-footprints-v4-9.json",
 
     "application/json"
 
@@ -10339,8 +11294,16 @@ function importJSON(
           "all";
 
 
+        currentTypeFilter =
+          "all";
+
+
         currentSearchText =
           "";
+
+
+        currentQuickView =
+          "all";
 
 
         document
@@ -10350,6 +11313,10 @@ function importJSON(
           .value =
           "";
 
+
+        resetTypeFilter();
+
+        updateQuickViewButtons();
 
         renderTripSelectors();
 
@@ -10663,6 +11630,10 @@ renderTripSelectors();
 updateDateFilterOptions();
 
 renderTripSummary();
+
+updateQuickViewButtons();
+
+resetTypeFilter();
 
 renderRecords();
 
