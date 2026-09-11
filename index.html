@@ -2,75 +2,55 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V4.6
+  我的旅遊足跡 V4.6.1
 =============================================================
 
-【V4.6 新增功能】
+【V4.6.1 新增】
 
-1. 旅程分類
-   每筆足跡新增：
-   - tripId
-   - tripName
+1. 新增刪除旅程功能
+   - 目前旅程右側新增 🗑️ 按鈕
+   - 「未分類旅程」不能刪除
+   - 刪除其他旅程時：
+       → 旅程本身刪除
+       → 旅程內足跡不刪除
+       → 足跡自動移到「未分類旅程」
 
-   可以建立 / 選擇不同旅程，例如：
-   - 2026 東北賞楓
-   - 福岡自由行
-   - 台北一日遊
+2. 修正 Record → Map 操作
+   - 點時間軸紀錄
+   - 自動捲回地圖
+   - 地圖定位該 Marker
+   - 自動開啟 Popup
 
-2. 足跡類型
-   每筆足跡新增 type：
+3. 保留 Map → Record
+   - 點 Marker
+   - 自動捲到該筆時間軸紀錄
 
-   attraction   景點
-   restaurant   餐廳
-   hotel        飯店
-   station      車站
-   airport      機場
-   shopping     購物
-   rest         休息
-   other        其他
+【V4.6 功能保留】
 
-3. 快速紀錄
-   搜尋附近地點後：
-   - 點「選擇」：只填入地點名稱
-   - 點「快速紀錄」：立即建立足跡
-
-4. 自動判斷附近地點類型
-   Overpass 結果會自動對應足跡 type。
-
-5. 舊資料相容
-   V4.5 以前紀錄如果沒有：
-   - tripId
-   - tripName
-   - type
-
-   會自動補：
-   tripId   = "default"
-   tripName = "未分類旅程"
-   type     = "other"
-
-6. 保留 V4.5 全部功能
-   - GPS
-   - Nominatim
-   - Overpass 500m
-   - 18 秒 timeout
-   - Server fallback
-   - 附近 10 個地點
-   - Leaflet 地圖
-   - 時區 / GMT
-   - 日期分組
-   - 距離統計
-   - 日期篩選
-   - 編輯
-   - 刪除
-   - 重複紀錄提醒
-   - CSV
-   - JSON 備份 / 還原
-   - Record ID 修復
+- 旅程分類
+- 新增旅程
+- 旅程篩選
+- 編輯時搬移旅程
+- 足跡類型
+- 附近地點自動分類
+- 快速紀錄
+- GPS
+- Nominatim
+- Overpass
+- Leaflet
+- 時區 / GMT
+- 日期分組
+- 距離統計
+- 日期篩選
+- 編輯
+- 刪除足跡
+- CSV
+- JSON
+- 舊資料相容
 
 Storage Key : travelFootprints
 Trips Key   : travelFootprintTrips
-
-Version     : V4.6
+Version     : V4.6.1
 =============================================================
 -->
 
@@ -95,7 +75,7 @@ Version     : V4.6
 >
 
 <title>
-  我的旅遊足跡 V4.6
+  我的旅遊足跡 V4.6.1
 </title>
 
 <link
@@ -316,7 +296,7 @@ header .date {
   display: grid;
 
   grid-template-columns:
-    1fr auto;
+    1fr auto auto;
 
   gap: 8px;
 }
@@ -337,6 +317,28 @@ header .date {
   background: #e7f0ff;
 
   color: #185cb1;
+}
+
+.trip-delete-btn {
+  width: auto;
+
+  min-width: 52px;
+
+  margin: 0;
+
+  padding: 10px 14px;
+
+  background: #fff0f0;
+
+  color: #c62828;
+}
+
+.trip-delete-btn:disabled {
+  background: #f1f1f1;
+
+  color: #aaa;
+
+  opacity: 0.6;
 }
 
 .current-trip {
@@ -421,7 +423,7 @@ textarea {
 
 
 /* =========================================================
-   TYPE SELECTOR
+   TYPE
 ========================================================= */
 
 .type-grid {
@@ -1210,7 +1212,7 @@ button:disabled {
   🌏 我的旅遊足跡
 
   <span class="version-badge">
-    V4.6
+    V4.6.1
   </span>
 </h1>
 
@@ -1263,8 +1265,19 @@ button:disabled {
         type="button"
         class="trip-add-btn"
         onclick="openAddTripDialog()"
+        title="新增旅程"
       >
         ＋
+      </button>
+
+      <button
+        type="button"
+        class="trip-delete-btn"
+        id="deleteTripButton"
+        onclick="deleteCurrentTrip()"
+        title="刪除目前旅程"
+      >
+        🗑️
       </button>
 
     </div>
@@ -1327,7 +1340,8 @@ button:disabled {
     🗺️ 足跡地圖
   </div>
 
-  <div id="map"></div>
+  <div id="map">
+  </div>
 
 </div>
 
@@ -1388,7 +1402,9 @@ button:disabled {
 
     <div class="lookup-row">
 
-      <span>🏷️</span>
+      <span>
+        🏷️
+      </span>
 
       <span
         id="nameLookupStatus"
@@ -1400,7 +1416,9 @@ button:disabled {
 
     <div class="lookup-row">
 
-      <span>📍</span>
+      <span>
+        📍
+      </span>
 
       <span
         id="poiLookupStatus"
@@ -1411,7 +1429,6 @@ button:disabled {
     </div>
 
   </div>
-  
     <div
     class="nearby-section"
     id="nearbySection"
@@ -1721,8 +1738,8 @@ button:disabled {
   >
 
   <div class="small-note">
-    匯入會取代目前手機上的足跡紀錄。
-    V4.5 以前的資料會自動補上旅程與類型。
+    支援舊版足跡備份。
+    V4.5 以前的資料會自動補上旅程與足跡類型。
   </div>
 
   <br>
@@ -1732,7 +1749,7 @@ button:disabled {
     type="button"
     onclick="clearAllRecords()"
   >
-    🗑️ 清除全部紀錄
+    🗑️ 清除全部足跡
   </button>
 
 </div>
@@ -2031,11 +2048,6 @@ let placeNameSource =
 let locationLookupSequence =
   0;
 
-/*
-  V4.6
-  新增目前足跡類型
-*/
-
 let selectedType =
   "other";
 
@@ -2226,10 +2238,6 @@ function getTrips() {
 
     }
 
-    /*
-      確保 default 永遠存在
-    */
-
     if (
       !trips.some(
         trip =>
@@ -2347,22 +2355,28 @@ function getCurrentTrip() {
     getCurrentTripId();
 
   return (
+
     getTrips().find(
       trip =>
         trip.id ===
         id
     ) ||
+
     {
-      id: "default",
-      name: "未分類旅程"
+      id:
+        "default",
+
+      name:
+        "未分類旅程"
     }
+
   );
 
 }
 
 
 /* =========================================================
-   RENDER TRIPS
+   RENDER TRIP SELECTORS
 ========================================================= */
 
 function renderTripSelectors() {
@@ -2419,8 +2433,9 @@ function renderTripSelectors() {
   tripSelect.value =
     currentId;
 
+
   /*
-    Filter
+    Timeline Filter
   */
 
   tripFilter.innerHTML =
@@ -2472,8 +2487,9 @@ function renderTripSelectors() {
 
   }
 
+
   /*
-    編輯視窗
+    Edit Modal Trip
   */
 
   editTrip.innerHTML =
@@ -2500,6 +2516,11 @@ function renderTripSelectors() {
     }
   );
 
+
+  /*
+    Current trip text
+  */
+
   const currentTrip =
     getCurrentTrip();
 
@@ -2510,6 +2531,27 @@ function renderTripSelectors() {
     .textContent =
     "目前旅程：" +
     currentTrip.name;
+
+
+  /*
+    V4.6.1
+    未分類旅程不能刪除
+  */
+
+  const deleteTripButton =
+    document.getElementById(
+      "deleteTripButton"
+    );
+
+  if (
+    deleteTripButton
+  ) {
+
+    deleteTripButton.disabled =
+      currentTrip.id ===
+      "default";
+
+  }
 
 }
 
@@ -2669,10 +2711,6 @@ async function createTrip() {
   const trips =
     getTrips();
 
-  /*
-    避免同名
-  */
-
   const exists =
     trips.some(
       trip =>
@@ -2737,6 +2775,267 @@ async function createTrip() {
     "✅ 已建立旅程：" +
     name
   );
+
+}
+
+
+/* =========================================================
+   DELETE CURRENT TRIP
+   V4.6.1
+========================================================= */
+
+async function deleteCurrentTrip() {
+
+  const trip =
+    getCurrentTrip();
+
+  /*
+    default 是系統保留旅程
+  */
+
+  if (
+    trip.id ===
+    "default"
+  ) {
+
+    await showDialog({
+
+      icon:
+        "⚠️",
+
+      title:
+        "無法刪除",
+
+      message:
+        "「未分類旅程」是系統預設旅程，不能刪除。",
+
+      showCancel:
+        false
+
+    });
+
+    return;
+
+  }
+
+
+  const records =
+    getRecords();
+
+  const tripRecords =
+    records.filter(
+      record =>
+        String(
+          record.tripId
+        ) ===
+        String(
+          trip.id
+        )
+    );
+
+
+  /*
+    確認訊息
+  */
+
+  let message =
+
+    "確定要刪除旅程：\n\n" +
+
+    "🧳 " +
+    trip.name +
+    "？";
+
+  if (
+    tripRecords.length >
+    0
+  ) {
+
+    message +=
+
+      "\n\n此旅程目前有 " +
+      tripRecords.length +
+      " 筆足跡。" +
+
+      "\n\n刪除旅程後，這些足跡不會刪除，會自動移到「未分類旅程」。";
+
+  }
+
+  const ok =
+    await showDialog({
+
+      icon:
+        "🗑️",
+
+      title:
+        "刪除旅程",
+
+      message:
+        message,
+
+      confirmText:
+        "刪除旅程",
+
+      cancelText:
+        "取消",
+
+      danger:
+        true
+
+    });
+
+  if (
+    !ok
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+    1.
+    足跡搬到未分類旅程
+  */
+
+  const updatedRecords =
+    records.map(
+      record => {
+
+        if (
+          String(
+            record.tripId
+          ) ===
+          String(
+            trip.id
+          )
+        ) {
+
+          return {
+
+            ...record,
+
+            tripId:
+              "default",
+
+            tripName:
+              "未分類旅程"
+
+          };
+
+        }
+
+        return record;
+
+      }
+    );
+
+  saveRecords(
+    updatedRecords
+  );
+
+
+  /*
+    2.
+    刪除旅程
+  */
+
+  const trips =
+    getTrips();
+
+  const updatedTrips =
+    trips.filter(
+      item =>
+        String(
+          item.id
+        ) !==
+        String(
+          trip.id
+        )
+    );
+
+  saveTrips(
+    updatedTrips
+  );
+
+
+  /*
+    3.
+    Current Trip → default
+  */
+
+  setCurrentTripId(
+    "default"
+  );
+
+
+  /*
+    4.
+    Timeline Filter
+  */
+
+  if (
+    String(
+      currentTripFilter
+    ) ===
+    String(
+      trip.id
+    )
+  ) {
+
+    currentTripFilter =
+      "all";
+
+  }
+
+  currentDateFilter =
+    "all";
+
+
+  /*
+    5.
+    UI
+  */
+
+  renderTripSelectors();
+
+  updateDateFilterOptions();
+
+  renderRecords();
+
+
+  /*
+    6.
+    Toast
+  */
+
+  if (
+    tripRecords.length >
+    0
+  ) {
+
+    showToast(
+
+      "🗑️ 已刪除「" +
+      trip.name +
+      "」，" +
+      tripRecords.length +
+      " 筆足跡已移到未分類"
+
+    );
+
+  }
+
+  else {
+
+    showToast(
+
+      "🗑️ 已刪除旅程：" +
+      trip.name
+
+    );
+
+  }
 
 }
 
@@ -2819,9 +3118,10 @@ function normalizeRecords(
         id
       );
 
+
       /*
-        V4.6：
-        舊資料補 trip
+        V4.6+
+        舊資料補旅程
       */
 
       if (
@@ -2848,8 +3148,8 @@ function normalizeRecords(
 
       }
 
+
       /*
-        V4.6：
         舊資料補 type
       */
 
@@ -3182,6 +3482,7 @@ function showDialog({
   );
 
 }
+
 /* =========================================================
    TIMEZONE
 ========================================================= */
@@ -3430,9 +3731,6 @@ function resetLookupUI() {
     )
     .value =
     "";
-
-  selectedType =
-    "other";
 
   selectType(
     "other"
@@ -4159,9 +4457,12 @@ async function lookupNearbyPlaces(
               padding:12px;
               color:#777;
               font-size:14px;
+              line-height:1.6;
             "
           >
             500 公尺內沒有找到已登錄名稱的地點。
+            <br>
+            可以直接使用自動地名或手動輸入。
           </div>
 
         `;
@@ -5160,14 +5461,17 @@ async function saveLocation() {
 
     await showDialog({
 
-      icon: "📍",
+      icon:
+        "📍",
 
-      title: "尚未定位",
+      title:
+        "尚未定位",
 
       message:
         "請先按「取得目前 GPS」。",
 
-      showCancel: false
+      showCancel:
+        false
 
     });
 
@@ -5212,7 +5516,8 @@ async function saveLocation() {
     const ok =
       await showDialog({
 
-        icon: "⚠️",
+        icon:
+          "⚠️",
 
         title:
           "可能是重複紀錄",
@@ -5587,7 +5892,7 @@ function groupRecordsByDay(
 
 
 /* =========================================================
-   RECORD FILTER
+   FILTER
 ========================================================= */
 
 function getTripFilteredRecords() {
@@ -5654,11 +5959,6 @@ function updateDateFilterOptions() {
     document.getElementById(
       "dateFilter"
     );
-
-  /*
-    日期選單依照目前「旅程篩選」
-    動態產生。
-  */
 
   const records =
     getTripFilteredRecords();
@@ -5820,11 +6120,7 @@ function scrollToRecord(
 
 /* =========================================================
    RECORD → MAP
-========================================================= */
-
-
-/* =========================================================
-   RECORD → MAP
+   V4.6.1
 ========================================================= */
 
 function focusRecordOnMap(
@@ -5846,14 +6142,14 @@ function focusRecordOnMap(
 
   }
 
-  /*
-    先把畫面捲回足跡地圖
-  */
-
   const mapElement =
     document.getElementById(
       "map"
     );
+
+  /*
+    先捲回地圖
+  */
 
   mapElement.scrollIntoView({
 
@@ -5866,8 +6162,8 @@ function focusRecordOnMap(
   });
 
   /*
-    等畫面捲動後，
-    再讓 Leaflet 定位到該筆紀錄
+    iPhone Safari 平滑捲動後，
+    再讓 Leaflet 重新計算尺寸並定位。
   */
 
   setTimeout(
@@ -5898,18 +6194,6 @@ function focusRecordOnMap(
 ========================================================= */
 
 function renderRecords() {
-
-  /*
-    統計：
-    只套用旅程篩選，
-    不套用日期篩選。
-
-    例如：
-    旅程 = 2026 東北賞楓
-    日期 = 9/18
-
-    統計仍然顯示整趟旅程。
-  */
 
   const tripRecords =
     getTripFilteredRecords()
@@ -5972,6 +6256,7 @@ function renderRecords() {
 
   markerByRecordId.clear();
 
+
   /*
     清除舊路線
   */
@@ -5988,6 +6273,7 @@ function renderRecords() {
       null;
 
   }
+
 
   if (
     displayRecords.length ===
@@ -6016,8 +6302,6 @@ function renderRecords() {
   const path =
     [];
 
-  let markerIndex =
-    1;
 
   dateKeys.forEach(
     dateKey => {
@@ -6082,6 +6366,7 @@ function renderRecords() {
       dayGroup.appendChild(
         header
       );
+
 
       dayRecords.forEach(
         (
@@ -6245,18 +6530,14 @@ function renderRecords() {
 
               <br>
 
-              <span
-                class="type-badge"
-              >
+              <span class="type-badge">
 
                 ${typeInfo.icon}
                 ${typeInfo.label}
 
               </span>
 
-              <span
-                class="record-timezone"
-              >
+              <span class="record-timezone">
 
                 🕐
                 ${escapeHTML(
@@ -6271,9 +6552,7 @@ function renderRecords() {
                 ?
 
                 `
-                <span
-                  class="record-distance"
-                >
+                <span class="record-distance">
                   ↗ 前一站
                   ${distanceText}
                 </span>
@@ -6311,10 +6590,9 @@ function renderRecords() {
 
           `;
 
+
           /*
-            使用 addEventListener，
-            不把 record.id 直接塞進 onclick，
-            對匯入舊資料比較安全。
+            點紀錄 → 地圖
           */
 
           div
@@ -6338,6 +6616,11 @@ function renderRecords() {
               }
             );
 
+
+          /*
+            編輯
+          */
+
           div
             .querySelector(
               '[data-action="edit"]'
@@ -6354,6 +6637,11 @@ function renderRecords() {
 
               }
             );
+
+
+          /*
+            刪除
+          */
 
           div
             .querySelector(
@@ -6372,9 +6660,11 @@ function renderRecords() {
               }
             );
 
+
           dayGroup.appendChild(
             div
           );
+
 
           /*
             Map Marker
@@ -6436,6 +6726,11 @@ function renderRecords() {
 
             );
 
+
+          /*
+            Marker → Timeline
+          */
+
           marker.on(
             "click",
             () => {
@@ -6469,8 +6764,6 @@ function renderRecords() {
             ]
           );
 
-          markerIndex++;
-
         }
       );
 
@@ -6480,6 +6773,7 @@ function renderRecords() {
 
     }
   );
+
 
   /*
     路線
@@ -6495,9 +6789,11 @@ function renderRecords() {
         path,
         {
 
-          weight: 4,
+          weight:
+            4,
 
-          opacity: 0.7
+          opacity:
+            0.7
 
         }
       )
@@ -6507,8 +6803,9 @@ function renderRecords() {
 
   }
 
+
   /*
-    自動縮放
+    初始縮放
   */
 
   if (
@@ -6567,12 +6864,6 @@ function updateStats(
 
   let total =
     0;
-
-  /*
-    距離以每日為單位計算，
-    避免跨日最後一站 →
-    隔日第一站被算入每日移動。
-  */
 
   Object.values(
     groups
@@ -6646,7 +6937,8 @@ async function deleteRecord(
   const ok =
     await showDialog({
 
-      icon: "🗑️",
+      icon:
+        "🗑️",
 
       title:
         "刪除足跡",
@@ -7138,7 +7430,8 @@ async function saveEditedRecord() {
 
     await showDialog({
 
-      icon: "⚠️",
+      icon:
+        "⚠️",
 
       title:
         "資料不完整",
@@ -7189,8 +7482,11 @@ async function saveEditedRecord() {
         newTripId
     ) ||
     {
-      id: "default",
-      name: "未分類旅程"
+      id:
+        "default",
+
+      name:
+        "未分類旅程"
     };
 
   record.tripId =
@@ -7283,7 +7579,8 @@ async function clearAllRecords() {
   const ok =
     await showDialog({
 
-      icon: "⚠️",
+      icon:
+        "⚠️",
 
       title:
         "清除全部足跡",
@@ -7470,7 +7767,7 @@ function exportCSV() {
 
     csv,
 
-    "travel-footprints-v4-6.csv",
+    "travel-footprints-v4-6-1.csv",
 
     "text/csv;charset=utf-8"
 
@@ -7501,21 +7798,13 @@ function exportJSON() {
 
   }
 
-  /*
-    V4.6 不只備份 records，
-    也把 trips 一起備份。
-
-    否則換手機後只還原 records，
-    旅程下拉選單會不完整。
-  */
-
   const backup = {
 
     app:
       "Travel Footprints",
 
     version:
-      "4.6",
+      "4.6.1",
 
     exportedAt:
       new Date()
@@ -7540,7 +7829,7 @@ function exportJSON() {
       2
     ),
 
-    "travel-footprints-v4-6.json",
+    "travel-footprints-v4-6-1.json",
 
     "application/json"
 
@@ -7560,8 +7849,11 @@ function buildTripsFromRecords(
   const trips = [
 
     {
-      id: "default",
-      name: "未分類旅程"
+      id:
+        "default",
+
+      name:
+        "未分類旅程"
     }
 
   ];
@@ -7622,8 +7914,11 @@ function normalizeImportedTrips(
   const result = [
 
     {
-      id: "default",
-      name: "未分類旅程"
+      id:
+        "default",
+
+      name:
+        "未分類旅程"
     }
 
   ];
@@ -7740,12 +8035,9 @@ function importJSON(
         let importedCurrentTripId =
           null;
 
+
         /*
-          V2 舊格式：
-          [
-            record,
-            record
-          ]
+          舊版 array 格式
         */
 
         if (
@@ -7758,13 +8050,6 @@ function importJSON(
             data;
 
         }
-
-        /*
-          V3 ~ V4.6：
-          {
-            records: [...]
-          }
-        */
 
         else if (
           data &&
@@ -7800,6 +8085,7 @@ function importJSON(
 
         }
 
+
         if (
           !importedRecords
         ) {
@@ -7810,8 +8096,9 @@ function importJSON(
 
         }
 
+
         /*
-          驗證必要欄位
+          基本驗證
         */
 
         const valid =
@@ -7839,12 +8126,9 @@ function importJSON(
 
         }
 
+
         /*
-          修復：
-          - 舊 Record ID
-          - 重複 ID
-          - trip
-          - type
+          修復舊資料
         */
 
         const normalized =
@@ -7855,12 +8139,9 @@ function importJSON(
         importedRecords =
           normalized.records;
 
-        /*
-          V4.6 有 trips：
-          使用備份中的 trips。
 
-          舊版沒有 trips：
-          從 record.tripId / tripName 重建。
+        /*
+          建立 Trip list
         */
 
         let finalTrips;
@@ -7885,9 +8166,9 @@ function importJSON(
 
         }
 
+
         /*
-          確保所有 record.tripId
-          都真的存在於 trip list。
+          確保每一筆 tripId 都存在
         */
 
         const tripMap =
@@ -7931,10 +8212,12 @@ function importJSON(
           }
         );
 
+
         const ok =
           await showDialog({
 
-            icon: "📥",
+            icon:
+              "📥",
 
             title:
               "匯入 JSON 備份",
@@ -7969,6 +8252,7 @@ function importJSON(
 
         }
 
+
         saveTrips(
           finalTrips
         );
@@ -7977,8 +8261,9 @@ function importJSON(
           importedRecords
         );
 
+
         /*
-          恢復目前旅程
+          恢復 Current Trip
         */
 
         const finalTripIds =
@@ -8009,6 +8294,7 @@ function importJSON(
           );
 
         }
+
 
         currentTripFilter =
           "all";
@@ -8044,7 +8330,8 @@ function importJSON(
 
         await showDialog({
 
-          icon: "❌",
+          icon:
+            "❌",
 
           title:
             "匯入失敗",
@@ -8076,7 +8363,7 @@ function importJSON(
 
 
 /* =========================================================
-   DOWNLOAD FILE
+   DOWNLOAD
 ========================================================= */
 
 function downloadFile(
@@ -8301,20 +8588,6 @@ document
    APP START
 ========================================================= */
 
-/*
-  第一次進入 V4.6：
-
-  getTrips()
-  會自動建立：
-  未分類旅程
-
-  getRecords()
-  會把 V4.5 舊紀錄自動補上：
-  tripId
-  tripName
-  type
-*/
-
 getTrips();
 
 getRecords();
@@ -8331,7 +8604,7 @@ selectType(
 
 
 /*
-  iPhone Safari 從背景回到前景，
+  iPhone Safari 從背景回前景後，
   更新時間與 Leaflet 尺寸。
 */
 
