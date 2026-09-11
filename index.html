@@ -5822,6 +5822,11 @@ function scrollToRecord(
    RECORD → MAP
 ========================================================= */
 
+
+/* =========================================================
+   RECORD → MAP
+========================================================= */
+
 function focusRecordOnMap(
   id
 ) {
@@ -5841,12 +5846,49 @@ function focusRecordOnMap(
 
   }
 
-  map.setView(
-    marker.getLatLng(),
-    16
-  );
+  /*
+    先把畫面捲回足跡地圖
+  */
 
-  marker.openPopup();
+  const mapElement =
+    document.getElementById(
+      "map"
+    );
+
+  mapElement.scrollIntoView({
+
+    behavior:
+      "smooth",
+
+    block:
+      "center"
+
+  });
+
+  /*
+    等畫面捲動後，
+    再讓 Leaflet 定位到該筆紀錄
+  */
+
+  setTimeout(
+    () => {
+
+      map.invalidateSize();
+
+      map.setView(
+        marker.getLatLng(),
+        16,
+        {
+          animate:
+            true
+        }
+      );
+
+      marker.openPopup();
+
+    },
+    450
+  );
 
 }
 
