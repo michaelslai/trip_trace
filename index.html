@@ -2,49 +2,53 @@
 
 <!--
 =============================================================
-  我的旅遊足跡 V4.7
+  我的旅遊足跡 V4.8
 =============================================================
 
-【V4.7 新增】
+【V4.8 新增】
 
-1. 至下一筆紀錄時間
+1. 🔎 足跡搜尋
+   - 搜尋地點名稱
+   - 搜尋備註
+   - 搜尋旅程名稱
+   - 可搭配旅程 / 日期篩選
 
-   只有在：
-   下一筆紀錄.previousRecordId === 目前紀錄.id
+2. 🗺️ 每日路線編號
+   - 每日從 1 開始編號
+   - 地圖 Marker 顯示編號
+   - 時間軸同步顯示站點編號
+   - 不改變原本 previousRecordId 鏈結邏輯
 
-   才顯示：
+3. 📊 旅程摘要
+   - 總足跡
+   - 總天數
+   - 已追蹤移動
+   - 第一筆
+   - 最後一筆
+   - 類型統計
 
-   ⏱ 至下一筆紀錄 6 分鐘
+4. 用詞修正
+   - 「有效移動」
+   → 「已追蹤移動」
 
-   避免單純依時間排序造成誤判。
-
-
-2. 每日摘要
-
-   每天顯示：
-
-   📍 足跡數
-   🚗 有效移動
-   🕐 第一筆
-   🕐 最後一筆
-   🏷️ 類型統計
-
-
-【保留 V4.6.2 鏈結邏輯】
+【保留】
 
 - previousRecordId
 - linkTracked
 - 刪除中間紀錄不重新接線
 - 前一站已刪除警告
-- 地圖不跨斷點
-- 每日有效移動只算有效鏈結
-- 舊版紀錄不猜測前一站
-- 舊版紀錄不顯示「前一站未知」
-
+- 不推算舊版前一站
+- 每日摘要
+- 至下一筆紀錄時間
+- Nominatim
+- Overpass
+- 旅程管理
+- CSV / JSON
+- Leaflet 地圖
 
 Storage Key : travelFootprints
 Trips Key   : travelFootprintTrips
-Version     : V4.7
+Version     : V4.8
 =============================================================
 -->
 
@@ -69,7 +73,7 @@ Version     : V4.7
 >
 
 <title>
-  我的旅遊足跡 V4.7
+  我的旅遊足跡 V4.8
 </title>
 
 <link
@@ -269,6 +273,46 @@ header .date {
 
 
 /* =========================================================
+   V4.8 NUMBER MARKER
+========================================================= */
+
+.route-number-icon {
+  background: transparent;
+  border: none;
+}
+
+.route-number-marker {
+  width: 30px;
+
+  height: 30px;
+
+  border-radius: 50%;
+
+  background: #1f6feb;
+
+  color: white;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: 3px solid #ffffff;
+
+  box-shadow:
+    0 2px 8px
+    rgba(0,0,0,0.32);
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  line-height: 1;
+}
+
+
+/* =========================================================
    TRIP
 ========================================================= */
 
@@ -335,6 +379,98 @@ header .date {
   margin-top: 8px;
 
   font-size: 13px;
+
+  color: #555;
+}
+
+
+/* =========================================================
+   V4.8 TRIP SUMMARY
+========================================================= */
+
+.trip-summary-box {
+  background: #f7f9fc;
+
+  border-radius: 14px;
+
+  padding: 14px;
+}
+
+.trip-summary-title {
+  font-size: 16px;
+
+  font-weight: 700;
+
+  margin-bottom: 10px;
+}
+
+.trip-summary-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 8px;
+
+  margin-bottom: 12px;
+}
+
+.trip-summary-stat {
+  background: #ffffff;
+
+  border-radius: 10px;
+
+  padding: 10px 6px;
+
+  text-align: center;
+
+  border: 1px solid #e7e9ed;
+}
+
+.trip-summary-value {
+  font-size: 17px;
+
+  font-weight: 700;
+}
+
+.trip-summary-label {
+  margin-top: 3px;
+
+  font-size: 11px;
+
+  color: #777;
+}
+
+.trip-summary-period {
+  font-size: 13px;
+
+  color: #666;
+
+  line-height: 1.8;
+}
+
+.trip-summary-types {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  margin-top: 10px;
+}
+
+.trip-summary-chip {
+  display: inline-block;
+
+  padding: 4px 8px;
+
+  background: #ffffff;
+
+  border: 1px solid #e0e3e8;
+
+  border-radius: 999px;
+
+  font-size: 12px;
 
   color: #555;
 }
@@ -792,12 +928,6 @@ button:disabled {
   font-weight: 600;
 }
 
-
-/*
-  V4.7
-  至下一筆紀錄時間
-*/
-
 .record-next-time {
   display: inline-block;
 
@@ -816,6 +946,37 @@ button:disabled {
   font-size: 12px;
 
   font-weight: 600;
+}
+
+
+/* =========================================================
+   V4.8 RECORD NUMBER
+========================================================= */
+
+.record-number {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 26px;
+
+  height: 26px;
+
+  margin-right: 7px;
+
+  border-radius: 50%;
+
+  background: #1f6feb;
+
+  color: white;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  vertical-align: middle;
 }
 
 
@@ -883,8 +1044,57 @@ button:disabled {
   margin-bottom: 8px;
 }
 
-.filter-box select:last-child {
+
+/* =========================================================
+   V4.8 SEARCH
+========================================================= */
+
+.search-wrap {
+  position: relative;
+
+  margin-bottom: 8px;
+}
+
+.search-input {
   margin-bottom: 0;
+
+  padding-right: 44px;
+}
+
+.search-clear {
+  position: absolute;
+
+  right: 5px;
+
+  top: 5px;
+
+  width: 36px;
+
+  height: 36px;
+
+  margin: 0;
+
+  padding: 0;
+
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: #888;
+
+  font-size: 20px;
+
+  font-weight: 400;
+}
+
+.search-result-info {
+  margin-top: 7px;
+
+  font-size: 12px;
+
+  color: #777;
+
+  min-height: 18px;
 }
 
 
@@ -922,12 +1132,6 @@ button:disabled {
   line-height: 1.8;
 }
 
-
-/*
-  V4.7
-  類型摘要
-*/
-
 .day-type-summary {
   display: flex;
 
@@ -953,7 +1157,6 @@ button:disabled {
 
   color: #555;
 }
-
 
 .record {
   padding: 15px 8px;
@@ -1000,6 +1203,10 @@ button:disabled {
   font-weight: 700;
 
   font-size: 19px;
+
+  display: flex;
+
+  align-items: center;
 }
 
 .record-place {
@@ -1269,6 +1476,11 @@ button:disabled {
       repeat(4,1fr);
   }
 
+  .trip-summary-grid {
+    grid-template-columns:
+      repeat(3,1fr);
+  }
+
 }
 
 </style>
@@ -1283,7 +1495,7 @@ button:disabled {
   🌏 我的旅遊足跡
 
   <span class="version-badge">
-    V4.7
+    V4.8
   </span>
 </h1>
 
@@ -1311,6 +1523,7 @@ button:disabled {
 </header>
 
 <div class="container">
+
 
 <!-- =========================================================
      TRIP
@@ -1364,6 +1577,101 @@ button:disabled {
 
 </div>
 
+
+<!-- =========================================================
+     V4.8 TRIP SUMMARY
+========================================================= -->
+
+<div class="card">
+
+  <div class="section-title">
+    📊 旅程摘要
+  </div>
+
+  <div
+    class="trip-summary-box"
+    id="tripSummaryBox"
+  >
+
+    <div
+      class="trip-summary-title"
+      id="tripSummaryTitle"
+    >
+      未分類旅程
+    </div>
+
+
+    <div class="trip-summary-grid">
+
+      <div class="trip-summary-stat">
+
+        <div
+          class="trip-summary-value"
+          id="tripSummaryRecords"
+        >
+          0
+        </div>
+
+        <div class="trip-summary-label">
+          足跡
+        </div>
+
+      </div>
+
+
+      <div class="trip-summary-stat">
+
+        <div
+          class="trip-summary-value"
+          id="tripSummaryDays"
+        >
+          0
+        </div>
+
+        <div class="trip-summary-label">
+          天數
+        </div>
+
+      </div>
+
+
+      <div class="trip-summary-stat">
+
+        <div
+          class="trip-summary-value"
+          id="tripSummaryDistance"
+        >
+          0 m
+        </div>
+
+        <div class="trip-summary-label">
+          已追蹤移動
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      class="trip-summary-period"
+      id="tripSummaryPeriod"
+    >
+      尚無足跡
+    </div>
+
+
+    <div
+      class="trip-summary-types"
+      id="tripSummaryTypes"
+    >
+    </div>
+
+  </div>
+
+</div>
+
+
 <!-- =========================================================
      CURRENT TIME
 ========================================================= -->
@@ -1401,6 +1709,7 @@ button:disabled {
 
 </div>
 
+
 <!-- =========================================================
      MAP
 ========================================================= -->
@@ -1415,6 +1724,7 @@ button:disabled {
   </div>
 
 </div>
+
 
 <!-- =========================================================
      GPS
@@ -1680,6 +1990,7 @@ button:disabled {
 
     </div>
 
+
     <div class="stat">
 
       <div
@@ -1695,17 +2006,18 @@ button:disabled {
 
     </div>
 
+
     <div class="stat">
 
       <div
         class="stat-value"
         id="totalDistance"
       >
-        0 km
+        0 m
       </div>
 
       <div class="stat-label">
-        有效移動
+        已追蹤移動
       </div>
 
     </div>
@@ -1725,7 +2037,43 @@ button:disabled {
     🕐 足跡時間軸
   </div>
 
+
   <div class="filter-box">
+
+    <!-- V4.8 Search -->
+
+    <div class="filter-title">
+      🔎 搜尋足跡
+    </div>
+
+    <div class="search-wrap">
+
+      <input
+        type="search"
+        id="recordSearch"
+        class="search-input"
+        placeholder="搜尋地點、備註、旅程..."
+        autocomplete="off"
+        oninput="changeRecordSearch()"
+      >
+
+      <button
+        type="button"
+        class="search-clear"
+        onclick="clearRecordSearch()"
+        aria-label="清除搜尋"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div
+      class="search-result-info"
+      id="searchResultInfo"
+    >
+    </div>
+
 
     <div class="filter-title">
       🧳 旅程
@@ -1755,6 +2103,7 @@ button:disabled {
     </select>
 
   </div>
+
 
   <div id="recordList">
   </div>
@@ -1792,6 +2141,7 @@ button:disabled {
 
   </div>
 
+
   <button
     class="btn-orange"
     type="button"
@@ -1812,11 +2162,14 @@ button:disabled {
     onchange="importJSON(event)"
   >
 
+
   <div class="small-note">
     支援舊版足跡備份；舊資料不會自動猜測前一站。
   </div>
 
+
   <br>
+
 
   <button
     class="btn-red"
@@ -1846,10 +2199,12 @@ button:disabled {
       ✏️ 編輯足跡
     </div>
 
+
     <input
       type="hidden"
       id="editRecordId"
     >
+
 
     <label>
       旅程
@@ -1859,6 +2214,7 @@ button:disabled {
       id="editTrip"
     >
     </select>
+
 
     <label>
       足跡類型
@@ -1902,6 +2258,7 @@ button:disabled {
 
     </select>
 
+
     <label>
       地點名稱
     </label>
@@ -1911,6 +2268,7 @@ button:disabled {
       id="editPlace"
     >
 
+
     <label>
       日期
     </label>
@@ -1919,6 +2277,7 @@ button:disabled {
       type="date"
       id="editDate"
     >
+
 
     <label>
       時間
@@ -1930,6 +2289,7 @@ button:disabled {
       step="1"
     >
 
+
     <label>
       備註
     </label>
@@ -1937,6 +2297,7 @@ button:disabled {
     <textarea
       id="editNote"
     ></textarea>
+
 
     <div class="gps-info">
 
@@ -1949,6 +2310,7 @@ button:disabled {
       </div>
 
     </div>
+
 
     <div class="modal-actions">
 
@@ -1990,6 +2352,7 @@ button:disabled {
       🧳 新增旅程
     </div>
 
+
     <label>
       旅程名稱
     </label>
@@ -1999,6 +2362,7 @@ button:disabled {
       id="newTripName"
       placeholder="例如：2026 東北賞楓"
     >
+
 
     <div class="modal-actions">
 
@@ -2056,6 +2420,7 @@ button:disabled {
     >
     </div>
 
+
     <div
       class="dialog-actions"
       id="dialogActions"
@@ -2101,17 +2466,30 @@ button:disabled {
    GLOBAL
 ========================================================= */
 
-let currentLat = null;
-let currentLng = null;
-let currentAccuracy = null;
+let currentLat =
+  null;
 
-let currentMarker = null;
+let currentLng =
+  null;
 
-let recordMarkers = [];
-let routeLayers = [];
+let currentAccuracy =
+  null;
+
+
+let currentMarker =
+  null;
+
+
+let recordMarkers =
+  [];
+
+let routeLayers =
+  [];
+
 
 let markerByRecordId =
   new Map();
+
 
 let currentDateFilter =
   "all";
@@ -2119,14 +2497,27 @@ let currentDateFilter =
 let currentTripFilter =
   "all";
 
+
+/*
+  V4.8
+  搜尋字串
+*/
+
+let currentSearchText =
+  "";
+
+
 let toastTimer =
   null;
+
 
 let placeNameSource =
   "none";
 
+
 let locationLookupSequence =
   0;
+
 
 let selectedType =
   "other";
@@ -2144,6 +2535,7 @@ const NOMINATIM_TIMEOUT_MS =
 
 const OVERPASS_RADIUS =
   500;
+
 
 const OVERPASS_SERVERS = [
 
@@ -2220,7 +2612,9 @@ function selectType(
 ) {
 
   if (
-    !TYPE_INFO[type]
+    !TYPE_INFO[
+      type
+    ]
   ) {
 
     type =
@@ -2228,8 +2622,10 @@ function selectType(
 
   }
 
+
   selectedType =
     type;
+
 
   document
     .querySelectorAll(
@@ -2266,6 +2662,7 @@ function getTrips() {
       "travelFootprintTrips"
     );
 
+
   if (
     !data
   ) {
@@ -2282,13 +2679,16 @@ function getTrips() {
 
     ];
 
+
     saveTrips(
       defaults
     );
 
+
     return defaults;
 
   }
+
 
   try {
 
@@ -2296,6 +2696,7 @@ function getTrips() {
       JSON.parse(
         data
       );
+
 
     if (
       !Array.isArray(
@@ -2310,6 +2711,7 @@ function getTrips() {
       );
 
     }
+
 
     if (
       !trips.some(
@@ -2329,11 +2731,13 @@ function getTrips() {
 
       });
 
+
       saveTrips(
         trips
       );
 
     }
+
 
     return trips;
 
@@ -2353,9 +2757,11 @@ function getTrips() {
 
     ];
 
+
     saveTrips(
       defaults
     );
+
 
     return defaults;
 
@@ -2392,8 +2798,10 @@ function getCurrentTripId() {
       "travelFootprintCurrentTrip"
     );
 
+
   const trips =
     getTrips();
+
 
   if (
     id &&
@@ -2407,6 +2815,7 @@ function getCurrentTripId() {
     return id;
 
   }
+
 
   return "default";
 
@@ -2433,6 +2842,7 @@ function getCurrentTrip() {
   const id =
     getCurrentTripId();
 
+
   return (
 
     getTrips().find(
@@ -2455,7 +2865,7 @@ function getCurrentTrip() {
 
 
 /* =========================================================
-   RENDER TRIPS
+   RENDER TRIP SELECTORS
 ========================================================= */
 
 function renderTripSelectors() {
@@ -2463,18 +2873,22 @@ function renderTripSelectors() {
   const trips =
     getTrips();
 
+
   const currentId =
     getCurrentTripId();
+
 
   const tripSelect =
     document.getElementById(
       "tripSelect"
     );
 
+
   const tripFilter =
     document.getElementById(
       "tripFilter"
     );
+
 
   const editTrip =
     document.getElementById(
@@ -2485,6 +2899,7 @@ function renderTripSelectors() {
   tripSelect.innerHTML =
     "";
 
+
   trips.forEach(
     trip => {
 
@@ -2493,11 +2908,14 @@ function renderTripSelectors() {
           "option"
         );
 
+
       option.value =
         trip.id;
 
+
       option.textContent =
         trip.name;
+
 
       tripSelect.appendChild(
         option
@@ -2506,12 +2924,14 @@ function renderTripSelectors() {
     }
   );
 
+
   tripSelect.value =
     currentId;
 
 
   tripFilter.innerHTML =
     '<option value="all">全部旅程</option>';
+
 
   trips.forEach(
     trip => {
@@ -2521,11 +2941,14 @@ function renderTripSelectors() {
           "option"
         );
 
+
       option.value =
         trip.id;
 
+
       option.textContent =
         trip.name;
+
 
       tripFilter.appendChild(
         option
@@ -2555,6 +2978,7 @@ function renderTripSelectors() {
     currentTripFilter =
       "all";
 
+
     tripFilter.value =
       "all";
 
@@ -2564,6 +2988,7 @@ function renderTripSelectors() {
   editTrip.innerHTML =
     "";
 
+
   trips.forEach(
     trip => {
 
@@ -2572,11 +2997,14 @@ function renderTripSelectors() {
           "option"
         );
 
+
       option.value =
         trip.id;
 
+
       option.textContent =
         trip.name;
+
 
       editTrip.appendChild(
         option
@@ -2611,7 +3039,7 @@ function renderTripSelectors() {
 
 
 /* =========================================================
-   CHANGE TRIP
+   CHANGE CURRENT TRIP
 ========================================================= */
 
 function changeCurrentTrip() {
@@ -2623,11 +3051,16 @@ function changeCurrentTrip() {
       )
       .value;
 
+
   setCurrentTripId(
     id
   );
 
+
   renderTripSelectors();
+
+  renderTripSummary();
+
 
   showToast(
     "🧳 已切換旅程：" +
@@ -2636,6 +3069,10 @@ function changeCurrentTrip() {
 
 }
 
+
+/* =========================================================
+   CHANGE FILTER TRIP
+========================================================= */
 
 function changeTripFilter() {
 
@@ -2646,7 +3083,9 @@ function changeTripFilter() {
       )
       .value;
 
+
   updateDateFilterOptions();
+
 
   renderRecords();
 
@@ -2665,6 +3104,7 @@ function openAddTripDialog() {
     )
     .value =
     "";
+
 
   document
     .getElementById(
@@ -2721,6 +3161,7 @@ async function createTrip() {
       .value
       .trim();
 
+
   if (
     !name
   ) {
@@ -2740,6 +3181,7 @@ async function createTrip() {
         false
 
     });
+
 
     return;
 
@@ -2781,6 +3223,7 @@ async function createTrip() {
 
     });
 
+
     return;
 
   }
@@ -2816,6 +3259,8 @@ async function createTrip() {
 
   renderTripSelectors();
 
+  renderTripSummary();
+
 
   showToast(
     "✅ 已建立旅程：" +
@@ -2833,6 +3278,7 @@ async function deleteCurrentTrip() {
 
   const trip =
     getCurrentTrip();
+
 
   if (
     trip.id ===
@@ -2945,6 +3391,7 @@ async function deleteCurrentTrip() {
 
         }
 
+
         return record;
 
       }
@@ -3001,6 +3448,8 @@ async function deleteCurrentTrip() {
 
   updateDateFilterOptions();
 
+  renderTripSummary();
+
   renderRecords();
 
 
@@ -3043,7 +3492,7 @@ function generateRecordId() {
 
 
 /* =========================================================
-   NORMALIZE
+   NORMALIZE RECORDS
 ========================================================= */
 
 function normalizeRecords(
@@ -3053,6 +3502,7 @@ function normalizeRecords(
   const usedIds =
     new Set();
 
+
   let changed =
     false;
 
@@ -3061,8 +3511,10 @@ function normalizeRecords(
     record => {
 
       let id =
-        record.id !== undefined &&
-        record.id !== null
+        record.id !==
+        undefined &&
+        record.id !==
+        null
           ? String(
               record.id
             )
@@ -3079,10 +3531,12 @@ function normalizeRecords(
         record.id =
           generateRecordId();
 
+
         id =
           String(
             record.id
           );
+
 
         changed =
           true;
@@ -3092,6 +3546,7 @@ function normalizeRecords(
 
       record.id =
         id;
+
 
       usedIds.add(
         id
@@ -3105,6 +3560,7 @@ function normalizeRecords(
         record.tripId =
           "default";
 
+
         changed =
           true;
 
@@ -3117,6 +3573,7 @@ function normalizeRecords(
 
         record.tripName =
           "未分類旅程";
+
 
         changed =
           true;
@@ -3134,6 +3591,7 @@ function normalizeRecords(
         record.type =
           "other";
 
+
         changed =
           true;
 
@@ -3148,6 +3606,7 @@ function normalizeRecords(
         record.linkTracked =
           false;
 
+
         changed =
           true;
 
@@ -3155,14 +3614,18 @@ function normalizeRecords(
 
 
       if (
-        !Object.prototype.hasOwnProperty.call(
-          record,
-          "previousRecordId"
-        )
+        !Object
+          .prototype
+          .hasOwnProperty
+          .call(
+            record,
+            "previousRecordId"
+          )
       ) {
 
         record.previousRecordId =
           null;
+
 
         changed =
           true;
@@ -3188,8 +3651,11 @@ function normalizeRecords(
 
   return {
 
-    records,
-    changed
+    records:
+      records,
+
+    changed:
+      changed
 
   };
 
@@ -3197,7 +3663,7 @@ function normalizeRecords(
 
 
 /* =========================================================
-   STORAGE
+   RECORD STORAGE
 ========================================================= */
 
 function getRecords() {
@@ -3265,6 +3731,7 @@ function getRecords() {
       "Storage Error:",
       error
     );
+
 
     return [];
 
@@ -3470,15 +3937,8 @@ function getPreviousLinkState(
 
 
 /* =========================================================
-   V4.7 NEXT RECORD
+   NEXT LINKED RECORD
 ========================================================= */
-
-/*
-  找真正以目前紀錄為 previousRecordId 的下一筆。
-
-  不使用單純時間排序猜測，
-  所以中間有斷鏈時不會產生假的停留時間。
-*/
 
 function getNextLinkedRecord(
   record,
@@ -3530,7 +3990,7 @@ function getNextLinkedRecord(
 
 
 /* =========================================================
-   V4.7 DURATION
+   DURATION
 ========================================================= */
 
 function formatDuration(
@@ -3682,6 +4142,7 @@ document
       placeNameSource =
         "manual";
 
+
       document
         .querySelectorAll(
           ".nearby-item"
@@ -3716,8 +4177,10 @@ function showToast(
       "toast"
     );
 
+
   toast.textContent =
     message;
+
 
   toast
     .classList
@@ -3725,9 +4188,11 @@ function showToast(
       "show"
     );
 
+
   clearTimeout(
     toastTimer
   );
+
 
   toastTimer =
     setTimeout(
@@ -3770,30 +4235,36 @@ function showDialog({
           "dialogModal"
         );
 
+
       const iconEl =
         document.getElementById(
           "dialogIcon"
         );
+
 
       const titleEl =
         document.getElementById(
           "dialogTitle"
         );
 
+
       const messageEl =
         document.getElementById(
           "dialogMessage"
         );
+
 
       const actions =
         document.getElementById(
           "dialogActions"
         );
 
+
       const confirmBtn =
         document.getElementById(
           "dialogConfirm"
         );
+
 
       const cancelBtn =
         document.getElementById(
@@ -3804,14 +4275,18 @@ function showDialog({
       iconEl.textContent =
         icon;
 
+
       titleEl.textContent =
         title;
+
 
       messageEl.textContent =
         message;
 
+
       confirmBtn.textContent =
         confirmText;
+
 
       cancelBtn.textContent =
         cancelText;
@@ -3854,11 +4329,14 @@ function showDialog({
             "show"
           );
 
+
         confirmBtn.onclick =
           null;
 
+
         cancelBtn.onclick =
           null;
+
 
         resolve(
           result
@@ -3884,6 +4362,7 @@ function showDialog({
   );
 
 }
+
 /* =========================================================
    TIMEZONE
 ========================================================= */
@@ -3916,23 +4395,29 @@ function getGMTOffset(
   const offsetMinutes =
     -date.getTimezoneOffset();
 
+
   const sign =
     offsetMinutes >= 0
       ? "+"
       : "-";
+
 
   const absoluteMinutes =
     Math.abs(
       offsetMinutes
     );
 
+
   const hours =
     Math.floor(
-      absoluteMinutes / 60
+      absoluteMinutes /
+      60
     );
 
+
   const minutes =
-    absoluteMinutes % 60;
+    absoluteMinutes %
+    60;
 
 
   if (
@@ -3987,8 +4472,10 @@ function updateCurrentTimeDisplay() {
   const now =
     new Date();
 
+
   const timeZone =
     getCurrentTimeZone();
+
 
   const gmt =
     getGMTOffset(
@@ -5953,6 +6440,8 @@ async function quickSaveNearby(
 
   updateDateFilterOptions();
 
+  renderTripSummary();
+
   renderRecords();
 
 
@@ -6180,6 +6669,8 @@ async function saveLocation() {
 
   updateDateFilterOptions();
 
+  renderTripSummary();
+
   renderRecords();
 
 
@@ -6197,6 +6688,119 @@ async function saveLocation() {
     record.place
 
   );
+
+}
+
+
+/* =========================================================
+   V4.8 SEARCH
+========================================================= */
+
+function normalizeSearchText(
+  value
+) {
+
+  return String(
+    value ||
+    ""
+  )
+  .trim()
+  .toLocaleLowerCase();
+
+}
+
+
+function recordMatchesSearch(
+  record,
+  searchText
+) {
+
+  const keyword =
+    normalizeSearchText(
+      searchText
+    );
+
+
+  if (
+    !keyword
+  ) {
+
+    return true;
+
+  }
+
+
+  const typeInfo =
+    getTypeInfo(
+      record.type
+    );
+
+
+  const searchableText = [
+
+    record.place,
+
+    record.note,
+
+    record.tripName,
+
+    typeInfo.label,
+
+    getRecordDateKey(
+      record
+    )
+
+  ]
+  .map(
+    value =>
+      String(
+        value ||
+        ""
+      )
+      .toLocaleLowerCase()
+  )
+  .join(
+    " "
+  );
+
+
+  return searchableText.includes(
+    keyword
+  );
+
+}
+
+
+function changeRecordSearch() {
+
+  currentSearchText =
+    document
+      .getElementById(
+        "recordSearch"
+      )
+      .value;
+
+
+  renderRecords();
+
+}
+
+
+function clearRecordSearch() {
+
+  currentSearchText =
+    "";
+
+
+  document
+    .getElementById(
+      "recordSearch"
+    )
+    .value =
+    "";
+
+
+  renderRecords();
 
 }
 
@@ -6266,6 +6870,7 @@ function formatRecordTime(
       record.timestamp
     );
 
+
   const timeZone =
     record.timeZone ||
     getCurrentTimeZone();
@@ -6302,6 +6907,7 @@ function getRecordDateKey(
     new Date(
       record.timestamp
     );
+
 
   const timeZone =
     record.timeZone ||
@@ -6496,6 +7102,24 @@ function getDisplayRecords() {
             record
           ) ===
           currentDateFilter
+      );
+
+  }
+
+
+  if (
+    normalizeSearchText(
+      currentSearchText
+    )
+  ) {
+
+    records =
+      records.filter(
+        record =>
+          recordMatchesSearch(
+            record,
+            currentSearchText
+          )
       );
 
   }
@@ -6758,7 +7382,7 @@ function focusRecordOnMap(
 
 
 /* =========================================================
-   VALID DAY DISTANCE
+   TRACKED DISTANCE
 ========================================================= */
 
 function calculateTrackedDayDistance(
@@ -6814,6 +7438,20 @@ function calculateTrackedDayDistance(
       }
 
 
+      if (
+        String(
+          link.previous.tripId
+        ) !==
+        String(
+          record.tripId
+        )
+      ) {
+
+        return;
+
+      }
+
+
       total +=
         calculateDistanceKm(
 
@@ -6845,18 +7483,18 @@ function calculateTrackedDayDistance(
 
 
 /* =========================================================
-   DAILY TYPE SUMMARY
+   TYPE SUMMARY
 ========================================================= */
 
-function getDailyTypeSummary(
-  dayRecords
+function getTypeSummary(
+  records
 ) {
 
   const counts =
     {};
 
 
-  dayRecords.forEach(
+  records.forEach(
     record => {
 
       const type =
@@ -6931,36 +7569,272 @@ function getDailyTypeSummary(
 
 
 /* =========================================================
-   DAILY SUMMARY HTML
+   V4.8 TRIP SUMMARY
+========================================================= */
+
+function renderTripSummary() {
+
+  const trip =
+    getCurrentTrip();
+
+
+  const allRecords =
+    getRecords()
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          new Date(
+            a.timestamp
+          ) -
+          new Date(
+            b.timestamp
+          )
+      );
+
+
+  const records =
+    allRecords.filter(
+      record =>
+        String(
+          record.tripId
+        ) ===
+        String(
+          trip.id
+        )
+    );
+
+
+  document
+    .getElementById(
+      "tripSummaryTitle"
+    )
+    .textContent =
+    trip.name;
+
+
+  document
+    .getElementById(
+      "tripSummaryRecords"
+    )
+    .textContent =
+    records.length;
+
+
+  const groups =
+    groupRecordsByDay(
+      records
+    );
+
+
+  document
+    .getElementById(
+      "tripSummaryDays"
+    )
+    .textContent =
+    Object.keys(
+      groups
+    ).length;
+
+
+  let distance =
+    0;
+
+
+  Object.values(
+    groups
+  )
+  .forEach(
+    dayRecords => {
+
+      distance +=
+        calculateTrackedDayDistance(
+          dayRecords,
+          allRecords
+        );
+
+    }
+  );
+
+
+  document
+    .getElementById(
+      "tripSummaryDistance"
+    )
+    .textContent =
+    formatDistance(
+      distance
+    );
+
+
+  const period =
+    document.getElementById(
+      "tripSummaryPeriod"
+    );
+
+
+  const types =
+    document.getElementById(
+      "tripSummaryTypes"
+    );
+
+
+  if (
+    records.length ===
+    0
+  ) {
+
+    period.textContent =
+      "尚無足跡";
+
+
+    types.innerHTML =
+      "";
+
+
+    return;
+
+  }
+
+
+  const first =
+    records[
+      0
+    ];
+
+
+  const last =
+    records[
+      records.length - 1
+    ];
+
+
+  period.innerHTML = `
+
+    📅
+    ${escapeHTML(
+      getRecordDateKey(
+        first
+      )
+    )}
+
+    ${formatRecordTime(
+      first
+    )}
+
+    <br>
+
+    ↓
+
+    <br>
+
+    📅
+    ${escapeHTML(
+      getRecordDateKey(
+        last
+      )
+    )}
+
+    ${formatRecordTime(
+      last
+    )}
+
+  `;
+
+
+  const typeSummary =
+    getTypeSummary(
+      records
+    );
+
+
+  types.innerHTML =
+    typeSummary
+      .map(
+        item => `
+
+          <span class="trip-summary-chip">
+
+            ${item.icon}
+            ${escapeHTML(
+              item.label
+            )}
+            ${item.count}
+
+          </span>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   DAILY TYPE SUMMARY
 ========================================================= */
 
 function buildDailyTypeSummaryHTML(
   dayRecords
 ) {
 
-  const summary =
-    getDailyTypeSummary(
-      dayRecords
-    );
+  return getTypeSummary(
+    dayRecords
+  )
+  .map(
+    item => `
+
+      <span class="day-type-chip">
+
+        ${item.icon}
+        ${escapeHTML(
+          item.label
+        )}
+        ${item.count}
+
+      </span>
+
+    `
+  )
+  .join("");
+
+}
 
 
-  return summary
-    .map(
-      item => `
+/* =========================================================
+   V4.8 NUMBERED ICON
+========================================================= */
 
-        <span class="day-type-chip">
+function createNumberedMarkerIcon(
+  number
+) {
 
-          ${item.icon}
-          ${escapeHTML(
-            item.label
-          )}
-          ${item.count}
+  return L.divIcon({
 
-        </span>
+    className:
+      "route-number-icon",
 
-      `
-    )
-    .join("");
+    html: `
+
+      <div class="route-number-marker">
+
+        ${number}
+
+      </div>
+
+    `,
+
+    iconSize:
+      [30,30],
+
+    iconAnchor:
+      [15,15],
+
+    popupAnchor:
+      [0,-18]
+
+  });
 
 }
 
@@ -7025,6 +7899,39 @@ function renderRecords() {
       );
 
 
+  const resultInfo =
+    document.getElementById(
+      "searchResultInfo"
+    );
+
+
+  const keyword =
+    normalizeSearchText(
+      currentSearchText
+    );
+
+
+  if (
+    keyword
+  ) {
+
+    resultInfo.textContent =
+      "找到 " +
+      displayRecords.length +
+      " 筆符合「" +
+      currentSearchText.trim() +
+      "」的足跡";
+
+  }
+
+  else {
+
+    resultInfo.textContent =
+      "";
+
+  }
+
+
   const list =
     document.getElementById(
       "recordList"
@@ -7034,10 +7941,6 @@ function renderRecords() {
   list.innerHTML =
     "";
 
-
-  /*
-    清除 Marker
-  */
 
   recordMarkers.forEach(
     marker => {
@@ -7056,10 +7959,6 @@ function renderRecords() {
 
   markerByRecordId.clear();
 
-
-  /*
-    清除路線
-  */
 
   routeLayers.forEach(
     layer => {
@@ -7159,12 +8058,6 @@ function renderRecords() {
         ];
 
 
-      const typeSummaryHTML =
-        buildDailyTypeSummaryHTML(
-          dayRecords
-        );
-
-
       const dayGroup =
         document.createElement(
           "div"
@@ -7198,6 +8091,7 @@ function renderRecords() {
 
         </div>
 
+
         <div class="day-summary">
 
           📍
@@ -7207,7 +8101,7 @@ function renderRecords() {
           ・
 
           🚗
-          有效移動
+          已追蹤移動
           ${formatDistance(
             dayDistance
           )}
@@ -7228,9 +8122,12 @@ function renderRecords() {
 
         </div>
 
+
         <div class="day-type-summary">
 
-          ${typeSummaryHTML}
+          ${buildDailyTypeSummaryHTML(
+            dayRecords
+          )}
 
         </div>
 
@@ -7243,7 +8140,14 @@ function renderRecords() {
 
 
       dayRecords.forEach(
-        record => {
+        (
+          record,
+          dayIndex
+        ) => {
+
+          const sequenceNumber =
+            dayIndex + 1;
+
 
           const typeInfo =
             getTypeInfo(
@@ -7280,13 +8184,15 @@ function renderRecords() {
             "";
 
 
-          /*
-            真正前一站存在
-          */
-
           if (
             link.state ===
-            "valid"
+            "valid" &&
+            String(
+              link.previous.tripId
+            ) ===
+            String(
+              record.tripId
+            )
           ) {
 
             const distanceKm =
@@ -7327,10 +8233,6 @@ function renderRecords() {
           }
 
 
-          /*
-            真正前一站已被刪除
-          */
-
           else if (
             link.state ===
             "deleted"
@@ -7349,11 +8251,6 @@ function renderRecords() {
           }
 
 
-          /*
-            V4.7
-            找真正的下一筆紀錄。
-          */
-
           const nextInfo =
             getTimeToNextLinkedRecord(
               record,
@@ -7367,7 +8264,13 @@ function renderRecords() {
 
           if (
             nextInfo &&
-            nextInfo.text
+            nextInfo.text &&
+            String(
+              nextInfo.next.tripId
+            ) ===
+            String(
+              record.tripId
+            )
           ) {
 
             nextTimeBadge = `
@@ -7413,11 +8316,18 @@ function renderRecords() {
 
                 <div class="record-time">
 
+                  <span class="record-number">
+
+                    ${sequenceNumber}
+
+                  </span>
+
                   ${formatRecordTime(
                     record
                   )}
 
                 </div>
+
 
                 <div class="record-place">
 
@@ -7493,6 +8403,7 @@ function renderRecords() {
 
               </span>
 
+
               <span class="record-timezone">
 
                 🕐
@@ -7501,6 +8412,7 @@ function renderRecords() {
                 )}
 
               </span>
+
 
               ${linkBadge}
 
@@ -7534,10 +8446,6 @@ function renderRecords() {
           `;
 
 
-          /*
-            Record → Map
-          */
-
           div
             .querySelectorAll(
               '[data-action="focus"]'
@@ -7560,10 +8468,6 @@ function renderRecords() {
             );
 
 
-          /*
-            Edit
-          */
-
           div
             .querySelector(
               '[data-action="edit"]'
@@ -7582,10 +8486,6 @@ function renderRecords() {
               }
             );
 
-
-          /*
-            Delete
-          */
 
           div
             .querySelector(
@@ -7611,13 +8511,10 @@ function renderRecords() {
           );
 
 
-          /*
-            Marker
-          */
-
           const marker =
             L.marker(
               [
+
                 Number(
                   record.latitude
                 ),
@@ -7625,7 +8522,16 @@ function renderRecords() {
                 Number(
                   record.longitude
                 )
-              ]
+
+              ],
+              {
+
+                icon:
+                  createNumberedMarkerIcon(
+                    sequenceNumber
+                  )
+
+              }
             )
             .addTo(
               map
@@ -7635,10 +8541,13 @@ function renderRecords() {
               `
 
               <b>
+
+                ${sequenceNumber}.
                 ${typeInfo.icon}
                 ${escapeHTML(
                   record.place
                 )}
+
               </b>
 
               <br>
@@ -7707,12 +8616,20 @@ function renderRecords() {
 
 
           /*
-            只畫有效鏈結
+            只畫真正有效、且目前畫面中存在的鏈結
           */
 
           if (
             link.state ===
             "valid" &&
+
+            String(
+              link.previous.tripId
+            ) ===
+            String(
+              record.tripId
+            ) &&
+
             displayIds.has(
               String(
                 link.previous.id
@@ -7994,16 +8911,14 @@ async function deleteRecord(
     );
 
 
-  /*
-    不修改其他紀錄的 previousRecordId
-  */
-
   saveRecords(
     newRecords
   );
 
 
   updateDateFilterOptions();
+
+  renderTripSummary();
 
   renderRecords();
 
@@ -8161,7 +9076,7 @@ function closeEditModal() {
 
 
 /* =========================================================
-   EDIT DATE / TIME
+   EDIT DATE/TIME
 ========================================================= */
 
 function getEditableDateTimeParts(
@@ -8247,7 +9162,7 @@ function getEditableDateTimeParts(
 
 
 /* =========================================================
-   LOCAL TIME → UTC
+   LOCAL → UTC
 ========================================================= */
 
 function localDateTimeToUTC(
@@ -8527,11 +9442,13 @@ async function saveEditedRecord() {
         newTripId
     ) ||
     {
+
       id:
         "default",
 
       name:
         "未分類旅程"
+
     };
 
 
@@ -8585,7 +9502,7 @@ async function saveEditedRecord() {
 
   /*
     跨旅程搬移：
-    不猜測新的前一站
+    不猜新的前一站
   */
 
   if (
@@ -8625,6 +9542,8 @@ async function saveEditedRecord() {
 
   updateDateFilterOptions();
 
+  renderTripSummary();
+
   renderRecords();
 
 
@@ -8653,6 +9572,7 @@ async function clearAllRecords() {
     showToast(
       "目前沒有足跡"
     );
+
 
     return;
 
@@ -8708,9 +9628,23 @@ async function clearAllRecords() {
     "all";
 
 
+  currentSearchText =
+    "";
+
+
+  document
+    .getElementById(
+      "recordSearch"
+    )
+    .value =
+    "";
+
+
   renderTripSelectors();
 
   updateDateFilterOptions();
+
+  renderTripSummary();
 
   renderRecords();
 
@@ -8740,6 +9674,7 @@ function exportCSV() {
     showToast(
       "目前沒有紀錄"
     );
+
 
     return;
 
@@ -8871,7 +9806,7 @@ function exportCSV() {
 
     csv,
 
-    "travel-footprints-v4-7.csv",
+    "travel-footprints-v4-8.csv",
 
     "text/csv;charset=utf-8"
 
@@ -8899,6 +9834,7 @@ function exportJSON() {
       "目前沒有紀錄"
     );
 
+
     return;
 
   }
@@ -8910,7 +9846,7 @@ function exportJSON() {
       "Travel Footprints",
 
     version:
-      "4.7",
+      "4.8",
 
     exportedAt:
       new Date()
@@ -8936,7 +9872,7 @@ function exportJSON() {
       2
     ),
 
-    "travel-footprints-v4-7.json",
+    "travel-footprints-v4-8.json",
 
     "application/json"
 
@@ -9403,9 +10339,23 @@ function importJSON(
           "all";
 
 
+        currentSearchText =
+          "";
+
+
+        document
+          .getElementById(
+            "recordSearch"
+          )
+          .value =
+          "";
+
+
         renderTripSelectors();
 
         updateDateFilterOptions();
+
+        renderTripSummary();
 
         renderRecords();
 
@@ -9544,8 +10494,10 @@ function csvEscape(
 ) {
 
   if (
-    value === null ||
-    value === undefined
+    value ===
+    null ||
+    value ===
+    undefined
   ) {
 
     return "";
@@ -9709,6 +10661,8 @@ getRecords();
 renderTripSelectors();
 
 updateDateFilterOptions();
+
+renderTripSummary();
 
 renderRecords();
 
